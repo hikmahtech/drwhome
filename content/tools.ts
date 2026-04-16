@@ -1,4 +1,5 @@
 import { Base64 } from "@/components/tools/Base64";
+import { Dns } from "@/components/tools/Dns";
 import { Headers } from "@/components/tools/Headers";
 import { IpLookup } from "@/components/tools/IpLookup";
 import { Json } from "@/components/tools/Json";
@@ -92,6 +93,14 @@ export const tools: Tool[] = [
     category: "network",
     keywords: ["ip", "lookup", "geoip", "asn", "isp", "ipinfo"],
     component: IpLookup,
+  },
+  {
+    slug: "dns",
+    name: "dns lookup",
+    description: "resolve A, AAAA, MX, TXT, NS, or CNAME records via Cloudflare DoH.",
+    category: "network",
+    keywords: ["dns", "lookup", "record", "A", "AAAA", "MX", "TXT", "cloudflare"],
+    component: Dns,
   },
 ];
 
