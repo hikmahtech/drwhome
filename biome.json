@@ -16,5 +16,7 @@
     "lineWidth": 100
   },
   "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always" } },
-  "files": { "ignore": [".next/**", "node_modules/**", "playwright-report/**", "test-results/**"] }
+  "files": {
+    "ignore": [".next/**", "node_modules/**", "playwright-report/**", "test-results/**", "**/*.mdx"]
+  }
 }

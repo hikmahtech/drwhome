@@ -1,7 +1,20 @@
+import Example, { frontmatter as exampleFm } from "@/content/posts/_example.mdx";
 import type { Post } from "@/lib/blog";
+import { parseFrontmatter } from "@/lib/blog";
+import type { ComponentType } from "react";
 
-export const posts: Post[] = [];
+export type PostRecord = Post & { component: ComponentType };
 
-export function findPost(slug: string): Post | undefined {
+function record(slug: string, fm: unknown, component: ComponentType): PostRecord {
+  const r = parseFrontmatter(slug, fm);
+  if (!r.ok) throw new Error(`invalid frontmatter for ${slug}: ${r.error}`);
+  return { ...r.post, component };
+}
+
+export const posts: PostRecord[] = [record("_example", exampleFm, Example)].sort((a, b) =>
+  b.date.localeCompare(a.date),
+);
+
+export function findPost(slug: string): PostRecord | undefined {
   return posts.find((p) => p.slug === slug);
 }
