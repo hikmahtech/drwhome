@@ -1,5 +1,6 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Headers } from "@/components/tools/Headers";
+import { IpLookup } from "@/components/tools/IpLookup";
 import { Json } from "@/components/tools/Json";
 import { Jwt } from "@/components/tools/Jwt";
 import { UrlCodec } from "@/components/tools/UrlCodec";
@@ -83,6 +84,14 @@ export const tools: Tool[] = [
     category: "network",
     keywords: ["http", "headers", "request", "user-agent", "accept"],
     component: Headers,
+  },
+  {
+    slug: "ip-lookup",
+    name: "ip lookup",
+    description: "look up any IP's geolocation, ASN, and ISP (via ipinfo.io).",
+    category: "network",
+    keywords: ["ip", "lookup", "geoip", "asn", "isp", "ipinfo"],
+    component: IpLookup,
   },
 ];
 
