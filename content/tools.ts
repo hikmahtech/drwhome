@@ -1,5 +1,6 @@
-import type { ComponentType } from "react";
 import { Base64 } from "@/components/tools/Base64";
+import { Json } from "@/components/tools/Json";
+import type { ComponentType } from "react";
 
 export type ToolCategory = "network" | "dev";
 
@@ -20,6 +21,14 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["base64", "encode", "decode", "encoder", "decoder"],
     component: Base64,
+  },
+  {
+    slug: "json",
+    name: "json",
+    description: "format and validate JSON. 2 / 4 space or minified output.",
+    category: "dev",
+    keywords: ["json", "format", "prettify", "validate", "minify"],
+    component: Json,
   },
 ];
 
