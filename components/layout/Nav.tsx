@@ -10,6 +10,7 @@ export function Nav() {
       </Link>
       <div className="flex items-center gap-4 text-xs">
         <Link href="/#tools">tools</Link>
+        <Link href="/blog">blog</Link>
         <Link href="/about">about</Link>
         <ThemeToggle />
       </div>
