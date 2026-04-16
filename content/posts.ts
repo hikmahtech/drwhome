@@ -1,4 +1,5 @@
 import Example, { frontmatter as exampleFm } from "@/content/posts/_example.mdx";
+import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-verifying.mdx";
 import type { Post } from "@/lib/blog";
 import { parseFrontmatter } from "@/lib/blog";
 import type { ComponentType } from "react";
@@ -11,7 +12,10 @@ function record(slug: string, fm: unknown, component: ComponentType): PostRecord
   return { ...r.post, component };
 }
 
-export const posts: PostRecord[] = [record("_example", exampleFm, Example)]
+export const posts: PostRecord[] = [
+  record("decode-jwt-without-verifying", jwtFm, Jwt),
+  record("_example", exampleFm, Example),
+]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));
 

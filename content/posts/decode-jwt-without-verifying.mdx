@@ -1,0 +1,54 @@
+---
+title: How to decode a JWT without verifying
+date: "2026-04-18"
+description: Inspecting a token's payload is a read operation. Verification is a trust decision. They are not the same step, and conflating them causes auth bugs.
+tags: [jwt, auth, security]
+relatedTool: jwt
+---
+
+A JWT is just three base64url-encoded strings joined by dots. Decoding one tells you what a token **claims**. It does **not** tell you whether those claims are true. Conflating the two is the single most common JWT mistake.
+
+## What "decoding" actually does
+
+The header and payload are plain JSON once you base64url-decode them. Anyone can read them — that's why you never put secrets in a JWT payload. The signature is a MAC (HMAC) or asymmetric signature over `base64url(header) + "." + base64url(payload)`, computed with a secret or private key. Decoding doesn't check it.
+
+```ts
+const [headerB64, payloadB64] = token.split(".");
+const b64url = (s: string) => s.replaceAll("-", "+").replaceAll("_", "/");
+const header = JSON.parse(atob(b64url(headerB64)));
+const payload = JSON.parse(atob(b64url(payloadB64)));
+```
+
+That's it. No crypto, no network, nothing to trust yet.
+
+A JWT has three parts separated by dots: `header.payload.signature`. The header is a JSON object that describes the token — most importantly, the `alg` field, which tells the verifier which algorithm was used to produce the signature (`RS256`, `ES256`, `HS256`, and so on). The payload is another JSON object containing the claims: `sub` (subject), `iss` (issuer), `exp` (expiry), plus whatever custom fields the issuer added. The signature is raw bytes, not JSON — it's the cryptographic proof that the header and payload haven't been tampered with.
+
+The `alg` field in the header exists because JWT was designed to support multiple algorithms. A verifier needs to know which algorithm to use before it can check the signature. This is also where one of JWT's most notorious attack vectors lives — but more on that in a moment.
+
+Base64url differs from plain base64 in two characters: `+` becomes `-` and `/` becomes `_`, and padding (`=`) is stripped. This makes the encoded string safe to embed in a URL without percent-encoding. The four-line decoder above handles the conversion with `replaceAll` before passing to `atob`. You don't need a library for read-only decoding — the browser's built-in `atob` is sufficient.
+
+## When decoding is enough
+
+Three places where read-only decoding is the right tool:
+
+- **Debugging.** "What's in this token my backend just issued?" — paste it into a decoder, read the claims, move on.
+- **Client UI hints.** Showing the user's name from `payload.name` without re-fetching. Never make auth decisions on this — the server must verify.
+- **Observability.** Logging `iss` / `aud` / `sub` for correlation in tracing.
+
+A concrete example: you're building a dashboard that shows the logged-in user's display name and avatar in the nav bar. Rather than making an extra `/me` API call on every page load, you read `payload.name` and `payload.picture` directly from the token already sitting in memory. The feature ships faster, there's one fewer round-trip, and nothing is less secure — the server still verifies the token on every authenticated request. The UI is just reading data the server already attested to when it issued the token.
+
+**The line to never cross:** decoding for display is fine; decoding for access decisions is not. If your frontend reads `payload.role === "admin"` and then shows or hides UI elements, that's cosmetic — a user who manipulates their token only changes what they see, not what they can do. But if any code path — frontend or backend — grants, skips, or grants elevated access based on a decoded-but-unverified claim, you have a vulnerability. The rule: decode to show, verify to decide.
+
+## When it is not
+
+Anywhere the answer to "should this request succeed?" depends on the token being genuine. API gateways, middleware, authorization checks. For those, verify the signature against the issuer's key (RS256 / ES256 fetched from a JWKS endpoint; HS256 with your shared secret) and also validate `exp`, `nbf`, `iss`, and `aud`. A decoder that doesn't do this is a debugging tool, not an auth library.
+
+The classic bug: code that reads `payload.role === "admin"` and grants access without verifying. Anyone can craft a token with whatever role they want — only the signature makes it authentic.
+
+Proper verification looks like this: your server fetches the issuer's public keys from a JWKS URL (e.g. `https://auth.example.com/.well-known/jwks.json`), caches them with a short TTL, and verifies the signature on every incoming token. Libraries like `jose` (Node) or `python-jose` handle this. After the signature passes, validate the claims: `exp` must be in the future, `nbf` (not-before) must be in the past, `iss` must match your expected issuer, and `aud` must include your service. Key rotation — when an issuer cycles to a new signing key — is handled by re-fetching JWKS when you encounter an unknown `kid` (key ID) in the header. Never hardcode public keys; always resolve them from JWKS at runtime.
+
+**The `alg: "none"` attack** is one of the most-cited JWT vulnerabilities. The JWT spec originally allowed `"alg": "none"` to signal an unsecured token — no signature required. Some early libraries accepted this and skipped signature verification when they saw it. An attacker could take any token, strip the signature, set `alg` to `"none"`, and the verifier would accept it as valid. The fix is straightforward: your verifier must have an explicit allowlist of accepted algorithms and must reject any token whose `alg` is not on that list. Never rely on the token itself to tell you how to verify it — that decision belongs to the server.
+
+## try it
+
+Paste any token into [/tools/jwt](/tools/jwt) — the decoder runs entirely in your browser, never sends the token anywhere, and prints the header + payload + raw signature. It does not verify. That's intentional.
