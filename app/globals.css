@@ -22,6 +22,7 @@
   :root:not([data-theme="light"]) {
     --bg: #0a0a0a;
     --fg: #d4d4d4;
+    --muted: #737373;
     --accent: #4ade80;
     --border: #1f1f1f;
   }
