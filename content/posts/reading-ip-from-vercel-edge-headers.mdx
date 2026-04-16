@@ -1,0 +1,82 @@
+---
+title: "Reading the real client IP from Vercel edge headers"
+date: "2026-04-18"
+description: Behind a CDN the socket address is always the edge node. The real client IP travels in x-forwarded-for — here is how to read it safely in a Next.js 15 route handler.
+tags: [vercel, edge, http-headers, nextjs]
+relatedTool: ip
+---
+
+Behind a CDN, `req.socket.remoteAddress` is useless for identifying the client. It gives you the IP of the last hop — the CDN edge node, not the browser. The real origin IP is passed forward in headers, and reading it correctly requires understanding the chain those headers form.
+
+## The XFF chain
+
+`X-Forwarded-For` is a comma-separated list of IP addresses appended by every proxy in the path. Each proxy takes the current value, appends its own view of where the request came from, and forwards it on. A request that passed through two proxies looks like this:
+
+```
+X-Forwarded-For: 203.0.113.42, 10.0.0.1, 10.0.0.2
+```
+
+The leftmost entry is the originator — the IP the first proxy recorded. Each subsequent entry is the address the next proxy saw. Your server receives the rightmost entry as the connecting socket address, and it is always infrastructure you own.
+
+**The trust boundary matters here.** Anything to the left of your first trusted proxy can be spoofed. A malicious client can send `X-Forwarded-For: 1.2.3.4` and if your code naively reads the first entry, it reads attacker-supplied data. The safe approach is to count inward from the right by the number of hops you control — or to use a header your CDN guarantees it has sanitized.
+
+Vercel sanitizes `X-Forwarded-For` before your function sees it, stripping any client-supplied prefixes. The leftmost entry in the header Vercel delivers is the real client IP. You can read `[0]` safely.
+
+## Vercel-specific headers
+
+Beyond the standard XFF header, Vercel injects several headers at its edge that are not present in any upstream request:
+
+| Header | Value |
+|---|---|
+| `x-forwarded-for` | Sanitized client IP chain |
+| `x-real-ip` | Set by some reverse proxies; Vercel does not populate this universally — do not rely on it |
+| `x-vercel-forwarded-for` | Vercel's own sanitized leftmost client IP — the most reliable single-value source |
+| `x-vercel-ip-country` | ISO 3166-1 alpha-2 country code |
+| `x-vercel-ip-country-region` | ISO 3166-2 region/subdivision code |
+| `x-vercel-ip-city` | City name, URL-encoded — must `decodeURIComponent` before display |
+| `x-vercel-ip-latitude` | Decimal latitude |
+| `x-vercel-ip-longitude` | Decimal longitude |
+| `x-vercel-ip-timezone` | IANA timezone identifier |
+
+All of these are set by Vercel's infrastructure and are not present when running `vercel dev` locally. In local development the geo headers are simply absent; your code needs to handle `null` values without throwing.
+
+## Reading it in a Next.js route handler
+
+Next.js 15 made `headers()` from `next/headers` asynchronous — it now returns a promise. Call it with `await` or you'll get a thenable back, not the actual header map.
+
+```ts
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+
+export const runtime = "edge";
+
+export async function GET() {
+  const h = await headers();
+  const forwarded = h.get("x-forwarded-for") ?? "";
+  const ip = forwarded.split(",")[0]?.trim() || null;
+  const cityRaw = h.get("x-vercel-ip-city");
+  const city = cityRaw ? decodeURIComponent(cityRaw) : null;
+  return NextResponse.json({
+    ip,
+    city,
+    country: h.get("x-vercel-ip-country"),
+    timezone: h.get("x-vercel-ip-timezone"),
+  });
+}
+```
+
+Setting `runtime = "edge"` keeps the function on Vercel's edge network, which is where the geo headers are populated. In a Node.js serverless function the headers still arrive, but the function runs in a region rather than at the edge, so latency is slightly higher and some geo data may be less precise.
+
+The `decodeURIComponent` on city is not optional. City names like "São Paulo" or "Zürich" arrive percent-encoded — `S%C3%A3o%20Paulo` — and displaying the raw value is a user-facing bug.
+
+## A few gotchas
+
+IPv6 addresses in `x-forwarded-for` arrive without brackets — `2001:db8::1`, not `[2001:db8::1]`. If you're parsing the IP to extract a version or validate its format, account for the colon-heavy notation. Some parsers expect the bracketed form and will fail on the bare IPv6 string.
+
+Local and preview environments behave differently. Running `next dev` without the Vercel CLI, the geo headers don't exist and `x-forwarded-for` is typically `127.0.0.1` or `::1`. Running through `vercel dev`, the CLI injects a stub `x-forwarded-for` of `127.0.0.1` but does not simulate geo headers — those only populate on actual Vercel infrastructure. Build your UI defensively: always render something sensible when geo fields are `null`.
+
+Finally, `x-real-ip` is set by nginx and some other reverse proxies but **Vercel does not guarantee it**. Code that reads `x-real-ip` as its primary source will work in some environments and silently fail on others. Prefer `x-vercel-forwarded-for` for a single authoritative value, or fall back to the leftmost entry of `x-forwarded-for`.
+
+## try it
+
+See the full set of headers your request carries — including IP and all Vercel geo fields — at [/tools/ip](/tools/ip).
