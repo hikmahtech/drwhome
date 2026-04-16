@@ -17,6 +17,7 @@ pnpm test:e2e      # e2e
 pnpm lint          # biome
 pnpm typecheck
 pnpm build
+pnpm lh           # Lighthouse CI (perf/seo ≥ 95)
 ```
 
 ## Env vars
