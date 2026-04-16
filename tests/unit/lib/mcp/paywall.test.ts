@@ -90,6 +90,22 @@ describe("withPaywall", () => {
     expect(inner).toHaveBeenCalledOnce();
   });
 
+  it("inner handler still receives a readable body after the paywall peek", async () => {
+    const inner = vi.fn(async (req: Request) => {
+      const parsed = await req.json();
+      return new Response(JSON.stringify(parsed), { status: 200 });
+    });
+    const wrapped = withPaywall(inner);
+    const req = jsonRequest({ jsonrpc: "2.0", id: 7, method: "tools/list" });
+
+    const res = await wrapped(req, { params: Promise.resolve({ transport: "mcp" }) });
+    const body = await res.json();
+
+    expect(body.method).toBe("tools/list");
+    expect(body.id).toBe(7);
+    expect(inner).toHaveBeenCalledOnce();
+  });
+
   it("uses null for id when the request omits it (notification-shaped)", async () => {
     const inner = vi.fn();
     const wrapped = withPaywall(inner);
