@@ -19,6 +19,11 @@ export type Tool = {
   category: ToolCategory;
   keywords: string[];
   component: ComponentType;
+  /**
+   * MCP tool name(s) that map to this web tool. Undefined = not MCP-exposed.
+   * Multiple entries for tools that expose >1 MCP function (e.g. base64 has encode + decode).
+   */
+  mcpNames?: readonly string[];
 };
 
 export const tools: Tool[] = [
@@ -29,6 +34,7 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["base64", "encode", "decode", "encoder", "decoder"],
     component: Base64,
+    mcpNames: ["base64_encode", "base64_decode"],
   },
   {
     slug: "json",
@@ -37,6 +43,7 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["json", "format", "prettify", "validate", "minify"],
     component: Json,
+    mcpNames: ["json_format"],
   },
   {
     slug: "url-codec",
@@ -45,6 +52,7 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["url", "encode", "decode", "percent", "encodeURIComponent"],
     component: UrlCodec,
+    mcpNames: ["url_encode", "url_decode"],
   },
   {
     slug: "uuid",
@@ -53,6 +61,7 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["uuid", "guid", "v4", "v7", "random", "identifier"],
     component: Uuid,
+    mcpNames: ["uuid_generate"],
   },
   {
     slug: "jwt",
@@ -61,6 +70,7 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["jwt", "decode", "token", "bearer", "auth"],
     component: Jwt,
+    mcpNames: ["jwt_decode"],
   },
   {
     slug: "user-agent",
@@ -69,6 +79,7 @@ export const tools: Tool[] = [
     category: "network",
     keywords: ["user agent", "ua", "browser", "os", "device"],
     component: UserAgent,
+    mcpNames: ["user_agent_parse"],
   },
   {
     slug: "ip",
@@ -93,6 +104,7 @@ export const tools: Tool[] = [
     category: "network",
     keywords: ["ip", "lookup", "geoip", "asn", "isp", "ipinfo"],
     component: IpLookup,
+    mcpNames: ["ip_lookup"],
   },
   {
     slug: "dns",
@@ -101,6 +113,7 @@ export const tools: Tool[] = [
     category: "network",
     keywords: ["dns", "lookup", "record", "A", "AAAA", "MX", "TXT", "cloudflare"],
     component: Dns,
+    mcpNames: ["dns_lookup"],
   },
 ];
 
