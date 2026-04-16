@@ -1,6 +1,7 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Json } from "@/components/tools/Json";
 import { UrlCodec } from "@/components/tools/UrlCodec";
+import { Uuid } from "@/components/tools/Uuid";
 import type { ComponentType } from "react";
 
 export type ToolCategory = "network" | "dev";
@@ -38,6 +39,14 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["url", "encode", "decode", "percent", "encodeURIComponent"],
     component: UrlCodec,
+  },
+  {
+    slug: "uuid",
+    name: "uuid",
+    description: "generate UUIDs (v4 random, v7 time-ordered).",
+    category: "dev",
+    keywords: ["uuid", "guid", "v4", "v7", "random", "identifier"],
+    component: Uuid,
   },
 ];
 
