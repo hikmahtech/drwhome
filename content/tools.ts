@@ -1,4 +1,5 @@
 import { Base64 } from "@/components/tools/Base64";
+import { Headers } from "@/components/tools/Headers";
 import { Json } from "@/components/tools/Json";
 import { Jwt } from "@/components/tools/Jwt";
 import { UrlCodec } from "@/components/tools/UrlCodec";
@@ -74,6 +75,14 @@ export const tools: Tool[] = [
     category: "network",
     keywords: ["ip", "ipv4", "ipv6", "location", "geoip", "whatsmyip"],
     component: WhatIsMyIp,
+  },
+  {
+    slug: "headers",
+    name: "http headers",
+    description: "inspect the http request headers your browser sends.",
+    category: "network",
+    keywords: ["http", "headers", "request", "user-agent", "accept"],
+    component: Headers,
   },
 ];
 
