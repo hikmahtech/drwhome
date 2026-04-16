@@ -19,10 +19,7 @@ test("robots.txt allows all and points at sitemap", async ({ request }) => {
 
 test("tool page has SoftwareApplication JSON-LD", async ({ page }) => {
   await page.goto("/tools/jwt");
-  const json = await page
-    .locator('script[type="application/ld+json"]')
-    .first()
-    .textContent();
+  const json = await page.locator('script[type="application/ld+json"]').first().textContent();
   expect(json).toBeTruthy();
   const parsed = JSON.parse(json ?? "{}");
   expect(parsed["@type"]).toBe("SoftwareApplication");
@@ -31,10 +28,7 @@ test("tool page has SoftwareApplication JSON-LD", async ({ page }) => {
 
 test("blog post page has BlogPosting JSON-LD", async ({ page }) => {
   await page.goto("/blog/decode-jwt-without-verifying");
-  const json = await page
-    .locator('script[type="application/ld+json"]')
-    .first()
-    .textContent();
+  const json = await page.locator('script[type="application/ld+json"]').first().textContent();
   const parsed = JSON.parse(json ?? "{}");
   expect(parsed["@type"]).toBe("BlogPosting");
   expect(parsed.headline).toContain("JWT");
@@ -42,10 +36,7 @@ test("blog post page has BlogPosting JSON-LD", async ({ page }) => {
 
 test("home page has WebSite JSON-LD", async ({ page }) => {
   await page.goto("/");
-  const json = await page
-    .locator('script[type="application/ld+json"]')
-    .first()
-    .textContent();
+  const json = await page.locator('script[type="application/ld+json"]').first().textContent();
   const parsed = JSON.parse(json ?? "{}");
   expect(parsed["@type"]).toBe("WebSite");
 });

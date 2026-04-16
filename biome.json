@@ -17,6 +17,13 @@
   },
   "javascript": { "formatter": { "quoteStyle": "double", "semicolons": "always" } },
   "files": {
-    "ignore": [".next/**", "node_modules/**", "playwright-report/**", "test-results/**", "**/*.mdx"]
+    "ignore": [
+      ".next/**",
+      ".lighthouseci/**",
+      "node_modules/**",
+      "playwright-report/**",
+      "test-results/**",
+      "**/*.mdx"
+    ]
   }
 }
