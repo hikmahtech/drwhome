@@ -1,5 +1,6 @@
 import Example, { frontmatter as exampleFm } from "@/content/posts/_example.mdx";
 import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-verifying.mdx";
+import Uuid, { frontmatter as uuidFm } from "@/content/posts/uuidv4-vs-uuidv7.mdx";
 import type { Post } from "@/lib/blog";
 import { parseFrontmatter } from "@/lib/blog";
 import type { ComponentType } from "react";
@@ -14,6 +15,7 @@ function record(slug: string, fm: unknown, component: ComponentType): PostRecord
 
 export const posts: PostRecord[] = [
   record("decode-jwt-without-verifying", jwtFm, Jwt),
+  record("uuidv4-vs-uuidv7", uuidFm, Uuid),
   record("_example", exampleFm, Example),
 ]
   .filter((p) => !p.slug.startsWith("_"))

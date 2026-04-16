@@ -1,0 +1,73 @@
+---
+title: "UUIDv4 vs UUIDv7: why timestamp ordering matters for databases"
+date: "2026-04-18"
+description: Random UUIDs fragment btree indexes. UUIDv7 fixes that with a millisecond timestamp prefix while keeping the same wire format as UUIDv4.
+tags: [uuid, postgres, databases, performance]
+relatedTool: uuid
+---
+
+Random UUIDs as primary keys come with a hidden cost: every insert lands in a random leaf page of your btree index. At low write volume this is invisible. At high write volume the index balloons, cache hit rates drop, and the database spends most of its time fetching pages that aren't hot. **The root cause is that UUIDv4 has no ordering property at all.**
+
+## How UUIDv4 is laid out
+
+A UUIDv4 is 128 bits. Six of those bits are fixed — 4 bits for the version nibble (`0100`) and 2 bits for the RFC 4122 variant (`10`). The remaining 122 bits are randomly generated. That entropy is what makes collisions statistically impossible: with 2¹²² possible values you'd need to generate roughly 2.7 × 10¹⁸ UUIDs before the probability of a collision reaches 50%.
+
+The randomness is also why `crypto.randomUUID()` is all you need to implement v4. There's no coordination, no monotonic counter, no timestamp — just entropy. **That simplicity is both the strength and the weakness of UUIDv4.**
+
+Because successive v4 values are uncorrelated, inserting them into an indexed column scatters writes across the entire keyspace. A btree page that was just loaded into the buffer pool has maybe a 1-in-N chance of being the right target for the next insert, where N is the number of existing leaf pages. As the table grows, N grows, and index locality gets progressively worse.
+
+## How UUIDv7 is different
+
+UUIDv7 reorganises the 128 bits so that time goes first.
+
+```text
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           unix_ts_ms                          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|          unix_ts_ms           |  ver  |       rand_a          |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|var|                        rand_b                             |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                           rand_b                              |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+The first 48 bits hold the Unix timestamp in milliseconds. Bits 48–51 are the version nibble (`0111`). Bits 64–65 are the RFC variant bits. The remaining 74 bits are random. Because **the timestamp is in the high-order bytes**, any two v7 values generated in the same millisecond differ only in their random suffix — and any value from a later millisecond is strictly greater than any value from an earlier one. Successive v7 values sort ascending by construction.
+
+The wire format is identical to every other UUID version: 32 hex characters grouped as `8-4-4-4-12`. No schema changes, no new column types. A v7 UUID drops into any column or field that already holds a v4.
+
+## Where v7 pays off
+
+**Timestamp ordering restores index locality.** When every new row gets a v7 primary key, new inserts target the rightmost leaf page of the btree — the same page that held the previous insert, still warm in the buffer pool. The index grows at its right edge like a sequence or a serial, not across its entire surface.
+
+Postgres stores the native `uuid` type in 16 bytes regardless of version. The btree comparator operates on the raw bytes in network order, which means it sees the timestamp prefix first and sorts correctly without any extra configuration.
+
+PostgreSQL 17 ships `uuidv7()` as a built-in SQL function:
+
+```sql
+CREATE TABLE events (
+  id         uuid        NOT NULL DEFAULT uuidv7(),
+  tenant_id  uuid        NOT NULL,
+  payload    jsonb       NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (id)
+);
+```
+
+On Postgres 16 and earlier, `pg_uuidv7` is a one-extension install (`CREATE EXTENSION pg_uuidv7`) that exposes the same `uuid_generate_v7()` function. Either way, the column type stays `uuid` — no migration needed if you're replacing v4 defaults.
+
+The timestamp embedded in a v7 value also means you often don't need a separate `created_at` column for rough time-range queries. You can extract the millisecond timestamp directly from the UUID when an exact timestamp isn't required.
+
+## When v4 is still the right call
+
+UUIDv7 leaks creation time. The first 48 bits are a millisecond-precision Unix timestamp, visible to anyone who decodes the value. If your IDs are public-facing — in URLs, in API responses, in shareable links — you may not want to expose when a resource was created. v4's pure randomness gives you enumeration protection and temporal opacity that v7 cannot offer.
+
+Clock skew is another consideration. UUIDv7 relies on each generating node having a monotonically non-decreasing clock. Most servers satisfy this, but clients — mobile apps, edge functions, IoT devices — can have clocks that drift or jump. A v7 generated on a client with a skewed clock can sort out of order, which partially undermines the index locality benefit. For client-generated IDs, v4 is safer.
+
+Finally, if you're generating IDs outside a database context (in application code, across multiple services with no coordination), the implementation complexity of v7 is higher than v4. `crypto.randomUUID()` is three words. A correct v7 implementation needs access to a high-resolution clock and must handle sub-millisecond monotonicity to avoid collisions within the same millisecond.
+
+## try it
+
+Generate both versions and compare the byte layout side by side at [/tools/uuid](/tools/uuid). The tool shows the decoded fields — version nibble, variant bits, timestamp prefix — so you can see exactly where the randomness ends and the structure begins.
