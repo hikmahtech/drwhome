@@ -2,9 +2,19 @@ import { findPost, posts } from "@/content/posts";
 import { describe, expect, it } from "vitest";
 
 describe("posts registry", () => {
-  it("is a valid array (populated once MDX pipeline lands in Task 3)", () => {
-    expect(Array.isArray(posts)).toBe(true);
-    expect(posts.length).toBeGreaterThanOrEqual(0);
+  it("is non-empty", () => {
+    expect(posts.length).toBeGreaterThan(0);
+  });
+
+  it("contains all 5 launch articles", () => {
+    const slugs = posts.map((p) => p.slug).sort();
+    expect(slugs).toEqual([
+      "base64-isnt-encryption",
+      "decode-jwt-without-verifying",
+      "dns-over-https-cloudflare-primer",
+      "reading-ip-from-vercel-edge-headers",
+      "uuidv4-vs-uuidv7",
+    ]);
   });
 
   it("sorts posts newest-first when populated", () => {
