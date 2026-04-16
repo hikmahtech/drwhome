@@ -1,5 +1,6 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Json } from "@/components/tools/Json";
+import { UrlCodec } from "@/components/tools/UrlCodec";
 import type { ComponentType } from "react";
 
 export type ToolCategory = "network" | "dev";
@@ -29,6 +30,14 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["json", "format", "prettify", "validate", "minify"],
     component: Json,
+  },
+  {
+    slug: "url-codec",
+    name: "url codec",
+    description: "percent-encode and decode URL components.",
+    category: "dev",
+    keywords: ["url", "encode", "decode", "percent", "encodeURIComponent"],
+    component: UrlCodec,
   },
 ];
 
