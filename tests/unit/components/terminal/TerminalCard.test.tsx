@@ -1,6 +1,6 @@
+import { TerminalCard } from "@/components/terminal/TerminalCard";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { TerminalCard } from "@/components/terminal/TerminalCard";
 
 describe("TerminalCard", () => {
   it("renders children", () => {

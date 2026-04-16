@@ -1,5 +1,5 @@
-import { afterEach, describe, expect, it } from "vitest";
 import { getStoredTheme, setStoredTheme } from "@/lib/theme";
+import { afterEach, describe, expect, it } from "vitest";
 
 describe("theme storage", () => {
   afterEach(() => localStorage.clear());
