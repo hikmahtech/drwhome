@@ -11,9 +11,9 @@ function record(slug: string, fm: unknown, component: ComponentType): PostRecord
   return { ...r.post, component };
 }
 
-export const posts: PostRecord[] = [record("_example", exampleFm, Example)].sort((a, b) =>
-  b.date.localeCompare(a.date),
-);
+export const posts: PostRecord[] = [record("_example", exampleFm, Example)]
+  .filter((p) => !p.slug.startsWith("_"))
+  .sort((a, b) => b.date.localeCompare(a.date));
 
 export function findPost(slug: string): PostRecord | undefined {
   return posts.find((p) => p.slug === slug);

@@ -15,7 +15,8 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     pre: (props) => (
       <pre className="border p-3 text-xs overflow-x-auto my-4 whitespace-pre" {...props} />
     ),
-    a: ({ href = "", children, ...rest }) => {
+    a: ({ href, children, ...rest }) => {
+      if (!href) return <>{children}</>;
       if (href.startsWith("/")) {
         return (
           <Link href={href as Route} {...rest}>
