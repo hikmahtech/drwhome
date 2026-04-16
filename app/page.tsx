@@ -1,5 +1,7 @@
 import { ToolCard } from "@/components/ToolCard";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { type Tool, type ToolCategory, tools } from "@/content/tools";
+import { buildWebsiteJsonLd, siteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -51,6 +53,7 @@ export default function Home() {
             </div>
           ))}
       </section>
+      <JsonLd data={buildWebsiteJsonLd({ siteUrl: siteUrl() })} />
     </div>
   );
 }

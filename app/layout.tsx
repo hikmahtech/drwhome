@@ -11,6 +11,14 @@ export const metadata: Metadata = {
   title: { default: "drwho.me — network + dev tools", template: "%s — drwho.me" },
   description: "Minimal, fast network and developer tools. No signup.",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://drwho.me"),
+  openGraph: {
+    siteName: "drwho.me",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
