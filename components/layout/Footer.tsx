@@ -8,7 +8,12 @@ export function Footer() {
         <Link href="/privacy">privacy</Link>
         <Link href="/terms">terms</Link>
         <Link href="/contact">contact</Link>
-        <span className="ml-auto">© {new Date().getFullYear()} drwho.me</span>
+        <span className="ml-auto">
+          © {new Date().getFullYear()}{" "}
+          <a href="https://hikmahtechnologies.com" rel="noopener">
+            hikmah technologies
+          </a>
+        </span>
       </div>
       <p className="mt-3">
         drwho.me contains affiliate links. See <Link href="/privacy#affiliates">disclosure</Link>.

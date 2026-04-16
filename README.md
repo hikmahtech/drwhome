@@ -1,6 +1,7 @@
 # drwho.me
 
 Minimal, fast network and developer tools at `drwho.me`.
+Operated by [Hikmah Technologies](https://hikmahtechnologies.com).
 
 ## Stack
 
