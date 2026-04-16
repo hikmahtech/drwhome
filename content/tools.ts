@@ -2,6 +2,7 @@ import { Base64 } from "@/components/tools/Base64";
 import { Json } from "@/components/tools/Json";
 import { Jwt } from "@/components/tools/Jwt";
 import { UrlCodec } from "@/components/tools/UrlCodec";
+import { UserAgent } from "@/components/tools/UserAgent";
 import { Uuid } from "@/components/tools/Uuid";
 import type { ComponentType } from "react";
 
@@ -56,6 +57,14 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["jwt", "decode", "token", "bearer", "auth"],
     component: Jwt,
+  },
+  {
+    slug: "user-agent",
+    name: "user agent",
+    description: "parse your browser's user agent string (browser, os, device, engine).",
+    category: "network",
+    keywords: ["user agent", "ua", "browser", "os", "device"],
+    component: UserAgent,
   },
 ];
 
