@@ -11,7 +11,9 @@ export default {
         accent: "var(--accent)",
         border: "var(--border)",
       },
-      fontFamily: { mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"] },
+      fontFamily: {
+        mono: ["var(--font-mono)", "ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+      },
       maxWidth: { content: "680px" },
       fontSize: {
         xs: ["12px", { lineHeight: "1.6" }],
