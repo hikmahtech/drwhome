@@ -1,4 +1,4 @@
-import { buildCapabilities, registerMcpTools } from "@/lib/mcp/server";
+import { registerMcpTools } from "@/lib/mcp/server";
 import { type McpToolResult, mcpTools } from "@/lib/mcp/tools";
 import { describe, expect, it, vi } from "vitest";
 
@@ -33,15 +33,5 @@ describe("registerMcpTools", () => {
     ) => Promise<McpToolResult>;
     const uuid = await uuidHandler({ version: "v4" });
     expect(uuid.content[0].text).toMatch(/^[0-9a-f-]{36}$/);
-  });
-});
-
-describe("buildCapabilities", () => {
-  it("emits a tools entry with every MCP tool's description", () => {
-    const caps = buildCapabilities();
-    expect(caps.tools).toBeDefined();
-    for (const t of mcpTools) {
-      expect(caps.tools[t.name]).toEqual({ description: t.description });
-    }
   });
 });

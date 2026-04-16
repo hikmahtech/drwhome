@@ -17,13 +17,3 @@ export function registerMcpTools(server: McpServerLike): void {
     server.tool(t.name, t.description, t.inputSchema, t.handler);
   }
 }
-
-export type McpCapabilities = {
-  tools: Record<string, { description: string }>;
-};
-
-export function buildCapabilities(): McpCapabilities {
-  const tools: McpCapabilities["tools"] = {};
-  for (const t of mcpTools) tools[t.name] = { description: t.description };
-  return { tools };
-}
