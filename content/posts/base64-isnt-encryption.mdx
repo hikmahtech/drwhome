@@ -1,0 +1,49 @@
+---
+title: Base64 isn't encryption
+date: "2026-04-18"
+description: Base64 is a reversible mapping. Anyone can reverse it. If the raw value is secret, base64 doesn't help.
+tags: [base64, encoding, security]
+relatedTool: base64
+---
+
+The `=` padding at the end of a base64 string is not a key. There is no key. Base64 is a public, deterministic mapping — the same input always produces the same output, and anyone who knows the algorithm (everyone) can reverse it instantly. Calling it "encoded" rather than "encrypted" is not a pedantic distinction. It is the entire point.
+
+## Encoding vs encryption
+
+An encoding is a **reversible mapping** between two representations of the same data. It has no secret component. Base64 takes 3 input bytes and emits 4 output characters drawn from a 64-character alphabet (`A–Z`, `a–z`, `0–9`, `+`, `/`) with `=` padding to align to a 4-character boundary. The mapping is fixed, public, and standardized in RFC 4648. Give any two people the same input and they produce the same output. Give any two people the same base64 string and they produce the same decoded output. No authorization required.
+
+Encryption is different in one critical way: it requires a secret. Given ciphertext, you cannot recover plaintext without the key. The whole point is that the mapping is only reversible for someone who holds that key. An encoding is transparent by design. Encryption is opaque by design. Conflating them is not a minor confusion — it leads to real security mistakes.
+
+## Where base64 is the right tool
+
+Base64 exists to move binary data through channels that only handle text. That's it. Legitimate uses:
+
+- **Email attachments (MIME).** SMTP is a text protocol. Attachments are base64-encoded so binary content survives transport.
+- **Data URIs.** `data:image/png;base64,...` embeds binary assets directly in HTML or CSS without a separate HTTP request.
+- **JWT header and payload.** JWTs use base64url (a slight variant: `+` → `-`, `/` → `_`, no padding) to make the header and payload URL-safe. Note that the payload is readable to anyone — base64 is not hiding it.
+- **HTTP Basic auth.** `Authorization: Basic <base64(user:pass)>`. This is **HTTP Basic auth is a format, not a security mechanism**. The base64 is there because the `Authorization` header is text and colons need delimiting — not because it protects the credentials. The security comes entirely from TLS wrapping the request. Strip TLS and the credentials are exposed, base64 or not.
+
+```ts
+const encoded = btoa("hello");  // "aGVsbG8="
+const decoded = atob(encoded);  // "hello"
+// base64url for URL-safe: btoa(s).replaceAll("+","-").replaceAll("/","_").replace(/=+$/, "")
+```
+
+## Where people misuse it
+
+The pattern looks like this: a developer has a value they want to "hide" — an API key, a password, a token — and they run it through `btoa` before storing or transmitting it. The thinking is that it's "not in plaintext." It is in plaintext. It is exactly as readable as the raw value. The `btoa` call added zero bits of entropy and zero bits of secrecy.
+
+Common misuses:
+
+- **Committing base64-encoded credentials to a repo.** If you base64-encode an API key and commit it, the key is compromised. Any script that checks out the repo can decode it in one line. This is **obfuscation, not encryption** — and weak obfuscation at that.
+- **"Encrypting" config files.** Base64 is sometimes used in config files to avoid accidentally leaking values in plain text logs. It doesn't work. Log aggregation systems, CI runners, and crash reporters all handle base64 strings just fine.
+- **Storing tokens in localStorage "safely."** Base64-encoding a token before writing it to localStorage does not protect it from XSS. If an attacker can run arbitrary JavaScript in your page, they can call `atob` as easily as you can.
+- **Obfuscating query parameters.** `?data=aGVsbG8=` is not a secure channel. The value is in the URL, in your access logs, in the browser history. Base64 changed the format, not the exposure.
+
+The mental model: treat base64 the way you treat `JSON.stringify`. It is a **transport format**. When you see a base64 string, assume everyone who can see the string can read it. If the underlying value needs to be secret, base64 is not the tool — actual encryption is. AES-GCM, libsodium's `secretbox`, or AGE are the right tools depending on what you're encrypting and where.
+
+A useful rule: if base64 is doing any work beyond "make this binary data fit in a text field," something is probably wrong with the design.
+
+## try it
+
+[/tools/base64](/tools/base64) encodes and decodes in both directions in your browser. Notice that decoding any base64 string requires no credentials, no key, no permission — just the string itself. That's the point.

@@ -1,4 +1,5 @@
 import Example, { frontmatter as exampleFm } from "@/content/posts/_example.mdx";
+import Base64Article, { frontmatter as base64Fm } from "@/content/posts/base64-isnt-encryption.mdx";
 import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-verifying.mdx";
 import Dns, { frontmatter as dnsFm } from "@/content/posts/dns-over-https-cloudflare-primer.mdx";
 import Ip, { frontmatter as ipFm } from "@/content/posts/reading-ip-from-vercel-edge-headers.mdx";
@@ -16,6 +17,7 @@ function record(slug: string, fm: unknown, component: ComponentType): PostRecord
 }
 
 export const posts: PostRecord[] = [
+  record("base64-isnt-encryption", base64Fm, Base64Article),
   record("decode-jwt-without-verifying", jwtFm, Jwt),
   record("dns-over-https-cloudflare-primer", dnsFm, Dns),
   record("reading-ip-from-vercel-edge-headers", ipFm, Ip),
