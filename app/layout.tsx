@@ -1,3 +1,5 @@
+import { Footer } from "@/components/layout/Footer";
+import { Nav } from "@/components/layout/Nav";
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
@@ -18,7 +20,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body className="min-h-screen flex flex-col">
+        <Nav />
         <main className="flex-1 w-full max-w-content mx-auto px-4 py-6">{children}</main>
+        <Footer />
       </body>
     </html>
   );
