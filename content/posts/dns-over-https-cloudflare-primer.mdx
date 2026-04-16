@@ -1,0 +1,84 @@
+---
+title: "DNS over HTTPS: a Cloudflare primer"
+date: "2026-04-18"
+description: Classical DNS is plaintext UDP — anyone on the path can read or forge your queries. DoH moves resolution over HTTPS, encrypting the transport. Here is how Cloudflare's endpoint works and why the JSON format matters for browser-side tools.
+tags: [dns, doh, cloudflare, privacy]
+relatedTool: dns
+---
+
+Classical DNS runs over UDP on port 53. Every query — every domain your device resolves — travels in plaintext. Your ISP sees it. The router at the coffee shop sees it. Any network appliance between you and the resolver sees it, and any of them can inject a forged response pointing `bank.example.com` at an attacker's server. DNS over HTTPS (DoH) fixes the transport layer of this problem by tunneling queries inside standard HTTPS connections.
+
+## Why DoH exists
+
+DoH is not a replacement for DNSSEC. The two solve different problems. DNSSEC authenticates the *answer* — cryptographic signatures in the DNS records let a resolver verify that the response came from the authoritative nameserver and was not tampered with after the fact. DoH authenticates the *transport* — TLS ensures your query reaches the resolver without being read or modified in flight. In practice, DNSSEC deployment across the public DNS is incomplete, so many domains have no signed records. DoH is universally applicable because it requires nothing from the domain owner.
+
+The threat model DoH addresses is passive surveillance and on-path injection. Your ISP can no longer log which domains you resolve. A compromised router cannot forge a response. This is meaningful privacy, not anonymity — the DoH resolver (Cloudflare, Google, or whoever you choose) has exactly the visibility your ISP used to have. You are delegating trust, not eliminating it.
+
+RFC 8484 is the IETF standard that defines DoH. It specifies how DNS queries are encoded as HTTP requests and how responses are returned. Cloudflare's public resolver at `https://cloudflare-dns.com/dns-query` implements RFC 8484 and also supports a non-standard JSON format that predates the RFC.
+
+## How the Cloudflare endpoint works
+
+The endpoint accepts two formats, selected by the `Accept` header you send.
+
+`Accept: application/dns-message` requests the binary DNS wireformat defined by RFC 8484. The query is a DNS message serialized to bytes, base64url-encoded, and sent either as a query parameter (`?dns=...`) in a GET request or as the request body in a POST. The response is the same binary format. This is what DNS stub resolvers use when they want to speak DoH — it is a direct wire-level replacement.
+
+`Accept: application/dns-json` requests a JSON-encoded response. This format is not part of RFC 8484; it was introduced by Google and Cloudflare independently, and the two implementations are compatible enough to treat as a de facto standard. The query is sent as plain query parameters: `?name=example.com&type=A`. No binary encoding required.
+
+For client-side tooling the JSON format is almost always the right choice. The wireformat requires a DNS message parser in the client; the JSON format gives you a plain object you can destructure immediately.
+
+## JSON vs wireformat
+
+A successful JSON response looks like this:
+
+```json
+{
+  "Status": 0,
+  "TC": false,
+  "RD": true,
+  "RA": true,
+  "AD": false,
+  "CD": false,
+  "Question": [{ "name": "example.com.", "type": 1 }],
+  "Answer": [
+    { "name": "example.com.", "type": 1, "TTL": 3600, "data": "93.184.216.34" }
+  ]
+}
+```
+
+`Status` follows RFC 1035 response codes: `0` is `NOERROR`, `2` is `SERVFAIL`, `3` is `NXDOMAIN` (domain does not exist). Any non-zero status means the query failed.
+
+Record types in `Answer[].type` are integers, not strings: `1` is A, `28` is AAAA, `15` is MX, `16` is TXT, `5` is CNAME, `2` is NS. The `data` field carries the record value as a human-readable string — an IP address for A records, a domain name for CNAME/MX/NS, raw text for TXT.
+
+`TTL` is seconds. If you are caching responses client-side (or server-side in an API route), this is the number you should honour.
+
+## Trying it from the browser
+
+One detail that makes the JSON endpoint particularly useful for web tools is CORS. Cloudflare's DoH endpoint returns `Access-Control-Allow-Origin: *`, which means a browser tab can call it directly with `fetch` — no server proxy required for the read path.
+
+```bash
+curl -sH 'Accept: application/dns-json' \
+  'https://cloudflare-dns.com/dns-query?name=example.com&type=A' | jq
+```
+
+From JavaScript in the browser, the equivalent is:
+
+```ts
+type DnsAnswer = { name: string; type: number; TTL: number; data: string };
+type DnsResponse = { Status: number; Answer?: DnsAnswer[] };
+
+const res = await fetch(
+  "https://cloudflare-dns.com/dns-query?name=example.com&type=A",
+  { headers: { Accept: "application/dns-json" } },
+);
+const data = (await res.json()) as DnsResponse;
+if (data.Status !== 0) throw new Error(`dns status ${data.Status}`);
+console.log(data.Answer);
+```
+
+This is essentially the shape of `lib/tools/dns.ts` in this project. The implementation proxies through a Next.js API route rather than calling Cloudflare directly from the client — a deliberate choice that centralises caching and keeps the upstream dependency out of the browser bundle — but the fetch call and response parsing are the same.
+
+If `Answer` is undefined on a successful response (`Status: 0`), the domain exists but has no records of the requested type. An A lookup for a domain that only has AAAA records returns `Status: 0` with no `Answer`. Treat `undefined` and an empty array as equivalent: no records found, not an error.
+
+## try it
+
+Query live DNS records for any domain — A, AAAA, MX, TXT, NS, or CNAME — at [/tools/dns](/tools/dns).
