@@ -3,15 +3,22 @@ import { registerMcpTools } from "@/lib/mcp/server";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { createMcpHandler } from "mcp-handler";
 
-// McpServerLike in server.ts uses a structural approximation of McpServer.tool.
-// The real McpServer satisfies the same 4-arg call; cast to resolve the overload mismatch.
+// registerMcpTools expects a minimal structural `{tool: ...}` object (McpServerLike)
+// so it can be unit-tested without the SDK. The SDK's `McpServer.tool` is heavily
+// overloaded, which TypeScript doesn't consider structurally assignable to our
+// single-signature McpServerLike. Construct an explicit adapter instead of casting.
 function initServer(server: McpServer): void {
-  registerMcpTools(server as Parameters<typeof registerMcpTools>[0]);
+  registerMcpTools({
+    tool: (name, description, schema, handler) =>
+      // Cast handler to the SDK's expected callback signature, which is wider than our simple one.
+      // biome-ignore lint/suspicious/noExplicitAny: SDK's tool() has 6 overloads; our adapter is intentionally minimal.
+      server.tool(name, description, schema, handler as any),
+  });
 }
 
-// createMcpHandler returns (request: Request) => Promise<Response>.
-// withPaywall expects (req, ctx) => Promise<Response> matching Next.js route shape.
-// We lift the inner handler into that signature here.
+// `ctx.params` (from Next.js dynamic routes) is intentionally dropped:
+// mcp-handler derives the transport from `basePath` + request URL, not from
+// Next.js route params, and `createMcpHandler` returns a single-arg `(req) => Response`.
 const mcpInner = createMcpHandler(
   initServer,
   {
