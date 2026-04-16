@@ -4,6 +4,7 @@ import { Jwt } from "@/components/tools/Jwt";
 import { UrlCodec } from "@/components/tools/UrlCodec";
 import { UserAgent } from "@/components/tools/UserAgent";
 import { Uuid } from "@/components/tools/Uuid";
+import { WhatIsMyIp } from "@/components/tools/WhatIsMyIp";
 import type { ComponentType } from "react";
 
 export type ToolCategory = "network" | "dev";
@@ -65,6 +66,14 @@ export const tools: Tool[] = [
     category: "network",
     keywords: ["user agent", "ua", "browser", "os", "device"],
     component: UserAgent,
+  },
+  {
+    slug: "ip",
+    name: "what is my ip",
+    description: "your public ip address, location, and timezone.",
+    category: "network",
+    keywords: ["ip", "ipv4", "ipv6", "location", "geoip", "whatsmyip"],
+    component: WhatIsMyIp,
   },
 ];
 
