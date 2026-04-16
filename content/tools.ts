@@ -1,5 +1,6 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Json } from "@/components/tools/Json";
+import { Jwt } from "@/components/tools/Jwt";
 import { UrlCodec } from "@/components/tools/UrlCodec";
 import { Uuid } from "@/components/tools/Uuid";
 import type { ComponentType } from "react";
@@ -47,6 +48,14 @@ export const tools: Tool[] = [
     category: "dev",
     keywords: ["uuid", "guid", "v4", "v7", "random", "identifier"],
     component: Uuid,
+  },
+  {
+    slug: "jwt",
+    name: "jwt decoder",
+    description: "decode JWT header and payload client-side. no signature verification.",
+    category: "dev",
+    keywords: ["jwt", "decode", "token", "bearer", "auth"],
+    component: Jwt,
   },
 ];
 
