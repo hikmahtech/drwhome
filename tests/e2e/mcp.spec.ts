@@ -84,7 +84,9 @@ test("MCP tools/call returns 402 + -32001 paywall", async ({ request }) => {
   expect(body.error.data.tier).toBe("paid");
 });
 
-test("MCP tools/call paywalls every MCP-compatible tool (quick spot check)", async ({ request }) => {
+test("MCP tools/call paywalls every MCP-compatible tool (quick spot check)", async ({
+  request,
+}) => {
   for (const name of ["jwt_decode", "base64_encode", "dns_lookup"]) {
     const res = await request.post(MCP_URL, {
       headers: HEADERS,
