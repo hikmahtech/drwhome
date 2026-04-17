@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@/components/terminal/ThemeToggle";
+import type { Route } from "next";
 import Link from "next/link";
 
 export function Nav() {
@@ -11,6 +12,7 @@ export function Nav() {
       <div className="flex items-center gap-4 text-xs">
         <Link href="/#tools">tools</Link>
         <Link href="/blog">blog</Link>
+        <Link href={"/mcp" as Route}>mcp</Link>
         <Link href="/about">about</Link>
         <ThemeToggle />
       </div>

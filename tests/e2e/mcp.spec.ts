@@ -100,3 +100,22 @@ test("MCP tools/call paywalls every MCP-compatible tool (quick spot check)", asy
     expect(res.status(), `expected 402 for ${name}`).toBe(402);
   }
 });
+
+test("/mcp landing renders endpoint URL + tool list + waitlist form", async ({ page }) => {
+  await page.goto("/mcp");
+  await expect(page.getByText("https://drwho.me/mcp/mcp").first()).toBeVisible();
+  await expect(page.getByText("uuid_generate")).toBeVisible();
+  await expect(page.locator('form[aria-label="waitlist"]')).toBeVisible();
+});
+
+test("/mcp waitlist form has honeypot + required email field", async ({ page }) => {
+  await page.goto("/mcp");
+  const form = page.locator('form[aria-label="waitlist"]');
+  await expect(form.locator('input[name="email"][required]')).toBeAttached();
+  await expect(form.locator('input[name="company"]')).toBeAttached();
+  const isValid = await page.evaluate(() => {
+    const form = document.querySelector<HTMLFormElement>('form[aria-label="waitlist"]');
+    return form?.checkValidity() ?? true;
+  });
+  expect(isValid).toBe(false); // empty required email means invalid form
+});
