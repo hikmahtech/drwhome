@@ -1,6 +1,7 @@
 "use client";
 import { CopyButton } from "@/components/terminal/CopyButton";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { useTrackOnce } from "@/lib/analytics/useTrackOnce";
 import { parseUserAgent } from "@/lib/tools/userAgent";
 import { useEffect, useState } from "react";
 
@@ -12,6 +13,8 @@ export function UserAgent() {
   }, []);
 
   const parsed = ua ? parseUserAgent(ua) : null;
+
+  useTrackOnce("user-agent", parsed !== null, parsed !== null);
 
   return (
     <div className="space-y-4">

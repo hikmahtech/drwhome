@@ -1,5 +1,6 @@
 "use client";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { trackToolExecuted } from "@/lib/analytics/client";
 import type { IpLookupResult } from "@/lib/tools/ipLookup";
 import { useState } from "react";
 
@@ -13,7 +14,9 @@ export function IpLookup() {
     setLoading(true);
     try {
       const res = await fetch(`/api/ip-lookup?ip=${encodeURIComponent(ip)}`);
-      setResult(await res.json());
+      const json = (await res.json()) as IpLookupResult;
+      setResult(json);
+      trackToolExecuted("ip-lookup", json.ok);
     } finally {
       setLoading(false);
     }

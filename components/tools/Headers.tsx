@@ -1,6 +1,7 @@
 "use client";
 import { CopyButton } from "@/components/terminal/CopyButton";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { useTrackOnce } from "@/lib/analytics/useTrackOnce";
 import { useEffect, useState } from "react";
 
 export function Headers() {
@@ -11,6 +12,8 @@ export function Headers() {
       .then((r) => r.json())
       .then((d) => setRows(d.headers as [string, string][]));
   }, []);
+
+  useTrackOnce("headers", rows !== null, rows !== null && rows.length > 0);
 
   const asText = rows ? rows.map(([k, v]) => `${k}: ${v}`).join("\n") : "";
 

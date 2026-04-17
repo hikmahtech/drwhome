@@ -2,17 +2,24 @@
 import type { WhoamiResponse } from "@/app/api/whoami/route";
 import { CopyButton } from "@/components/terminal/CopyButton";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
-import { useCallback, useEffect, useState } from "react";
+import { trackToolExecuted } from "@/lib/analytics/client";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function WhatIsMyIp() {
   const [data, setData] = useState<WhoamiResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const tracked = useRef(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/whoami", { cache: "no-store" });
-      setData(await res.json());
+      const json = (await res.json()) as WhoamiResponse;
+      setData(json);
+      if (!tracked.current) {
+        trackToolExecuted("whoami", Boolean(json.ip));
+        tracked.current = true;
+      }
     } finally {
       setLoading(false);
     }

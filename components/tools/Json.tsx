@@ -1,6 +1,7 @@
 "use client";
 import { CopyButton } from "@/components/terminal/CopyButton";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { useTrackOnce } from "@/lib/analytics/useTrackOnce";
 import { formatJson } from "@/lib/tools/json";
 import { useState } from "react";
 
@@ -8,6 +9,8 @@ export function Json() {
   const [input, setInput] = useState("");
   const [indent, setIndent] = useState(2);
   const result = formatJson(input, indent);
+
+  useTrackOnce("json", input.length > 0, result.ok);
 
   return (
     <div className="space-y-4">

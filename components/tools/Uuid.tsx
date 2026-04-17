@@ -1,6 +1,7 @@
 "use client";
 import { CopyButton } from "@/components/terminal/CopyButton";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { trackToolExecuted } from "@/lib/analytics/client";
 import { type UuidVersion, generateUuid } from "@/lib/tools/uuid";
 import { useState } from "react";
 
@@ -11,6 +12,7 @@ export function Uuid() {
 
   function generate() {
     setUuids(Array.from({ length: count }, () => generateUuid(version)));
+    trackToolExecuted("uuid", true);
   }
 
   return (

@@ -1,3 +1,4 @@
+import { sendMcpEvent } from "@/lib/analytics/server";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
@@ -31,7 +32,7 @@ function fail(text: string): McpToolResult {
   return { content: [{ type: "text", text }], isError: true };
 }
 
-export const mcpTools: McpTool[] = [
+const rawMcpTools: McpTool[] = [
   {
     name: "ip_lookup",
     slug: "ip-lookup",
@@ -172,6 +173,19 @@ export const mcpTools: McpTool[] = [
     },
   },
 ];
+
+function withTracking(tool: McpTool): McpTool {
+  return {
+    ...tool,
+    handler: async (input) => {
+      const result = await tool.handler(input);
+      void sendMcpEvent({ name: tool.name, success: !result.isError });
+      return result;
+    },
+  };
+}
+
+export const mcpTools: McpTool[] = rawMcpTools.map(withTracking);
 
 export function findMcpTool(name: string): McpTool | undefined {
   return mcpTools.find((t) => t.name === name);

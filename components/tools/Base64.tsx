@@ -1,6 +1,7 @@
 "use client";
 import { CopyButton } from "@/components/terminal/CopyButton";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { useTrackOnce } from "@/lib/analytics/useTrackOnce";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { useState } from "react";
 
@@ -14,6 +15,8 @@ export function Base64() {
     mode === "encode"
       ? { ok: true as const, value: encodeBase64(input).value }
       : decodeBase64(input);
+
+  useTrackOnce("base64", input.length > 0, output.ok);
 
   return (
     <div className="space-y-4">
