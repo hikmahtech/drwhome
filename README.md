@@ -34,6 +34,8 @@ Set in Vercel dashboard (do not commit):
 | `KV_REST_API_TOKEN` | Vercel KV REST auth token (auto-set when KV is attached) |
 | `NEXT_PUBLIC_ADS_ENABLED` | `"true"` to load real AdSense (Plan 5) |
 | `ADSENSE_CLIENT_ID` | AdSense client id (Plan 5) |
+| `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID, `G-XXXXXXXXXX`. Unset → no analytics |
+| `GA_API_SECRET` | GA4 Measurement Protocol API secret (server-side MCP events) |
 
 ## MCP
 

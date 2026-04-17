@@ -1,11 +1,14 @@
 import { Footer } from "@/components/layout/Footer";
 import { Nav } from "@/components/layout/Nav";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import { JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
 const mono = JetBrains_Mono({ subsets: ["latin"], display: "swap", variable: "--font-mono" });
+
+const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
   title: { default: "drwho.me — network + dev tools", template: "%s — drwho.me" },
@@ -32,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 w-full max-w-content mx-auto px-4 py-6">{children}</main>
         <Footer />
       </body>
+      {gaId && <GoogleAnalytics gaId={gaId} />}
     </html>
   );
 }
