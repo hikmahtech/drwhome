@@ -19,6 +19,7 @@ const PAYWALL_DATA = {
 
 export function withPaywall(inner: RouteHandler): RouteHandler {
   return async (req, ctx) => {
+    if (process.env.MCP_PAYWALL_ENABLED === "false") return inner(req, ctx);
     if (req.method !== "POST") return inner(req, ctx);
 
     // Peek the body without consuming the stream the inner handler reads.

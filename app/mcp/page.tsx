@@ -9,10 +9,13 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { WaitlistForm } from "./WaitlistForm";
 
+const paywallEnabled = process.env.MCP_PAYWALL_ENABLED !== "false";
+
 export const metadata: Metadata = pageMetadata({
   title: "mcp endpoint",
-  description:
-    "Remote MCP endpoint for drwho.me. Point Claude Desktop or any MCP client at https://drwho.me/mcp/mcp. Paid tier coming soon — join the waitlist.",
+  description: paywallEnabled
+    ? "Remote MCP endpoint for drwho.me. Point Claude Desktop or any MCP client at https://drwho.me/mcp/mcp. Paid tier coming soon — join the waitlist."
+    : "Remote MCP endpoint for drwho.me. Point Claude Desktop or any MCP client at https://drwho.me/mcp/mcp. Free and open while in beta.",
   path: "/mcp",
   type: "page",
 });
@@ -36,8 +39,9 @@ export default function McpLanding() {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: "drwho.me MCP endpoint",
-    description:
-      "Remote MCP server at drwho.me. Streamable HTTP transport. Paid tier — join the waitlist.",
+    description: paywallEnabled
+      ? "Remote MCP server at drwho.me. Streamable HTTP transport. Paid tier — join the waitlist."
+      : "Remote MCP server at drwho.me. Streamable HTTP transport. Free and open while in beta.",
     url: `${siteUrl()}/mcp`,
   };
 
@@ -45,14 +49,23 @@ export default function McpLanding() {
     <article className="space-y-6">
       <Breadcrumb path="~/mcp" />
       <TerminalPrompt>mcp</TerminalPrompt>
-      <p className="text-sm">
-        <span className="text-muted">drwho.me</span> exposes a remote MCP endpoint so AI clients
-        like Claude Desktop and ChatGPT can call the same tools this site offers in the browser. The
-        endpoint is <span className="text-muted">paid</span>: the handshake and tool listing are
-        open so your client can discover what&apos;s available, but every <code>tools/call</code>{" "}
-        returns a <code>402</code> + MCP error pointing back here. Join the waitlist below — we ping
-        you when the paid tier opens.
-      </p>
+      {paywallEnabled ? (
+        <p className="text-sm">
+          <span className="text-muted">drwho.me</span> exposes a remote MCP endpoint so AI clients
+          like Claude Desktop and ChatGPT can call the same tools this site offers in the browser.
+          The endpoint is <span className="text-muted">paid</span>: the handshake and tool listing
+          are open so your client can discover what&apos;s available, but every{" "}
+          <code>tools/call</code> returns a <code>402</code> + MCP error pointing back here. Join
+          the waitlist below — we ping you when the paid tier opens.
+        </p>
+      ) : (
+        <p className="text-sm">
+          <span className="text-muted">drwho.me</span> exposes a remote MCP endpoint so AI clients
+          like Claude Desktop and ChatGPT can call the same tools this site offers in the browser.
+          The endpoint is <span className="text-muted">open and free</span> while in beta — point
+          your client at the URL below and every tool is callable.
+        </p>
+      )}
 
       <section className="space-y-2">
         <h2 className="text-sm text-muted">endpoint</h2>
@@ -92,13 +105,15 @@ export default function McpLanding() {
         </ul>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm text-muted">waitlist</h2>
-        <p className="text-sm">
-          drop your email and we&apos;ll tell you when paid access opens. no other uses.
-        </p>
-        <WaitlistForm />
-      </section>
+      {paywallEnabled && (
+        <section className="space-y-3">
+          <h2 className="text-sm text-muted">waitlist</h2>
+          <p className="text-sm">
+            drop your email and we&apos;ll tell you when paid access opens. no other uses.
+          </p>
+          <WaitlistForm />
+        </section>
+      )}
 
       <JsonLd data={jsonLd} />
     </article>
