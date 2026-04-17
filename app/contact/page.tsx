@@ -10,10 +10,13 @@ export default function Contact() {
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget;
     setStatus("sending");
-    const res = await sendContact(new FormData(e.currentTarget));
-    if (res.ok) setStatus("ok");
-    else {
+    const res = await sendContact(new FormData(form));
+    if (res.ok) {
+      form.reset();
+      setStatus("ok");
+    } else {
       setErr(res.error);
       setStatus("err");
     }
