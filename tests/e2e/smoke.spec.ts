@@ -11,11 +11,11 @@ test("base64 tool encodes and decodes", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toContainText("> base64");
 
   await page.getByLabel("input").fill("hello");
-  await expect(page.locator("pre")).toContainText("aGVsbG8=");
+  await expect(page.locator("pre").first()).toContainText("aGVsbG8=");
 
   await page.getByRole("button", { name: "decode" }).click();
   await page.getByLabel("input").fill("aGVsbG8=");
-  await expect(page.locator("pre")).toContainText("hello");
+  await expect(page.locator("pre").first()).toContainText("hello");
 });
 
 test("theme toggle persists across reload", async ({ page }) => {
@@ -49,19 +49,19 @@ test("home lists all 10 tools", async ({ page }) => {
 test("json formatter formats valid input", async ({ page }) => {
   await page.goto("/tools/json");
   await page.getByLabel("input").fill('{"a":1}');
-  await expect(page.locator("pre")).toContainText('"a": 1');
+  await expect(page.locator("pre").first()).toContainText('"a": 1');
 });
 
 test("url codec round-trips", async ({ page }) => {
   await page.goto("/tools/url-codec");
   await page.getByLabel("input").fill("hello world");
-  await expect(page.locator("pre")).toContainText("hello%20world");
+  await expect(page.locator("pre").first()).toContainText("hello%20world");
 });
 
 test("uuid generator produces a v4 uuid", async ({ page }) => {
   await page.goto("/tools/uuid");
   await page.getByRole("button", { name: "generate" }).click();
-  await expect(page.locator("pre")).toHaveText(
+  await expect(page.locator("pre").first()).toHaveText(
     /[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/,
   );
 });

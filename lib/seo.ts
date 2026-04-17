@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
-import type { BlogPosting, SoftwareApplication, WebSite, WithContext } from "schema-dts";
+import type {
+  BlogPosting,
+  BreadcrumbList,
+  FAQPage,
+  HowTo,
+  SoftwareApplication,
+  WebSite,
+  WithContext,
+} from "schema-dts";
 
 type PageType = "tool" | "article" | "page";
 
@@ -93,4 +101,55 @@ export function buildWebsiteJsonLd(input: {
 
 export function siteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL ?? "https://drwho.me";
+}
+
+export function buildFaqJsonLd(faq: Array<{ q: string; a: string }>): WithContext<FAQPage> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((entry) => ({
+      "@type": "Question",
+      name: entry.q,
+      acceptedAnswer: { "@type": "Answer", text: entry.a },
+    })),
+  };
+}
+
+type HowToInput = {
+  name: string;
+  description: string;
+  steps: Array<{ step: string; detail: string }>;
+};
+
+export function buildHowToJsonLd(input: HowToInput): WithContext<HowTo> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    name: input.name,
+    description: input.description,
+    step: input.steps.map((s, i) => ({
+      "@type": "HowToStep",
+      position: i + 1,
+      name: s.step,
+      text: s.detail,
+    })),
+  };
+}
+
+type BreadcrumbCrumb = { name: string; path: string };
+
+export function buildBreadcrumbJsonLd(input: {
+  crumbs: BreadcrumbCrumb[];
+  siteUrl: string;
+}): WithContext<BreadcrumbList> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: input.crumbs.map((c, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      name: c.name,
+      item: `${input.siteUrl}${c.path}`,
+    })),
+  };
 }
