@@ -21,8 +21,18 @@ export default function Privacy() {
 
       <h2 className="text-base mt-4">what we collect</h2>
       <p>
-        drwho.me does not require accounts. we use Vercel Analytics, which is cookieless and
-        collects aggregated page-view counts and Web Vitals only.
+        drwho.me does not require accounts. we use google analytics 4 (GA4) to measure traffic and
+        how tools are used. GA4 captures page views, a <code>tool_executed</code> event when you run
+        a tool in the browser (recording the tool slug and whether it succeeded), and a{" "}
+        <code>mcp_tool_call</code> event when a remote MCP client invokes a tool on our server.
+        event parameters never include the text you typed into a tool &mdash; only the tool's
+        identifier and a success flag. IP addresses are anonymized by GA4 before storage and we do
+        not enable ads personalization. GA4 is processed by google under the EU-US data privacy
+        framework; google's{" "}
+        <a href="https://policies.google.com/privacy" rel="noopener">
+          privacy policy
+        </a>{" "}
+        applies to that processing.
       </p>
       <p>
         tools that look up your IP read standard HTTP headers forwarded by our hosting provider and
@@ -36,9 +46,14 @@ export default function Privacy() {
 
       <h2 className="text-base mt-4">cookies</h2>
       <p>
-        drwho.me itself does not set tracking cookies. google adsense (when enabled) uses cookies to
-        serve ads; we default to non-personalized ads where available. you can disable cookies in
-        your browser settings.
+        GA4 sets first-party cookies (<code>_ga</code>, <code>_ga_*</code>) to distinguish visitors
+        and sessions. google adsense (when enabled) uses cookies to serve ads; we default to
+        non-personalized ads where available. you can disable cookies in your browser settings, opt
+        out of GA via the{" "}
+        <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">
+          google analytics opt-out browser add-on
+        </a>
+        , or block analytics with your preferred tracker-blocker.
       </p>
 
       <h2 id="affiliates" className="text-base mt-4">
