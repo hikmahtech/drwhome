@@ -1,5 +1,8 @@
 import {
   buildArticleJsonLd,
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  buildHowToJsonLd,
   buildSoftwareApplicationJsonLd,
   buildWebsiteJsonLd,
   pageMetadata,
@@ -73,5 +76,67 @@ describe("buildWebsiteJsonLd", () => {
     expect(j["@type"]).toBe("WebSite");
     expect(j.url).toBe("https://drwho.me");
     expect(j.name).toBe("drwho.me");
+  });
+});
+
+describe("buildFaqJsonLd", () => {
+  it("emits FAQPage with Question/Answer entries", () => {
+    const j = buildFaqJsonLd([
+      { q: "what is base64?", a: "a binary-to-text encoding using 64 ascii chars." },
+      { q: "is it encryption?", a: "no. it is reversible encoding with no key." },
+    ]);
+    expect(j["@type"]).toBe("FAQPage");
+    const main = j.mainEntity as unknown as Array<Record<string, unknown>>;
+    expect(main).toHaveLength(2);
+    expect(main[0]["@type"]).toBe("Question");
+    expect(main[0].name).toBe("what is base64?");
+    expect((main[0].acceptedAnswer as Record<string, unknown>)["@type"]).toBe("Answer");
+    expect((main[0].acceptedAnswer as Record<string, unknown>).text).toBe(
+      "a binary-to-text encoding using 64 ascii chars.",
+    );
+  });
+
+  it("handles an empty faq list", () => {
+    const j = buildFaqJsonLd([]);
+    expect(j.mainEntity).toEqual([]);
+  });
+});
+
+describe("buildHowToJsonLd", () => {
+  it("emits HowTo with positioned steps", () => {
+    const j = buildHowToJsonLd({
+      name: "decode a base64 string",
+      description: "paste and click decode.",
+      steps: [
+        { step: "paste input", detail: "paste the base64 string into the input field." },
+        { step: "click decode", detail: "click the decode button to see the plaintext." },
+      ],
+    });
+    expect(j["@type"]).toBe("HowTo");
+    expect(j.name).toBe("decode a base64 string");
+    const steps = j.step as unknown as Array<Record<string, unknown>>;
+    expect(steps).toHaveLength(2);
+    expect(steps[0].position).toBe(1);
+    expect(steps[0].name).toBe("paste input");
+    expect(steps[1].position).toBe(2);
+  });
+});
+
+describe("buildBreadcrumbJsonLd", () => {
+  it("emits BreadcrumbList with absolute item URLs", () => {
+    const j = buildBreadcrumbJsonLd({
+      crumbs: [
+        { name: "home", path: "/" },
+        { name: "tools", path: "/tools" },
+        { name: "jwt", path: "/tools/jwt" },
+      ],
+      siteUrl: "https://drwho.me",
+    });
+    expect(j["@type"]).toBe("BreadcrumbList");
+    const items = j.itemListElement as unknown as Array<Record<string, unknown>>;
+    expect(items).toHaveLength(3);
+    expect(items[0].position).toBe(1);
+    expect(items[0].item).toBe("https://drwho.me/");
+    expect(items[2].item).toBe("https://drwho.me/tools/jwt");
   });
 });

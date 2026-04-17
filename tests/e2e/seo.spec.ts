@@ -17,6 +17,17 @@ test("robots.txt allows all and points at sitemap", async ({ request }) => {
   expect(body).toMatch(/Sitemap:.*\/sitemap\.xml/i);
 });
 
+test("llms.txt summarises site and lists all tools", async ({ request }) => {
+  const res = await request.get("/llms.txt");
+  expect(res.status()).toBe(200);
+  expect(res.headers()["content-type"]).toContain("text/plain");
+  const body = await res.text();
+  expect(body).toMatch(/^# drwho\.me/m);
+  expect(body).toContain("/tools/base64");
+  expect(body).toContain("/tools/jwt");
+  expect(body).toContain("/mcp/mcp");
+});
+
 test("tool page has SoftwareApplication JSON-LD", async ({ page }) => {
   await page.goto("/tools/jwt");
   const json = await page.locator('script[type="application/ld+json"]').first().textContent();
@@ -24,6 +35,19 @@ test("tool page has SoftwareApplication JSON-LD", async ({ page }) => {
   const parsed = JSON.parse(json ?? "{}");
   expect(parsed["@type"]).toBe("SoftwareApplication");
   expect(parsed.name).toBe("jwt decoder");
+});
+
+test("enriched tool page renders overview, how-to, faq sections and multiple JSON-LD", async ({
+  page,
+}) => {
+  await page.goto("/tools/jwt");
+  await expect(page.getByText("## overview")).toBeVisible();
+  await expect(page.getByText("## how to use")).toBeVisible();
+  await expect(page.getByText("## faq")).toBeVisible();
+  await expect(page.getByText("## references")).toBeVisible();
+  // 4 JSON-LD blocks on an enriched page: SoftwareApplication + BreadcrumbList + FAQPage + HowTo
+  const scripts = await page.locator('script[type="application/ld+json"]').count();
+  expect(scripts).toBe(4);
 });
 
 test("blog post page has BlogPosting JSON-LD", async ({ page }) => {
