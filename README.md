@@ -26,12 +26,18 @@ Set in Vercel dashboard (do not commit):
 
 | Name | Purpose |
 |---|---|
-| `RESEND_API_KEY` | contact form email delivery |
-| `CONTACT_TO_EMAIL` | inbox that receives contact messages |
+| `RESEND_API_KEY` | contact + waitlist email delivery |
+| `CONTACT_TO_EMAIL` | inbox that receives contact + waitlist messages |
 | `NEXT_PUBLIC_SITE_URL` | canonical site origin, e.g. `https://drwho.me` |
+| `IPINFO_TOKEN` | ipinfo.io API token |
+| `KV_REST_API_URL` | Vercel KV REST endpoint (auto-set when KV is attached) |
+| `KV_REST_API_TOKEN` | Vercel KV REST auth token (auto-set when KV is attached) |
 | `NEXT_PUBLIC_ADS_ENABLED` | `"true"` to load real AdSense (Plan 5) |
-| `IPINFO_TOKEN` | ipinfo.io API token (Plan 2) |
 | `ADSENSE_CLIENT_ID` | AdSense client id (Plan 5) |
+
+## MCP
+
+A remote MCP endpoint lives at `/mcp/mcp` (Streamable HTTP). The handshake and tool listing are open; `tools/call` is paywalled (HTTP 402, JSON-RPC error -32001) until the paid tier opens. See `/mcp` on the site for config snippets and the waitlist.
 
 ## Layout
 
