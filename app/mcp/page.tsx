@@ -26,7 +26,8 @@ const claudeConfig = JSON.stringify(
   {
     mcpServers: {
       "drwho.me": {
-        url: MCP_URL,
+        command: "npx",
+        args: ["-y", "mcp-remote", MCP_URL],
       },
     },
   },
@@ -79,7 +80,10 @@ export default function McpLanding() {
         </TerminalCard>
         <p className="text-xs text-muted">
           Add this to <code>~/Library/Application Support/Claude/claude_desktop_config.json</code>{" "}
-          (macOS) or the equivalent on Linux/Windows, then restart Claude Desktop.
+          (macOS) or the equivalent on Linux/Windows, then restart Claude Desktop. The npx{" "}
+          <code>mcp-remote</code> bridge is required because the Desktop app config only accepts
+          stdio-style entries — it runs as a local proxy to the remote endpoint. Other clients
+          (Cursor, ChatGPT connectors) may accept the URL directly.
         </p>
       </section>
 
