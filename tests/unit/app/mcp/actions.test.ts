@@ -65,8 +65,15 @@ describe("joinWaitlist", () => {
   it("rejects when honeypot is filled without touching KV or Resend", async () => {
     const { joinWaitlist } = await import("@/app/mcp/actions");
     const res = await joinWaitlist(formData({ email: "a@b.co", notes: "", company: "bot" }));
-    expect(res.ok).toBe(false);
+    expect(res).toEqual({ ok: false, error: "form submission failed" });
     expect(kvLpush).not.toHaveBeenCalled();
+    expect(resendSend).not.toHaveBeenCalled();
+  });
+
+  it("passes non-honeypot validation errors through unchanged", async () => {
+    const { joinWaitlist } = await import("@/app/mcp/actions");
+    const res = await joinWaitlist(formData({ email: "not-email", notes: "", company: "" }));
+    expect(res).toEqual({ ok: false, error: "invalid email" });
   });
 
   it("returns 'temporarily unavailable' when KV env vars are missing", async () => {

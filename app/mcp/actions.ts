@@ -14,7 +14,12 @@ export async function joinWaitlist(formData: FormData): Promise<WaitlistActionRe
   };
 
   const v = validateWaitlistInput(input);
-  if (!v.ok) return { ok: false, error: v.error };
+  if (!v.ok) {
+    // Mask the honeypot signal — real users never see this field; bots shouldn't learn
+    // the detection method. Surface other validation errors unchanged so real users can fix them.
+    const error = v.error === "honeypot tripped" ? "form submission failed" : v.error;
+    return { ok: false, error };
+  }
 
   if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
     return { ok: false, error: "waitlist temporarily unavailable" };
