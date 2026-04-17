@@ -1,6 +1,7 @@
 "use client";
 import { CopyButton } from "@/components/terminal/CopyButton";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { useTrackOnce } from "@/lib/analytics/useTrackOnce";
 import { decodeUrl, encodeUrl } from "@/lib/tools/url";
 import { useState } from "react";
 
@@ -12,6 +13,8 @@ export function UrlCodec() {
 
   const output =
     mode === "encode" ? { ok: true as const, value: encodeUrl(input).value } : decodeUrl(input);
+
+  useTrackOnce("url-codec", input.length > 0, output.ok);
 
   return (
     <div className="space-y-4">

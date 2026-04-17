@@ -1,11 +1,14 @@
 "use client";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { useTrackOnce } from "@/lib/analytics/useTrackOnce";
 import { decodeJwt } from "@/lib/tools/jwt";
 import { useState } from "react";
 
 export function Jwt() {
   const [input, setInput] = useState("");
   const result = input.trim() === "" ? null : decodeJwt(input);
+
+  useTrackOnce("jwt", result !== null, result?.ok === true);
 
   return (
     <div className="space-y-4">

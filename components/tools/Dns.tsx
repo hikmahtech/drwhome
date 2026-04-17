@@ -1,5 +1,6 @@
 "use client";
 import { TerminalCard } from "@/components/terminal/TerminalCard";
+import { trackToolExecuted } from "@/lib/analytics/client";
 import { DNS_TYPES, type DnsResult, type DnsType } from "@/lib/tools/dns";
 import { useState } from "react";
 
@@ -14,7 +15,9 @@ export function Dns() {
     setLoading(true);
     try {
       const res = await fetch(`/api/dns?name=${encodeURIComponent(name)}&type=${type}`);
-      setResult(await res.json());
+      const json = (await res.json()) as DnsResult;
+      setResult(json);
+      trackToolExecuted("dns", json.ok);
     } finally {
       setLoading(false);
     }
