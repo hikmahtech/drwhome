@@ -1,0 +1,17 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "me.drwho/tools",
+  "title": "drwho.me developer tools",
+  "description": "Remote MCP server: 10 developer utilities (base64, JWT, DNS, UUID, URL, JSON, UA, IP lookup).",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/hikmahtech/drwhome",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://drwho.me/mcp/mcp"
+    }
+  ]
+}
