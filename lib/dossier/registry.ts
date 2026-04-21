@@ -1,13 +1,22 @@
 import { dkimCheck } from "@/lib/dossier/checks/dkim";
 import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
+import { headersCheck } from "@/lib/dossier/checks/headers";
 import { mxCheck } from "@/lib/dossier/checks/mx";
 import { redirectsCheck } from "@/lib/dossier/checks/redirects";
 import { spfCheck } from "@/lib/dossier/checks/spf";
 import { tlsCheck } from "@/lib/dossier/checks/tls";
 import type { CheckResult } from "@/lib/dossier/types";
 
-export type DossierCheckId = "dns" | "mx" | "spf" | "dmarc" | "dkim" | "tls" | "redirects";
+export type DossierCheckId =
+  | "dns"
+  | "mx"
+  | "spf"
+  | "dmarc"
+  | "dkim"
+  | "tls"
+  | "redirects"
+  | "headers";
 
 export type DossierCheck = {
   id: DossierCheckId;
@@ -28,6 +37,12 @@ export const dossierChecks: DossierCheck[] = [
     title: "redirects",
     toolSlug: "dossier-redirects",
     run: redirectsCheck,
+  },
+  {
+    id: "headers",
+    title: "headers",
+    toolSlug: "dossier-headers",
+    run: headersCheck,
   },
 ];
 

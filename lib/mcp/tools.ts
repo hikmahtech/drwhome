@@ -2,6 +2,7 @@ import { sendMcpEvent } from "@/lib/analytics/server";
 import { dkimCheck } from "@/lib/dossier/checks/dkim";
 import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
+import { headersCheck } from "@/lib/dossier/checks/headers";
 import { mxCheck } from "@/lib/dossier/checks/mx";
 import { redirectsCheck } from "@/lib/dossier/checks/redirects";
 import { spfCheck } from "@/lib/dossier/checks/spf";
@@ -165,6 +166,17 @@ const rawMcpTools: McpTool[] = [
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
       const r = await redirectsCheck(domain);
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_headers",
+    slug: "dossier-headers",
+    description: "Fetch https://<domain>/ and return the response headers as a CheckResult.",
+    inputSchema: { domain: z.string().describe("Public FQDN.") },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const r = await headersCheck(domain);
       return ok(JSON.stringify(r, null, 2));
     },
   },

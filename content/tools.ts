@@ -3,6 +3,7 @@ import { Dns } from "@/components/tools/Dns";
 import { DossierDkim } from "@/components/tools/DossierDkim";
 import { DossierDmarc } from "@/components/tools/DossierDmarc";
 import { DossierDns } from "@/components/tools/DossierDns";
+import { DossierHeaders } from "@/components/tools/DossierHeaders";
 import { DossierMx } from "@/components/tools/DossierMx";
 import { DossierRedirects } from "@/components/tools/DossierRedirects";
 import { DossierSpf } from "@/components/tools/DossierSpf";
@@ -186,6 +187,16 @@ export const tools: Tool[] = [
     keywords: ["redirect", "301", "302", "chain", "dossier", "http"],
     component: DossierRedirects,
     mcpNames: ["dossier_redirects"],
+  },
+  {
+    slug: "dossier-headers",
+    name: "dossier / headers",
+    description:
+      "inspect the response headers served at https://<domain>/ — HSTS, CSP, X-Frame-Options, etc.",
+    category: "network",
+    keywords: ["headers", "hsts", "csp", "security", "dossier", "http"],
+    component: DossierHeaders,
+    mcpNames: ["dossier_headers"],
   },
 ];
 

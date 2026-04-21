@@ -1587,6 +1587,85 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
+  "dossier-headers": {
+    lead: "inspect the response headers served at https://<domain>/ — HSTS, CSP, X-Frame-Options, and the rest of the security crew. part of the drwho.me domain dossier.",
+    overview:
+      "response headers are how a server tells a browser how to treat a page: cache it, frame it, execute which scripts, upgrade future requests to https, and so on. the six headers this tool highlights as `security headers` are the modern defensive set — `strict-transport-security` (HSTS: force https for a max-age window, optionally joining the preload list with `max-age=63072000; includeSubDomains; preload`), `content-security-policy` (CSP: a per-directive allowlist of script/style/img/connect sources, the single biggest lever against XSS when a `nonce` or `strict-dynamic` is in play), `x-frame-options` (DENY/SAMEORIGIN — clickjacking protection, largely superseded by CSP's `frame-ancestors`), `x-content-type-options` (`nosniff` — disable MIME sniffing so a rogue image can't be interpreted as javascript), `referrer-policy` (what gets leaked in the `Referer` header on outbound navigations; `strict-origin-when-cross-origin` is the safe default), `permissions-policy` (formerly `feature-policy` — opt-out of geolocation, camera, mic, etc. per-origin). this tool issues a single `GET https://<domain>/` with `redirect: follow`, collects every response header into a lowercased map, and renders the security set first with `—` where absent, then the remaining headers sorted alphabetically. CSP tradeoff worth calling out: a perfect CSP is restrictive enough to break obvious XSS but permissive enough to not break analytics, A/B tests, third-party widgets — most real-world CSPs either include `'unsafe-inline'` (and provide almost no XSS protection) or use a per-request nonce injected by the server. there's no middle ground that's both safe and cheap.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, or paths." },
+      {
+        step: "read the security headers block",
+        detail:
+          "six rows, one per defensive header. a `—` means the server doesn't send that header at all — not that it's misconfigured, just absent. an HSTS row with `max-age=0` means the site is actively un-preloading itself; with `max-age=31536000; includeSubDomains; preload` it's on the long-term preload roadmap.",
+      },
+      {
+        step: "scan the other headers for signals",
+        detail:
+          "`server` and `x-powered-by` tell you the stack (nginx, cloudflare, vercel, express). `cache-control` reveals CDN strategy. `set-cookie` shows session naming (and whether `Secure` / `HttpOnly` / `SameSite` are set). `alt-svc` advertises HTTP/3. treat it as reconnaissance for the rest of the dossier.",
+      },
+    ],
+    examples: [
+      {
+        input: "github.com",
+        output:
+          "hardened: `strict-transport-security: max-age=31536000; includeSubDomains; preload`, a long CSP with nonces, `x-frame-options: deny`, `x-content-type-options: nosniff`, `referrer-policy: strict-origin-when-cross-origin`, `permissions-policy` covering dozens of features. a useful baseline for what 'taking security headers seriously' looks like.",
+        note: "GitHub has been on the HSTS preload list since 2015. the CSP even ships separate `content-security-policy-report-only` rules for monitoring new directives before enforcing.",
+      },
+      {
+        input: "example.com",
+        output:
+          "a plain apex: likely no HSTS, no CSP, no frame-options — just `content-type`, `cache-control`, `date`, `server`. all six security rows render `—`. perfectly functional for IANA's documentation domain, but 0/6 on the hardening score.",
+        note: "not every site needs a CSP; a static doc page with no user-content isn't an XSS target. context matters.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "we probe `/` only — headers can differ per path",
+        body: "a site's CSP on `/` (login page, small allowlist) is often tighter than its CSP on `/app` (full app, wider allowlist) or its CSP on `/static/*` (probably just `default-src 'none'`). this tool fetches exactly `https://<domain>/`, so what you see is the landing-page policy. to audit a specific path, use `curl -sI https://<domain>/<path>` directly.",
+      },
+      {
+        title: "CDN headers can mask (or add to) origin headers",
+        body: "cloudflare, fastly, akamai and friends can strip, rewrite, or append headers at the edge. a `server: cloudflare` + `cf-ray` combo means you're seeing CF's composite response, not your origin's raw output. headers like `strict-transport-security` may be CF-injected even if the origin doesn't set them. check CF's 'transform rules' or 'response headers' tab to confirm what's origin vs edge.",
+      },
+      {
+        title: "HSTS without `preload` doesn't join the preload list",
+        body: "the `preload` token is necessary but not sufficient — you also have to submit the domain to https://hstspreload.org and ship `includeSubDomains` + `max-age>=31536000`. shipping `max-age=31536000; preload` without submitting changes nothing in chrome/firefox/safari. conversely, once preloaded, removing the header doesn't un-preload you; removal requires a separate request to the list maintainer.",
+      },
+    ],
+    faq: [
+      {
+        q: "which security headers matter most in 2026?",
+        a: "in order of impact-per-effort: (1) HSTS with a year-plus max-age, (2) a strict CSP using nonces or `strict-dynamic` — this is the only XSS control that actually works, (3) `x-content-type-options: nosniff`, (4) `referrer-policy: strict-origin-when-cross-origin`. `x-frame-options` is largely redundant if your CSP includes `frame-ancestors`; `permissions-policy` is high-value only for sites that actually request camera/mic/geolocation permissions.",
+      },
+      {
+        q: "why is my CSP showing `unsafe-inline` — is that bad?",
+        a: "yes. `'unsafe-inline'` defeats the primary purpose of CSP because an XSS payload can just use an inline `<script>` tag or `onerror=` handler and bypass the allowlist. modern CSPs use a per-request nonce (`script-src 'nonce-<random>'`) or `strict-dynamic` to allow specific scripts without a blanket escape hatch. if you can't remove `'unsafe-inline'` without breaking the site, you haven't really deployed a CSP — you've deployed a policy theater.",
+      },
+      {
+        q: "does this tool send cookies or auth?",
+        a: "no. we send no cookies, no `Authorization`, and a fixed `User-Agent: drwho-dossier/1.0`. some sites vary their security headers based on auth state (e.g. a more restrictive CSP for logged-in users' sensitive pages), so the anon response you see here may differ from what a real session receives.",
+      },
+      {
+        q: "what's a good CSP max-age?",
+        a: "CSP itself has no max-age. you're thinking of HSTS. for HSTS: `max-age=31536000` (1 year) is the preload minimum; `max-age=63072000` (2 years) is the common production setting. lower max-ages defeat HSTS's purpose (an attacker only needs to feint-out for a few seconds to serve a downgraded response before a short TTL expires).",
+      },
+      {
+        q: "why `redirect: follow` here but `redirect: manual` in dossier-redirects?",
+        a: "different questions. dossier-redirects wants the chain as data (every hop's url + status), so it walks manually. dossier-headers wants the headers of whatever page a browser would actually land on, so it lets fetch follow the chain and reports the final URL + its headers. if you want both — walk the chain AND inspect headers at each hop — run both tools side-by-side.",
+      },
+    ],
+    related: ["dns", "dossier-redirects", "dossier-tls"],
+    references: [
+      {
+        title: "MDN — HTTP security headers (Security on the web)",
+        url: "https://developer.mozilla.org/en-US/docs/Web/Security",
+      },
+      {
+        title: "Mozilla Observatory — grader for HTTP security headers",
+        url: "https://observatory.mozilla.org/",
+      },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {
