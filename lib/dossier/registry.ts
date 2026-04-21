@@ -7,6 +7,7 @@ import { mxCheck } from "@/lib/dossier/checks/mx";
 import { redirectsCheck } from "@/lib/dossier/checks/redirects";
 import { spfCheck } from "@/lib/dossier/checks/spf";
 import { tlsCheck } from "@/lib/dossier/checks/tls";
+import { webSurfaceCheck } from "@/lib/dossier/checks/web-surface";
 import type { CheckResult } from "@/lib/dossier/types";
 
 export type DossierCheckId =
@@ -18,7 +19,8 @@ export type DossierCheckId =
   | "tls"
   | "redirects"
   | "headers"
-  | "cors";
+  | "cors"
+  | "web-surface";
 
 export type DossierCheck = {
   id: DossierCheckId;
@@ -47,6 +49,12 @@ export const dossierChecks: DossierCheck[] = [
     run: headersCheck,
   },
   { id: "cors", title: "cors", toolSlug: "dossier-cors", run: corsCheck },
+  {
+    id: "web-surface",
+    title: "web-surface",
+    toolSlug: "dossier-web-surface",
+    run: webSurfaceCheck,
+  },
 ];
 
 export function findCheck(id: DossierCheckId): DossierCheck | undefined {

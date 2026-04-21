@@ -1745,6 +1745,79 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
+  "dossier-web-surface": {
+    lead: "fetch robots.txt, sitemap.xml, and the home page's <head> in parallel to summarise the public web surface a domain advertises. part of the drwho.me domain dossier.",
+    overview:
+      'three signals, one glance. `robots.txt` at the domain root declares crawler rules (which user-agents may fetch which paths) — its presence and contents hint at indexability intent. `sitemap.xml` (or a linked `sitemap_index.xml`) enumerates the URLs a site wants indexed; the count of `<loc>` entries is a crude measure of site footprint. the home-page `<head>` carries the visible-to-search-and-social-previews metadata: the `<title>`, the `<meta name="description">`, the OpenGraph (`og:*`) set used by facebook/linkedin/slack link unfurls, and the twitter card (`twitter:*`) set. this tool issues three parallel GETs with a shared 5s timeout, truncates bodies for safety (4KB for robots, 64KB for head), and does best-effort regex extraction — not a full HTML parser. if the home page fails, the whole check errors; robots and sitemap are treated as optional and silently marked absent on non-2xx or connection errors.',
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, or paths." },
+      {
+        step: "read robots / sitemap as indexability signals",
+        detail:
+          "presence of both is what a well-SEO'd content site looks like. a landing page may have neither — that's fine, it just means crawlers get no explicit guidance and the home page alone is the indexable surface. click the robots `<details>` to inspect the first 4KB of rules.",
+      },
+      {
+        step: "inspect the OG / Twitter block for social previews",
+        detail:
+          "when you paste a URL into slack/discord/linkedin/twitter, the unfurl card is built from `og:title`, `og:description`, `og:image`, and `twitter:card`. missing `og:image` means a link to this page will render as a plain text row with no thumbnail. missing `twitter:card` defaults to `summary` in most clients — fine for text-heavy pages, bad for marketing pages.",
+      },
+    ],
+    examples: [
+      {
+        input: "github.com",
+        output:
+          'robots.txt: present (standard crawl-rules for google/bing/etc). sitemap.xml: present, a sitemap-index with thousands of sub-sitemaps (this tool reports the top-level `<loc>` count, not the recursed total). head: title "GitHub · Build and ship software on a single, collaborative platform", full OG set with `og:image`, `twitter:card: summary_large_image`. a textbook content-heavy site.',
+        note: "when the root sitemap is itself an index file, the `urlCount` number underrepresents the real URL surface — the tool does not recurse.",
+      },
+      {
+        input: "example.com",
+        output:
+          'robots.txt: absent. sitemap.xml: absent. head: title "Example Domain", no description, no OG, no twitter tags. a deliberately minimal landing page — no indexable surface beyond the home page and no social-preview metadata. a link to example.com in slack unfurls as just the URL.',
+        note: "this is the baseline: it shows you what 'no SEO, no social cards' looks like. anything above this is intentional.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "regex head parsing misses some HTML edge cases",
+        body: "this tool extracts `<title>`, `<meta>`, and OG/Twitter tags using regex against the first 64KB of the home-page body — it does NOT build a DOM. unusual but valid HTML (CDATA in `<title>`, attribute values with single-quoted contents that themselves contain double quotes, comments hiding fake `<meta>` elements, SSR'd head content injected via client-side JS) will confuse it. if the fields come back empty on a page you know has them, the real HTML parser in a browser is authoritative — this is a best-effort view.",
+      },
+      {
+        title: "the sitemap you see may be a sitemap-index",
+        body: "larger sites publish `/sitemap.xml` as a list of sub-sitemap URLs rather than a list of content URLs. this tool counts top-level `<loc>` elements unconditionally — so an index file of 50 sub-sitemaps reports `urlCount: 50`, not the sum of each sub-sitemap's URL count. to get the real number you'd have to fetch and recurse each `<loc>`. that's out of scope here.",
+      },
+      {
+        title: "robots is only fetched at /robots.txt — no per-subpath check",
+        body: 'the `robots.txt` standard says the file lives at exactly the domain root. but crawlers also respect `<meta name="robots">` tags inside specific pages, and some CDN setups serve a different robots.txt per subpath via rewrite rules. this tool only reports the root-level file. a page with `<meta name="robots" content="noindex">` will still get crawled past robots.txt; the noindex happens later.',
+      },
+    ],
+    faq: [
+      {
+        q: "what's the difference between `og:*` and `twitter:*` tags?",
+        a: "`og:*` (OpenGraph) is the facebook-originated standard that most platforms (linkedin, slack, discord, whatsapp) now read. `twitter:*` (Twitter Cards) is twitter-specific and predates most OG readers falling back to OG. best practice: set both. twitter will use `twitter:*` if present, otherwise fall back to `og:*`. most other platforms read only OG. to avoid drift, set `twitter:card` (for layout), `twitter:site`, and let everything else come from OG.",
+      },
+      {
+        q: "why doesn't this tool follow `sitemap: <url>` lines inside robots.txt?",
+        a: "robots.txt may include one or more `Sitemap: https://…` directives pointing at non-standard sitemap locations. this tool does not parse those — it only fetches the conventional `/sitemap.xml`. so a site that publishes its sitemap at `/sitemap_google.xml` will render as `sitemap.xml: absent` here even though search engines find it just fine via robots.txt. a future refinement could parse robots and follow sitemap lines; for now the check is fixed-path.",
+      },
+      {
+        q: "how big is the response body I'm parsing?",
+        a: "the home page body is truncated to the first 64KB before head-parsing, so if the `<head>` closes past byte 65536 the tool will silently miss it. in practice heads are almost always in the first 8-16KB. the robots.txt body is truncated to 4KB for display purposes. the sitemap body is not truncated for parsing — we need to count all `<loc>` tags.",
+      },
+      {
+        q: "why is the whole check `error` if robots is missing, but `ok` if sitemap is missing?",
+        a: "it isn't — both robots and sitemap are treated as optional. a 404 on either is fine; the check stays `ok`. the check only errors if the *home page* fetch (`GET https://<domain>/`) itself fails — DNS failure, TCP refusal, or the request body throws mid-read. in that case the other two signals are meaningless because we have no head to summarise.",
+      },
+      {
+        q: "why doesn't the tool send my cookies or custom user-agent?",
+        a: "we send a fixed `User-Agent: drwho-dossier/1.0 (+https://drwho.me)` and no cookies. sites that serve a different home page to logged-in users or that bot-detect on the UA will show you the anonymous-crawler view, which is also what search engines and social-preview bots see. so this view is what the public web sees, which is usually what you want for an SEO dossier.",
+      },
+    ],
+    related: ["dossier-dns", "dossier-headers", "dossier-redirects"],
+    references: [
+      { title: "robotstxt.org — the Robots Exclusion Protocol", url: "https://www.robotstxt.org/" },
+      { title: "ogp.me — The Open Graph protocol", url: "https://ogp.me/" },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {

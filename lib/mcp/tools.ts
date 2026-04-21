@@ -8,6 +8,7 @@ import { mxCheck } from "@/lib/dossier/checks/mx";
 import { redirectsCheck } from "@/lib/dossier/checks/redirects";
 import { spfCheck } from "@/lib/dossier/checks/spf";
 import { tlsCheck } from "@/lib/dossier/checks/tls";
+import { webSurfaceCheck } from "@/lib/dossier/checks/web-surface";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
@@ -196,6 +197,18 @@ const rawMcpTools: McpTool[] = [
       const origin = (input as { origin?: string }).origin;
       const method = (input as { method?: string }).method;
       const r = await corsCheck(domain, { origin, method });
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_web_surface",
+    slug: "dossier-web-surface",
+    description:
+      "Summarise a domain's public web surface: robots.txt, sitemap.xml, home-page <head> metadata (title, description, OpenGraph, Twitter). Returns a composite CheckResult.",
+    inputSchema: { domain: z.string().describe("Public FQDN.") },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const r = await webSurfaceCheck(domain);
       return ok(JSON.stringify(r, null, 2));
     },
   },

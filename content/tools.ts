@@ -9,6 +9,7 @@ import { DossierMx } from "@/components/tools/DossierMx";
 import { DossierRedirects } from "@/components/tools/DossierRedirects";
 import { DossierSpf } from "@/components/tools/DossierSpf";
 import { DossierTls } from "@/components/tools/DossierTls";
+import { DossierWebSurface } from "@/components/tools/DossierWebSurface";
 import { Headers } from "@/components/tools/Headers";
 import { IpLookup } from "@/components/tools/IpLookup";
 import { Json } from "@/components/tools/Json";
@@ -208,6 +209,16 @@ export const tools: Tool[] = [
     keywords: ["cors", "preflight", "options", "dossier", "browser"],
     component: DossierCors,
     mcpNames: ["dossier_cors"],
+  },
+  {
+    slug: "dossier-web-surface",
+    name: "dossier / web surface",
+    description:
+      "fetch robots.txt, sitemap.xml, and the home page's <head> to summarise a domain's public-web surface.",
+    category: "network",
+    keywords: ["robots", "sitemap", "opengraph", "og", "twitter", "meta", "dossier", "seo"],
+    component: DossierWebSurface,
+    mcpNames: ["dossier_web_surface"],
   },
 ];
 

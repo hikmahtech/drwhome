@@ -193,6 +193,33 @@ describe("mcp dossier_dns", () => {
     expect(captured?.["Access-Control-Request-Method"]).toBe("PUT");
   });
 
+  it("dossier_web_surface returns CheckResult ok on success", async () => {
+    global.fetch = vi.fn().mockImplementation(async (url: string) => {
+      const body = url.endsWith("/robots.txt")
+        ? "User-agent: *"
+        : url.endsWith("/sitemap.xml")
+          ? "<urlset><url><loc>/a</loc></url></urlset>"
+          : "<html><head><title>T</title></head></html>";
+      return {
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        text: async () => body,
+      } as unknown as Response;
+    }) as unknown as typeof fetch;
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const tool = findMcpTool("dossier_web_surface");
+    expect(tool).toBeDefined();
+    if (!tool) throw new Error("tool missing");
+    const r = await tool.handler({ domain: "example.com" });
+    expect(r.isError).toBeFalsy();
+    const parsed = JSON.parse(r.content[0].text);
+    expect(parsed.status).toBe("ok");
+    expect(parsed.data.robots.present).toBe(true);
+    expect(parsed.data.sitemap.urlCount).toBe(1);
+    expect(parsed.data.head.title).toBe("T");
+  });
+
   it("dossier_dmarc returns CheckResult ok on success", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
