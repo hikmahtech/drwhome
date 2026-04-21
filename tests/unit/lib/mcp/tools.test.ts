@@ -2,7 +2,7 @@ import { findMcpTool, mcpTools } from "@/lib/mcp/tools";
 import { describe, expect, it } from "vitest";
 
 describe("mcpTools", () => {
-  it("exposes exactly the 11 MCP tools from the design spec", () => {
+  it("exposes exactly the 12 MCP tools from the design spec", () => {
     const names = mcpTools.map((t) => t.name).sort();
     expect(names).toEqual(
       [
@@ -10,6 +10,7 @@ describe("mcpTools", () => {
         "base64_encode",
         "dns_lookup",
         "dossier_dns",
+        "dossier_mx",
         "ip_lookup",
         "json_format",
         "jwt_decode",
@@ -37,6 +38,7 @@ describe("mcpTools", () => {
   it("every tool slug points at a real web tool slug (or null for mocked)", () => {
     const validSlugs = new Set([
       "dossier-dns",
+      "dossier-mx",
       "dns",
       "ip-lookup",
       "json",

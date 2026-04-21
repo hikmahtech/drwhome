@@ -1134,6 +1134,72 @@ export const toolContent: Record<string, ToolContent> = {
       { title: "RFC 8484 — dns over https (doh)", url: "https://www.rfc-editor.org/rfc/rfc8484" },
     ],
   },
+  "dossier-mx": {
+    lead: "list the mail exchangers (MX records) a domain advertises, sorted by priority.",
+    overview:
+      "mx records tell senders which smtp servers handle email for a domain. lower priority numbers win; multiple hosts at the same priority load-balance. this tool resolves the mx rrset via cloudflare's doh resolver, parses each record into (priority, exchange) pairs, and returns them sorted. it is part of the drwho.me domain dossier — the same result appears as the mx section at `/d/<domain>` and as the `dossier_mx` mcp tool.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, paths." },
+      { step: "run the check", detail: "a single mx doh query against cloudflare's resolver." },
+      {
+        step: "read the priority list",
+        detail: "lower priority is tried first. ties load-balance.",
+      },
+    ],
+    examples: [
+      {
+        input: "gmail.com",
+        output: "pri=5 gmail-smtp-in.l.google.com. - pri=10 alt1.gmail-smtp-in.l.google.com.",
+        note: "google workspace mx set.",
+      },
+      {
+        input: "protonmail.com",
+        output: "pri=10 mail.protonmail.ch. - pri=20 mailsec.protonmail.ch.",
+        note: "primary + backup pattern.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "no mx = no inbound smtp",
+        body: "a domain with zero mx records can still send email, but cannot receive smtp traffic. the check reports not_applicable in that case.",
+      },
+      {
+        title: "null mx (RFC 7505)",
+        body: 'a single record of priority 0 pointing to "." signals "this domain does not accept mail". the tool shows it verbatim.',
+      },
+      {
+        title: "mx aliases",
+        body: "mx exchanges must be a hostname (A/AAAA), not a CNAME. some domains get this wrong; the dossier does not currently flag it — cross-reference with the dns section if a recipient bounces.",
+      },
+    ],
+    faq: [
+      {
+        q: "why is there an mx section and a dns section?",
+        a: "dns covers A/AAAA/NS/SOA/CAA/TXT. mx gets its own section because it's the entry point to the email-auth cluster and the ordered priority view is specific to mail.",
+      },
+      {
+        q: "can i send mail without mx?",
+        a: "yes, you can send — but you cannot receive. senders consult the recipient's mx, not yours.",
+      },
+      {
+        q: "does this resolve the A/AAAA of each mx host?",
+        a: "no. that is a second hop; use the dns tool or the dns section of a dossier for each entry if you need the address set.",
+      },
+      {
+        q: "why is cloudflare resolving this and not google?",
+        a: "cloudflare's doh responds fast and returns structured json. no tracking headers are added. the choice has no effect on the answer — mx is an authoritative record type.",
+      },
+      {
+        q: "can i look up mx for an ip?",
+        a: "no. mx is a domain-level record. ip-level lookups belong in the ip-lookup tool.",
+      },
+    ],
+    related: ["dns", "dossier-dns"],
+    references: [
+      { title: "RFC 5321 — SMTP", url: "https://www.rfc-editor.org/rfc/rfc5321" },
+      { title: "RFC 7505 — null MX", url: "https://www.rfc-editor.org/rfc/rfc7505" },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {

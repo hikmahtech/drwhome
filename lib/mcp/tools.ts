@@ -1,5 +1,6 @@
 import { sendMcpEvent } from "@/lib/analytics/server";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
+import { mxCheck } from "@/lib/dossier/checks/mx";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
@@ -76,6 +77,18 @@ const rawMcpTools: McpTool[] = [
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
       const r = await dnsCheck(domain);
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_mx",
+    slug: "dossier-mx",
+    description:
+      "Return the MX records for a domain, sorted by priority, as a CheckResult discriminated union.",
+    inputSchema: { domain: z.string().describe("Public FQDN.") },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const r = await mxCheck(domain);
       return ok(JSON.stringify(r, null, 2));
     },
   },
