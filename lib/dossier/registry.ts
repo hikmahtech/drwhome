@@ -1,3 +1,4 @@
+import { corsCheck } from "@/lib/dossier/checks/cors";
 import { dkimCheck } from "@/lib/dossier/checks/dkim";
 import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
@@ -16,7 +17,8 @@ export type DossierCheckId =
   | "dkim"
   | "tls"
   | "redirects"
-  | "headers";
+  | "headers"
+  | "cors";
 
 export type DossierCheck = {
   id: DossierCheckId;
@@ -44,6 +46,7 @@ export const dossierChecks: DossierCheck[] = [
     toolSlug: "dossier-headers",
     run: headersCheck,
   },
+  { id: "cors", title: "cors", toolSlug: "dossier-cors", run: corsCheck },
 ];
 
 export function findCheck(id: DossierCheckId): DossierCheck | undefined {

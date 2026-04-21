@@ -1666,6 +1666,85 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
+  "dossier-cors": {
+    lead: "send a CORS preflight (OPTIONS) to https://<domain>/ with an `Origin` and `Access-Control-Request-Method`, then surface the `access-control-*` response headers. part of the drwho.me domain dossier.",
+    overview:
+      "CORS (cross-origin resource sharing) is how a server tells a browser which cross-origin pages are allowed to read its responses. before any non-simple request the browser issues a preflight `OPTIONS` carrying `Origin: <caller>` and `Access-Control-Request-Method: <method>` (plus `Access-Control-Request-Headers` if any non-simple headers will be sent), and the server responds with a matching set of `Access-Control-Allow-*` headers: `Allow-Origin` (either `*` or the echoed origin — never a list), `Allow-Methods`, `Allow-Headers`, optional `Allow-Credentials: true` (which is *incompatible* with `Allow-Origin: *` — the browser will reject the response), `Max-Age` (how long the preflight can be cached), and `Expose-Headers` (which response headers become readable to JS beyond the CORS-safelisted set). this tool fires exactly that preflight with `Origin` defaulting to `https://drwho.me` and method defaulting to `GET`, and renders the six AC-* headers side by side. if none come back, the site does not advertise CORS to that origin — which is the common case for sites that are consumed only by their own frontend.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, or paths." },
+      {
+        step: "(optional) set a custom origin and method",
+        detail:
+          "CORS responses commonly vary by the requesting `Origin` — a server may echo `Access-Control-Allow-Origin` only for allowlisted origins. similarly `POST` or `PUT` may be denied where `GET` is allowed. supply `origin` and `method` via the MCP tool to probe those branches.",
+      },
+      {
+        step: "read the AC-* block",
+        detail:
+          "`—` means the header is absent. `Allow-Origin: *` is a public API signal; an echoed origin (e.g. `https://drwho.me`) means the server has an allowlist and this origin passed. `Allow-Credentials: true` combined with a specific (non-`*`) origin means cookie-carrying cross-site requests are permitted.",
+      },
+    ],
+    examples: [
+      {
+        input: "api.github.com",
+        output:
+          "GitHub's REST API returns a permissive public CORS set: `Access-Control-Allow-Origin: *`, `Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE`, `Access-Control-Expose-Headers: ETag, Link, Location, Retry-After, X-GitHub-*, X-RateLimit-*`. designed for browser-side use without credentials.",
+        note: "because origin is `*`, credentials are by spec disallowed. authenticated calls must use `Authorization: Bearer ...`, not cookies.",
+      },
+      {
+        input: "example.com",
+        output:
+          "a plain static site: all six AC-* rows render `—`. the preflight itself returns 200 or 405, but no CORS headers come back. the muted note reads: `no access-control-* headers returned — site does not advertise CORS to this origin`.",
+        note: "this is the correct default — absence of CORS is a deny, not an allow. a browser cross-origin fetch will fail at the response-read step.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "a 2xx on OPTIONS does not imply CORS is configured",
+        body: "many servers respond 200/204 to an `OPTIONS /` request out of the box (nginx, apache, node frameworks) — sometimes returning the same HTML as `GET`. a 2xx preflight status with zero `access-control-*` headers means exactly the same thing as a 405: CORS is not advertised. always look at the headers, not the status code.",
+      },
+      {
+        title: "`Access-Control-Allow-Origin: *` with `Allow-Credentials: true` is invalid",
+        body: "the CORS spec forbids this combination. browsers will drop the response — not just the `Allow-Credentials` line — and the fetch rejects. servers intending to support cookie-bearing cross-site calls must echo the specific origin back, maintain a per-request allowlist, and include `Vary: Origin` in the response so caches don't cross-pollinate.",
+      },
+      {
+        title: "some CDNs require the preflight method to match a real endpoint",
+        body: "cloudflare, cloudfront, and fastly sometimes pass OPTIONS through to the origin unmodified — the origin then 404s because it has no route for `OPTIONS /some/api`. the fix at the edge is an `Access-Control-Request-Method`-aware rule that short-circuits with the correct AC-* headers. if your preflight succeeds on `/` but a browser call to `/api/v1/x` fails, the CDN rule probably only covers `/`.",
+      },
+    ],
+    faq: [
+      {
+        q: "what's the difference between `*` and an echoed origin?",
+        a: "`Access-Control-Allow-Origin: *` means 'any website may read this response, without credentials'. an echoed origin (the server copies the request's `Origin` header into the response) means 'this specific origin is allowed'. the echoed form is required any time you want to allow cookies/auth (`Access-Control-Allow-Credentials: true`). the echoed form also requires the server to include `Vary: Origin` so intermediary caches keyed by URL don't hand one origin's response to another.",
+      },
+      {
+        q: "why doesn't every cross-origin request send a preflight?",
+        a: "only non-simple requests do. a request is *simple* (no preflight) when the method is GET/HEAD/POST, the only custom headers are CORS-safelisted (`Accept`, `Accept-Language`, `Content-Language`, `Content-Type` limited to `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain`), and there's no ReadableStream upload. anything else — `PUT`, `DELETE`, `Content-Type: application/json`, a custom `X-Foo` header — triggers the preflight.",
+      },
+      {
+        q: "my call works from curl but fails from the browser — why?",
+        a: "curl doesn't enforce CORS; it's purely a browser security model. the server is responding fine at the HTTP layer, but the browser sees the AC-* headers (or the lack of them) and rejects the response before JS can read it. this tool probes exactly what the browser sees.",
+      },
+      {
+        q: "what's `Access-Control-Max-Age` for?",
+        a: "it tells the browser how long (in seconds) it can cache this preflight result, keyed by URL + method + headers. `Max-Age: 86400` means 'don't re-preflight for 24 hours'. chrome caps this at 2 hours, firefox at 24 hours. omitting it means every non-simple cross-origin request is preceded by its own preflight round-trip — a real perf cost on chatty APIs.",
+      },
+      {
+        q: "does this tool send cookies or auth?",
+        a: "no. we send a fixed `User-Agent: drwho-dossier/1.0`, the `Origin` header, and `Access-Control-Request-Method`. no cookies, no `Authorization`. servers that vary CORS by auth state (e.g. a tighter allowlist for anonymous users) will show you the anonymous variant.",
+      },
+    ],
+    related: ["dossier-headers", "dossier-redirects", "dossier-dns"],
+    references: [
+      {
+        title: "Fetch Standard §3.2 — CORS protocol",
+        url: "https://fetch.spec.whatwg.org/#http-cors-protocol",
+      },
+      {
+        title: "MDN — Cross-Origin Resource Sharing (CORS)",
+        url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS",
+      },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {

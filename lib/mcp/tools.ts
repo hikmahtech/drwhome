@@ -1,4 +1,5 @@
 import { sendMcpEvent } from "@/lib/analytics/server";
+import { corsCheck } from "@/lib/dossier/checks/cors";
 import { dkimCheck } from "@/lib/dossier/checks/dkim";
 import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
@@ -177,6 +178,24 @@ const rawMcpTools: McpTool[] = [
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
       const r = await headersCheck(domain);
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_cors",
+    slug: "dossier-cors",
+    description:
+      "Send a CORS preflight OPTIONS to https://<domain>/ and return the access-control-* headers. Optional `origin` and `method` inputs.",
+    inputSchema: {
+      domain: z.string().describe("Public FQDN."),
+      origin: z.string().optional().describe("Origin header to send; default https://drwho.me"),
+      method: z.string().optional().describe("Access-Control-Request-Method; default GET"),
+    },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const origin = (input as { origin?: string }).origin;
+      const method = (input as { method?: string }).method;
+      const r = await corsCheck(domain, { origin, method });
       return ok(JSON.stringify(r, null, 2));
     },
   },

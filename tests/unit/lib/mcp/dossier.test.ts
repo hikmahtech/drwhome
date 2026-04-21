@@ -147,6 +147,52 @@ describe("mcp dossier_dns", () => {
     expect(parsed.data.headers["strict-transport-security"]).toBe("max-age=31536000");
   });
 
+  it("dossier_cors returns CheckResult ok with AC-* headers on success", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      headers: new Headers({
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST",
+      }),
+    }) as unknown as typeof fetch;
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const tool = findMcpTool("dossier_cors");
+    expect(tool).toBeDefined();
+    if (!tool) throw new Error("tool missing");
+    const r = await tool.handler({ domain: "example.com" });
+    expect(r.isError).toBeFalsy();
+    const parsed = JSON.parse(r.content[0].text);
+    expect(parsed.status).toBe("ok");
+    expect(parsed.data.allowOrigin).toBe("*");
+    expect(parsed.data.anyAcHeader).toBe(true);
+    expect(parsed.data.origin).toBe("https://drwho.me");
+    expect(parsed.data.method).toBe("GET");
+  });
+
+  it("dossier_cors forwards optional origin and method inputs", async () => {
+    let captured: Record<string, string> | undefined;
+    global.fetch = vi.fn((_url: string, opts: { headers?: Record<string, string> }) => {
+      captured = opts?.headers;
+      return Promise.resolve({
+        ok: true,
+        status: 204,
+        headers: new Headers(),
+      } as unknown as Response);
+    }) as unknown as typeof fetch;
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const tool = findMcpTool("dossier_cors");
+    if (!tool) throw new Error("tool missing");
+    const r = await tool.handler({
+      domain: "example.com",
+      origin: "https://app.example.com",
+      method: "put",
+    });
+    expect(r.isError).toBeFalsy();
+    expect(captured?.Origin).toBe("https://app.example.com");
+    expect(captured?.["Access-Control-Request-Method"]).toBe("PUT");
+  });
+
   it("dossier_dmarc returns CheckResult ok on success", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,

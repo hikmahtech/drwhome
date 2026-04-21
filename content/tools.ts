@@ -1,5 +1,6 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Dns } from "@/components/tools/Dns";
+import { DossierCors } from "@/components/tools/DossierCors";
 import { DossierDkim } from "@/components/tools/DossierDkim";
 import { DossierDmarc } from "@/components/tools/DossierDmarc";
 import { DossierDns } from "@/components/tools/DossierDns";
@@ -197,6 +198,16 @@ export const tools: Tool[] = [
     keywords: ["headers", "hsts", "csp", "security", "dossier", "http"],
     component: DossierHeaders,
     mcpNames: ["dossier_headers"],
+  },
+  {
+    slug: "dossier-cors",
+    name: "dossier / cors",
+    description:
+      "run a CORS preflight (OPTIONS) against a domain and surface the access-control-* response headers.",
+    category: "network",
+    keywords: ["cors", "preflight", "options", "dossier", "browser"],
+    component: DossierCors,
+    mcpNames: ["dossier_cors"],
   },
 ];
 
