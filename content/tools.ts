@@ -5,6 +5,7 @@ import { DossierDmarc } from "@/components/tools/DossierDmarc";
 import { DossierDns } from "@/components/tools/DossierDns";
 import { DossierMx } from "@/components/tools/DossierMx";
 import { DossierSpf } from "@/components/tools/DossierSpf";
+import { DossierTls } from "@/components/tools/DossierTls";
 import { Headers } from "@/components/tools/Headers";
 import { IpLookup } from "@/components/tools/IpLookup";
 import { Json } from "@/components/tools/Json";
@@ -165,6 +166,16 @@ export const tools: Tool[] = [
     keywords: ["dkim", "dossier", "email", "authentication", "selector", "domainkey"],
     component: DossierDkim,
     mcpNames: ["dossier_dkim"],
+  },
+  {
+    slug: "dossier-tls",
+    name: "dossier / tls",
+    description:
+      "inspect a domain's TLS certificate: subject, issuer, validity, SANs, fingerprint.",
+    category: "network",
+    keywords: ["tls", "ssl", "certificate", "dossier", "issuer", "san", "fingerprint"],
+    component: DossierTls,
+    mcpNames: ["dossier_tls"],
   },
 ];
 

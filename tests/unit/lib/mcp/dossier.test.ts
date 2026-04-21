@@ -99,6 +99,17 @@ describe("mcp dossier_dns", () => {
     expect(parsed.status).toBe("ok");
   });
 
+  it("dossier_tls returns CheckResult error for invalid domain", async () => {
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const tool = findMcpTool("dossier_tls");
+    expect(tool).toBeDefined();
+    if (!tool) throw new Error("tool missing");
+    const r = await tool.handler({ domain: "not a domain" });
+    expect(r.isError).toBeFalsy();
+    const parsed = JSON.parse(r.content[0].text);
+    expect(parsed.status).toBe("error");
+  });
+
   it("dossier_dmarc returns CheckResult ok on success", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,

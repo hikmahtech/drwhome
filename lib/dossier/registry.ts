@@ -3,9 +3,10 @@ import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { mxCheck } from "@/lib/dossier/checks/mx";
 import { spfCheck } from "@/lib/dossier/checks/spf";
+import { tlsCheck } from "@/lib/dossier/checks/tls";
 import type { CheckResult } from "@/lib/dossier/types";
 
-export type DossierCheckId = "dns" | "mx" | "spf" | "dmarc" | "dkim";
+export type DossierCheckId = "dns" | "mx" | "spf" | "dmarc" | "dkim" | "tls";
 
 export type DossierCheck = {
   id: DossierCheckId;
@@ -20,6 +21,7 @@ export const dossierChecks: DossierCheck[] = [
   { id: "spf", title: "spf", toolSlug: "dossier-spf", run: spfCheck },
   { id: "dmarc", title: "dmarc", toolSlug: "dossier-dmarc", run: dmarcCheck },
   { id: "dkim", title: "dkim", toolSlug: "dossier-dkim", run: dkimCheck },
+  { id: "tls", title: "tls", toolSlug: "dossier-tls", run: tlsCheck },
 ];
 
 export function findCheck(id: DossierCheckId): DossierCheck | undefined {

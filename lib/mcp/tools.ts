@@ -4,6 +4,7 @@ import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { mxCheck } from "@/lib/dossier/checks/mx";
 import { spfCheck } from "@/lib/dossier/checks/spf";
+import { tlsCheck } from "@/lib/dossier/checks/tls";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
@@ -139,6 +140,18 @@ const rawMcpTools: McpTool[] = [
           ? (sel as string[])
           : undefined;
       const r = await dkimCheck(domain, selectors ? { selectors } : {});
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_tls",
+    slug: "dossier-tls",
+    description:
+      "Fetch the TLS peer certificate for a domain on port 443 and return subject, issuer, validity, SANs, and fingerprint as a CheckResult.",
+    inputSchema: { domain: z.string().describe("Public FQDN.") },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const r = await tlsCheck(domain);
       return ok(JSON.stringify(r, null, 2));
     },
   },

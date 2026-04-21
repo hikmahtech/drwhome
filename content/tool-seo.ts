@@ -1424,6 +1424,90 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
+  "dossier-tls": {
+    lead: "inspect a domain's TLS certificate served on port 443 - subject, issuer, validity, SANs, sha256 fingerprint. part of the drwho.me domain dossier.",
+    overview:
+      "tls (RFC 8446 for 1.3, RFC 5246 for 1.2) wraps tcp with an x.509 certificate chain so clients can authenticate the server and negotiate an encrypted channel. this tool opens a raw tls socket to `<domain>:443`, completes the handshake with SNI set to the requested domain, reads the peer certificate (the leaf, not the intermediates), and closes. we report the leaf's subject common-name, issuer common-name and organization, `valid_from` -> `valid_to` window, any `subjectAltName` DNS entries, and the sha256 fingerprint. browsers validate the full chain against a trust store; we deliberately pass `rejectUnauthorized: false` so we can surface an expired, self-signed, or hostname-mismatched certificate as data (`authorized: false` plus the openssl error code) instead of refusing the handshake. the dominant public CA today is Let's Encrypt via ACME (RFC 8555) which issues 90-day certs for free; SaaS platforms (Vercel, Cloudflare, Fly) proxy that for you. v1 scope is the peer cert only - we do NOT walk the chain, check OCSP, or probe weak ciphers; use sslyze or testssl.sh for the full audit surface.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, paths." },
+      {
+        step: "open the tls socket",
+        detail:
+          "the tool connects to port 443 with servername=<domain> (SNI). the handshake has a 5s timeout end to end.",
+      },
+      {
+        step: "read the certificate card",
+        detail:
+          "subject, issuer, validity window, SAN list, and sha256 fingerprint all render after the handshake. `authorized: yes` means the cert verified against node's trust store; `no` surfaces the openssl error code (e.g. `CERT_HAS_EXPIRED`, `UNABLE_TO_VERIFY_LEAF_SIGNATURE`).",
+      },
+      {
+        step: "cross-check SAN coverage",
+        detail:
+          "browsers match the requested hostname against the SAN list - never against subject CN. if the hostname you used is missing from SANs, the cert is not valid for that name even if `authorized` says yes (node's match happens against `servername` which we set to the input domain).",
+      },
+    ],
+    examples: [
+      {
+        input: "drwho.me",
+        output:
+          "subject CN=drwho.me, issuer=R3 / Let's Encrypt, valid 90 days, SAN=[drwho.me, www.drwho.me], authorized=yes",
+        note: "vercel-hosted app - Let's Encrypt via ACME, rotated every ~60 days.",
+      },
+      {
+        input: "google.com",
+        output:
+          "subject CN=*.google.com, issuer=WR2 / Google Trust Services, valid ~90 days, SAN includes google.com + many wildcards, authorized=yes",
+        note: "google runs its own public CA (google trust services) and signs its own wildcard certs.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "expired cert is a soft signal",
+        body: "we report `authorized: false` with `CERT_HAS_EXPIRED` but still return the cert fields so you can see WHAT expired. a browser refuses the connection outright; our tool does not, because seeing the cert is often the whole point of the check. expiration within the next 14 days is a common monitoring threshold - many acme renewals cut over in the last 30 days.",
+      },
+      {
+        title: "SNI is required - no SNI, no cert",
+        body: "modern CDNs (cloudfront, fastly, vercel) host thousands of certs on a single IP and pick the right one from the `servername` sent in the ClientHello. we set servername=<domain> so you get the cert you asked about; a plain `openssl s_client -connect ip:443` without `-servername` would usually get a default/placeholder cert instead.",
+      },
+      {
+        title: "port 443 only - no starttls, no non-web tls",
+        body: "this tool only probes https on 443. imap (993), smtp submission (465/587 STARTTLS), and postgres TLS all serve their own cert chains on other ports. use `openssl s_client -starttls smtp -connect host:587` for those - scope is intentionally narrow here.",
+      },
+    ],
+    faq: [
+      {
+        q: "why `rejectUnauthorized: false` - isn't that insecure?",
+        a: "we're inspecting the cert, not using the connection to send secrets. refusing the handshake on a cert error would leave us unable to SHOW the expired/self-signed cert - which defeats the tool. we surface `authorized` as a field in the output so consumers can still see the verdict. this is the same rationale chrome's `NET::ERR_CERT_DATE_INVALID` interstitial uses: show the error, but let the user see what's there.",
+      },
+      {
+        q: "do you walk the full chain?",
+        a: "no - v1 only reports the leaf. walking the chain means fetching each intermediate (often via Authority Information Access), re-verifying signatures, and cross-checking against the system trust store. use sslyze or ssllabs.com for that; we keep scope tight to one tcp round trip.",
+      },
+      {
+        q: "what does the sha256 fingerprint tell me?",
+        a: "it's the hex-uppercased sha256 of the der-encoded certificate. use it for cert pinning or to confirm two deployments are serving the exact same cert. any one-bit change in the cert (new validity window, rotated key) produces a totally different fingerprint.",
+      },
+      {
+        q: "why is google.com's SAN list so long?",
+        a: "large providers mint one cert that covers many product hostnames (`*.google.com`, `*.youtube.com`, etc.) to avoid the operational cost of per-host certs. this is allowed by RFC 5280 but increases the blast radius if the private key is ever compromised - one revocation nukes every hostname on the cert.",
+      },
+      {
+        q: "why is a Let's Encrypt cert only valid 90 days?",
+        a: "short validity forces automation (certbot, traefik, caddy, acme.sh), which means revocations propagate fast and operational mistakes self-heal on the next renewal. Let's Encrypt published the rationale in 2015 and the whole acme ecosystem now defaults to it; Apple's trust store is even moving toward a 45-day max in 2027.",
+      },
+    ],
+    related: ["dns", "dossier-dns", "dossier-mx"],
+    references: [
+      {
+        title: "RFC 5280 — Internet X.509 Public Key Infrastructure",
+        url: "https://www.rfc-editor.org/rfc/rfc5280",
+      },
+      {
+        title: "RFC 6066 — TLS Extensions (SNI)",
+        url: "https://www.rfc-editor.org/rfc/rfc6066",
+      },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {
