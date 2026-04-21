@@ -1344,6 +1344,86 @@ export const toolContent: Record<string, ToolContent> = {
       { title: "RFC 8617 — ARC", url: "https://www.rfc-editor.org/rfc/rfc8617" },
     ],
   },
+  "dossier-dkim": {
+    lead: "probe common DKIM selectors for a domain and surface the public-key TXT record. part of the drwho.me domain dossier.",
+    overview:
+      "dkim (RFC 6376) signs outgoing mail with a per-sender private key; receivers verify by fetching the matching public key at `<selector>._domainkey.<domain>`. unlike spf or dmarc, dkim has no canonical record location — each sender picks its own `selector` label, and the selector in use is announced per-message via the `DKIM-Signature: s=...` header tag. there is no public-dns api to enumerate a domain's selectors, so this tool probes a fixed list of common defaults in parallel: `default`, `google` (google workspace / gmail), `k1` (mailchimp / mandrill), `selector1` and `selector2` (microsoft 365 rotate between them), and `mxvault` (mxroute). each probe is a TXT doh lookup; a selector is reported as `found` if the record starts with `v=DKIM1` or with a bare `p=` (RFC 8301 minimum marker). supply `selectors=[...]` to the `dossier_dkim` MCP tool to override the defaults.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, paths." },
+      {
+        step: "run the check",
+        detail:
+          "six TXT doh queries fire in parallel, one per default selector at `<selector>._domainkey.<domain>`.",
+      },
+      {
+        step: "read the selector table",
+        detail:
+          "each probed selector appears as a row: `found` with the record, or `not_found` with a dash. a domain typically publishes one or two selectors.",
+      },
+      {
+        step: "find an unlisted selector",
+        detail:
+          "inspect a recently received email from the domain. the `DKIM-Signature:` header contains a `s=...` tag naming the selector actually in use — pass it via the MCP tool's `selectors` argument.",
+      },
+    ],
+    examples: [
+      {
+        input: "gmail.com",
+        output: "google - v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG... - other probed selectors not_found",
+        note: "google workspace publishes a single `google` selector at the apex.",
+      },
+      {
+        input: "mailchimp.com",
+        output:
+          "k1 - v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GN... - other probed selectors not_found",
+        note: "mailchimp signs with the `k1` selector across every customer domain.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "no public-dns enumeration",
+        body: "dns cannot list a domain's selectors. this tool probes a fixed common set — if a sender uses a bespoke selector (e.g. `20230601`, `s1024`, `smtpapi`), the default probe will report `not_found` for every slot even though dkim is fully configured. always cross-check against a real message's `DKIM-Signature: s=` tag before concluding dkim is missing.",
+      },
+      {
+        title: "key rotation leaves old selectors behind",
+        body: "senders rotate keys by publishing a new selector and cutting traffic over. the old selector's TXT record often lingers for months so in-flight mail can still verify. seeing two selectors `found` usually means a rotation is in progress, not a misconfiguration.",
+      },
+      {
+        title: "selectors frequently point at CNAMEs",
+        body: "a domain delegating mail to a provider (google workspace, sendgrid, mailchimp) typically publishes the `<selector>._domainkey` label as a CNAME into the provider's zone, not a direct TXT. doh resolvers follow the CNAME transparently, so this tool just sees the final TXT — but the control of the key lives with the provider, not the domain owner.",
+      },
+    ],
+    faq: [
+      {
+        q: "why these six selectors?",
+        a: "they cover the largest mail platforms by volume: `default` (generic fallback), `google` (google workspace / gmail), `k1` (mailchimp / mandrill), `selector1` + `selector2` (microsoft 365, which rotates between the two), and `mxvault` (mxroute). a domain that uses any other sender will likely come back all-`not_found` — that's expected.",
+      },
+      {
+        q: "can i supply a selector?",
+        a: "yes. the `dossier_dkim` MCP tool accepts `selectors=[...]`. pass the exact selector name you want to probe and only those labels are queried. the web ui probes the default set; use the mcp endpoint for custom probes.",
+      },
+      {
+        q: "what does `found` actually require?",
+        a: "a TXT record at `<selector>._domainkey.<domain>` whose value starts with `v=DKIM1` or contains a `p=` tag (the public-key marker). RFC 8301 permits omitting `v=DKIM1` on records that only carry the key, so we accept a bare `p=` prefix as well.",
+      },
+      {
+        q: "what does `not_found` mean — no record, or no dkim?",
+        a: "only that this specific selector has no TXT at the expected label. absence across all six common selectors is not proof dkim is missing — see the first gotcha about bespoke selector names.",
+      },
+      {
+        q: "why is this slower than spf/dmarc?",
+        a: "it fires six doh queries instead of one. they run in parallel under a single 5-second abort controller, so the wall-clock cost is close to a single query when the resolver is responsive.",
+      },
+    ],
+    related: ["dns", "dossier-dns", "dossier-spf", "dossier-dmarc"],
+    references: [
+      { title: "RFC 6376 — DKIM Signatures", url: "https://www.rfc-editor.org/rfc/rfc6376" },
+      {
+        title: "RFC 8301 — DKIM Cryptographic Algorithms",
+        url: "https://www.rfc-editor.org/rfc/rfc8301",
+      },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {

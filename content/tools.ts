@@ -1,5 +1,6 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Dns } from "@/components/tools/Dns";
+import { DossierDkim } from "@/components/tools/DossierDkim";
 import { DossierDmarc } from "@/components/tools/DossierDmarc";
 import { DossierDns } from "@/components/tools/DossierDns";
 import { DossierMx } from "@/components/tools/DossierMx";
@@ -154,6 +155,16 @@ export const tools: Tool[] = [
     keywords: ["dmarc", "dossier", "email", "authentication", "policy"],
     component: DossierDmarc,
     mcpNames: ["dossier_dmarc"],
+  },
+  {
+    slug: "dossier-dkim",
+    name: "dossier / dkim",
+    description:
+      "probe common DKIM selectors (default, google, k1, selector1/2, mxvault) for a domain.",
+    category: "network",
+    keywords: ["dkim", "dossier", "email", "authentication", "selector", "domainkey"],
+    component: DossierDkim,
+    mcpNames: ["dossier_dkim"],
   },
 ];
 

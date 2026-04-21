@@ -77,6 +77,28 @@ describe("mcp dossier_dns", () => {
     expect(parsed.status).toBe("ok");
   });
 
+  it("dossier_dkim returns CheckResult ok on success", async () => {
+    global.fetch = vi.fn().mockImplementation(async (url: string) => {
+      const name = new URL(url).searchParams.get("name") ?? "";
+      const isGoogle = name.startsWith("google._domainkey.");
+      return {
+        ok: true,
+        json: async () => ({
+          Status: 0,
+          Answer: isGoogle ? [{ name, type: 16, TTL: 60, data: '"v=DKIM1; k=rsa; p=ABC"' }] : [],
+        }),
+      };
+    }) as unknown as typeof fetch;
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const tool = findMcpTool("dossier_dkim");
+    expect(tool).toBeDefined();
+    if (!tool) throw new Error("tool missing");
+    const r = await tool.handler({ domain: "example.com" });
+    expect(r.isError).toBeFalsy();
+    const parsed = JSON.parse(r.content[0].text);
+    expect(parsed.status).toBe("ok");
+  });
+
   it("dossier_dmarc returns CheckResult ok on success", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,

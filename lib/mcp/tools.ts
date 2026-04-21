@@ -1,4 +1,5 @@
 import { sendMcpEvent } from "@/lib/analytics/server";
+import { dkimCheck } from "@/lib/dossier/checks/dkim";
 import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { mxCheck } from "@/lib/dossier/checks/mx";
@@ -115,6 +116,29 @@ const rawMcpTools: McpTool[] = [
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
       const r = await dmarcCheck(domain);
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_dkim",
+    slug: "dossier-dkim",
+    description:
+      "Probe DKIM selectors for a domain. Defaults to common selectors (default, google, k1, selector1, selector2, mxvault). Supply `selectors` to probe a custom list. Returns a CheckResult.",
+    inputSchema: {
+      domain: z.string().describe("Public FQDN."),
+      selectors: z
+        .array(z.string())
+        .optional()
+        .describe("Optional custom selector list. If omitted, probes the common-selectors set."),
+    },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const sel = (input as { selectors?: unknown }).selectors;
+      const selectors =
+        Array.isArray(sel) && sel.every((s) => typeof s === "string")
+          ? (sel as string[])
+          : undefined;
+      const r = await dkimCheck(domain, selectors ? { selectors } : {});
       return ok(JSON.stringify(r, null, 2));
     },
   },
