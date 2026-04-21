@@ -5,6 +5,7 @@ Next.js 15 App Router · TypeScript strict · Tailwind v4 · Biome · Vitest · 
 
 ## Invariants
 - All tool logic is pure functions in `lib/tools/*.ts`. Web UI (`components/tools/*`) and MCP handlers (`lib/mcp/server.ts`, Plan 4) both import these. No logic in components.
+- The domain-dossier flagship carves out its own namespace: pure checks in `lib/dossier/checks/*.ts`, sections in `components/dossier/sections/*.tsx`, standalone tool wrappers in `components/tools/Dossier*.tsx`. Same rule — no logic in components; MCP and web import the same pure fns.
 - `content/tools.ts` is the only place the tool list is declared. Home grid, dynamic route, sitemap, and MCP server all read from it.
 - Theme tokens live in `app/globals.css` as CSS variables. Do not hardcode colors anywhere else.
 - Max content width is 680px. Never override.
