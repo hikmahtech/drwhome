@@ -1,7 +1,7 @@
 import { sendMcpEvent } from "@/lib/analytics/server";
+import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
-import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
 import { formatJson } from "@/lib/tools/json";
 import { decodeJwt } from "@/lib/tools/jwt";

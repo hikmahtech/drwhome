@@ -45,8 +45,8 @@ export async function DnsSection({ domain }: { domain: string }) {
                   <span className="text-muted">—</span>
                 ) : (
                   <ul className="list-none p-0">
-                    {rows.map((a, i) => (
-                      <li key={`${t}-${i}`} className="break-all">
+                    {rows.map((a) => (
+                      <li key={`${t}-${a.data}`} className="break-all">
                         <span className="text-muted">ttl={a.TTL} </span>
                         {a.data}
                       </li>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 
 export function DossierDnsForm({ initial }: { initial: string }) {
   const router = useRouter();
@@ -26,7 +26,9 @@ export function DossierDnsForm({ initial }: { initial: string }) {
         onChange={(e) => setInput(e.target.value)}
         className="flex-1 bg-bg border px-2 py-1 text-sm"
       />
-      <button type="submit" className="border px-3 py-1 text-sm">run</button>
+      <button type="submit" className="border px-3 py-1 text-sm">
+        run
+      </button>
     </form>
   );
 }

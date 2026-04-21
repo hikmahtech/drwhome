@@ -12,7 +12,12 @@ export function validateDomain(raw: string): ValidateResult {
   if (trimmed.length > 253) return { ok: false, reason: "too long" };
 
   // Reject anything URL-ish. Disallow ports, paths, queries, userinfo.
-  if (trimmed.includes("/") || trimmed.includes("?") || trimmed.includes("@") || trimmed.includes(":")) {
+  if (
+    trimmed.includes("/") ||
+    trimmed.includes("?") ||
+    trimmed.includes("@") ||
+    trimmed.includes(":")
+  ) {
     if (HAS_IPV6.test(trimmed)) return { ok: false, reason: "ipv6 not allowed" };
     return { ok: false, reason: "must be a bare domain (no scheme, port, path, userinfo)" };
   }

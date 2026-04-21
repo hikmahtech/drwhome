@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { type CheckResult, isError, isOk } from "@/lib/dossier/types";
+import { describe, expect, it } from "vitest";
 
 describe("CheckResult narrowing", () => {
   it("isOk narrows to the ok variant and exposes data", () => {

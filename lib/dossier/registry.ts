@@ -1,5 +1,5 @@
-import type { CheckResult } from "@/lib/dossier/types";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
+import type { CheckResult } from "@/lib/dossier/types";
 
 export type DossierCheckId = "dns";
 

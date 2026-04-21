@@ -1,17 +1,15 @@
-import { describe, expect, it } from "vitest";
 import { validateDomain } from "@/lib/dossier/validate-domain";
+import { describe, expect, it } from "vitest";
 
 describe("validateDomain", () => {
-  it.each([
-    ["example.com"],
-    ["sub.example.com"],
-    ["xn--bcher-kva.de"],
-    ["a-b.c-d.dev"],
-  ])("accepts public FQDN %s", (d) => {
-    const r = validateDomain(d);
-    expect(r.ok).toBe(true);
-    if (r.ok) expect(r.domain).toBe(d.toLowerCase());
-  });
+  it.each([["example.com"], ["sub.example.com"], ["xn--bcher-kva.de"], ["a-b.c-d.dev"]])(
+    "accepts public FQDN %s",
+    (d) => {
+      const r = validateDomain(d);
+      expect(r.ok).toBe(true);
+      if (r.ok) expect(r.domain).toBe(d.toLowerCase());
+    },
+  );
 
   it("lowercases mixed-case input", () => {
     const r = validateDomain("Example.COM");

@@ -1,12 +1,12 @@
-import { Suspense } from "react";
-import { notFound } from "next/navigation";
-import type { Metadata } from "next";
-import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { TerminalPrompt } from "@/components/terminal/TerminalPrompt";
 import { DnsSection } from "@/components/dossier/sections/DnsSection";
 import { DnsSectionSkeleton } from "@/components/dossier/sections/DnsSectionSkeleton";
+import { Breadcrumb } from "@/components/layout/Breadcrumb";
+import { TerminalPrompt } from "@/components/terminal/TerminalPrompt";
 import { validateDomain } from "@/lib/dossier/validate-domain";
 import { pageMetadata } from "@/lib/seo";
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import { Suspense } from "react";
 
 export async function generateMetadata({
   params,
@@ -22,9 +22,7 @@ export async function generateMetadata({
   });
 }
 
-export default async function DossierPage({
-  params,
-}: { params: Promise<{ domain: string }> }) {
+export default async function DossierPage({ params }: { params: Promise<{ domain: string }> }) {
   const { domain: raw } = await params;
   const v = validateDomain(decodeURIComponent(raw));
   if (!v.ok) notFound();

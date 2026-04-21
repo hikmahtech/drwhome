@@ -1,6 +1,6 @@
+import { DnsSection } from "@/components/dossier/sections/DnsSection";
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { DnsSection } from "@/components/dossier/sections/DnsSection";
 
 vi.mock("@/lib/dossier/checks/dns", () => ({
   DNS_DOSSIER_TYPES: ["A", "AAAA", "NS", "SOA", "CAA", "TXT"],
@@ -16,7 +16,11 @@ describe("DnsSection", () => {
       data: {
         records: {
           A: [{ name: "example.com.", type: 1, TTL: 300, data: "93.184.216.34" }],
-          AAAA: [], NS: [], SOA: [], CAA: [], TXT: [],
+          AAAA: [],
+          NS: [],
+          SOA: [],
+          CAA: [],
+          TXT: [],
         },
       },
     });
@@ -48,7 +52,10 @@ describe("DnsSection", () => {
   });
 
   it("renders timeout line", async () => {
-    (dnsCheck as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({ status: "timeout", ms: 5000 });
+    (dnsCheck as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: "timeout",
+      ms: 5000,
+    });
     const ui = await DnsSection({ domain: "example.com" });
     render(ui);
     expect(screen.getByText(/timed out after 5000ms/)).toBeInTheDocument();

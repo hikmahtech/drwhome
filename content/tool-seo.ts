@@ -1058,6 +1058,82 @@ export const toolContent: Record<string, ToolContent> = {
       { title: "Cloudflare 1.1.1.1 — public resolver", url: "https://1.1.1.1" },
     ],
   },
+  "dossier-dns": {
+    lead: "resolve a, aaaa, ns, soa, caa, and txt records for a domain in one shot. part of the drwho.me domain dossier.",
+    overview:
+      "a single pass that fans out six parallel doh queries against cloudflare's resolver and gathers the answers into one view. the same pure function powers the domain dossier page (`/d/<domain>`), the standalone tool, and the mcp tool — no logic duplication. this is the first satellite of the domain dossier; more sections (tls, email auth, headers, cors, redirects) are landing across subsequent plans.",
+    howTo: [
+      {
+        step: "enter a bare domain",
+        detail:
+          "public fqdn only. no schemes, no ports, no paths. ips and rfc1918 ranges are rejected.",
+      },
+      {
+        step: "run the check",
+        detail:
+          "the tool queries a, aaaa, ns, soa, caa, txt in parallel via cloudflare doh. results stream in together.",
+      },
+      {
+        step: "inspect the records",
+        detail: "each record type is shown with its ttl and rdata. empty types render a dash.",
+      },
+    ],
+    examples: [
+      {
+        input: "example.com",
+        output:
+          "A ttl=300 93.184.216.34 · NS ttl=86400 a.iana-servers.net. · SOA ttl=3600 ns.icann.org. …",
+        note: "most public sites return a, ns, soa at minimum.",
+      },
+      {
+        input: "drwho.me",
+        output: "A ttl=60 76.76.21.21 · NS ttl=3600 ns1.vercel-dns.com. · TXT ttl=60 v=spf1 -all …",
+        note: "a typical vercel-hosted site — short ttls, cloud-managed nameservers.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "no subdomain enumeration here",
+        body: "this tool queries record types for the exact name you enter. for subdomain discovery (via ct logs) see the upcoming subdomains check in a later dossier bundle.",
+      },
+      {
+        title: "resolver caching",
+        body: "cloudflare doh caches per ttl. fresh changes to your zone may not appear for up to the record's ttl window.",
+      },
+      {
+        title: "empty txt doesn't mean broken",
+        body: "many domains have no txt records at all. an empty txt block is a finding, not an error. email auth (spf/dmarc) lives in a dedicated section, not here.",
+      },
+    ],
+    faq: [
+      {
+        q: "why these six record types?",
+        a: "they are the ones that almost every real domain has something interesting to say about. mx lives in a separate section because the email-auth group (spf, dkim, dmarc, mx) is cohesive enough to deserve its own view.",
+      },
+      {
+        q: "do you support dnssec / caa semantics?",
+        a: "caa records are returned verbatim; full dnssec chain validation is out of scope for v1. the upcoming tls and email-auth sections will surface related signals.",
+      },
+      {
+        q: "can i use this with an agent?",
+        a: "yes. the `dossier_dns` mcp tool returns the same result as a structured checkresult json payload, so an llm agent can pattern-match on status (ok / error / timeout / not_applicable) and drill into records.",
+      },
+      {
+        q: "why not ptr / reverse dns?",
+        a: "ptr lookups are bound to ip addresses, not domains. the dossier is domain-scoped; ip-centric checks belong in the ip-lookup tool.",
+      },
+      {
+        q: "how is this different from the regular dns tool?",
+        a: "the plain dns tool resolves one record type at a time and is optimised for quick ad-hoc checks. dossier/dns fans out six queries in parallel and returns a single structured result designed for composition (with tls, headers, email auth, etc.) into a domain-wide view at `/d/<domain>`.",
+      },
+    ],
+    related: ["dns", "ip-lookup"],
+    references: [
+      { title: "RFC 1035 — domain names", url: "https://www.rfc-editor.org/rfc/rfc1035" },
+      { title: "RFC 6844 — caa records", url: "https://www.rfc-editor.org/rfc/rfc6844" },
+      { title: "RFC 8484 — dns over https (doh)", url: "https://www.rfc-editor.org/rfc/rfc8484" },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {

@@ -1,5 +1,5 @@
-import { describe, expect, it, vi, afterEach } from "vitest";
-import { dnsCheck, DNS_DOSSIER_TYPES } from "@/lib/dossier/checks/dns";
+import { DNS_DOSSIER_TYPES, dnsCheck } from "@/lib/dossier/checks/dns";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 describe("dnsCheck", () => {
   const originalFetch = global.fetch;
@@ -19,7 +19,7 @@ describe("dnsCheck", () => {
         ok: true,
         json: async () => ({
           Status: 0,
-          Answer: [{ name: `example.com.`, type: 1, TTL: 60, data: `stub-${type}` }],
+          Answer: [{ name: "example.com.", type: 1, TTL: 60, data: `stub-${type}` }],
         }),
       }) as unknown as Response;
     global.fetch = vi.fn().mockImplementation(async (url: string) => {
@@ -48,7 +48,9 @@ describe("dnsCheck", () => {
   });
 
   it("returns error when upstream DoH returns non-200", async () => {
-    global.fetch = vi.fn().mockResolvedValue({ ok: false, status: 500 } as Response) as unknown as typeof fetch;
+    global.fetch = vi
+      .fn()
+      .mockResolvedValue({ ok: false, status: 500 } as Response) as unknown as typeof fetch;
     const r = await dnsCheck("example.com");
     expect(r.status).toBe("error");
   });
