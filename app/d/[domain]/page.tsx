@@ -1,5 +1,15 @@
+import { CorsSection } from "@/components/dossier/sections/CorsSection";
+import { DkimSection } from "@/components/dossier/sections/DkimSection";
+import { DmarcSection } from "@/components/dossier/sections/DmarcSection";
 import { DnsSection } from "@/components/dossier/sections/DnsSection";
 import { DnsSectionSkeleton } from "@/components/dossier/sections/DnsSectionSkeleton";
+import { HeadersSection } from "@/components/dossier/sections/HeadersSection";
+import { MxSection } from "@/components/dossier/sections/MxSection";
+import { RedirectsSection } from "@/components/dossier/sections/RedirectsSection";
+import { SectionSkeleton } from "@/components/dossier/sections/SectionSkeleton";
+import { SpfSection } from "@/components/dossier/sections/SpfSection";
+import { TlsSection } from "@/components/dossier/sections/TlsSection";
+import { WebSurfaceSection } from "@/components/dossier/sections/WebSurfaceSection";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { TerminalPrompt } from "@/components/terminal/TerminalPrompt";
 import { validateDomain } from "@/lib/dossier/validate-domain";
@@ -16,7 +26,7 @@ export async function generateMetadata({
   if (!v.ok) return { title: "not found" };
   return pageMetadata({
     title: `dossier — ${v.domain}`,
-    description: `dns, tls, email auth, headers, and more for ${v.domain}.`,
+    description: `dns, mx, spf, dmarc, dkim, tls, redirects, headers, cors, and web surface for ${v.domain}.`,
     path: `/d/${v.domain}`,
     type: "tool",
   });
@@ -27,19 +37,125 @@ export default async function DossierPage({ params }: { params: Promise<{ domain
   const v = validateDomain(decodeURIComponent(raw));
   if (!v.ok) notFound();
 
+  const d = v.domain;
   return (
     <article className="space-y-4">
-      <Breadcrumb path={`~/d/${v.domain}`} />
-      <TerminalPrompt>dossier for {v.domain}</TerminalPrompt>
+      <Breadcrumb path={`~/d/${d}`} />
+      <TerminalPrompt>dossier for {d}</TerminalPrompt>
       <p className="text-sm text-muted">
         an at-a-glance snapshot. each section streams in independently.
       </p>
 
-      <Suspense fallback={<DnsSectionSkeleton domain={v.domain} />}>
-        <DnsSection domain={v.domain} />
+      <Suspense fallback={<DnsSectionSkeleton domain={d} />}>
+        <DnsSection domain={d} />
       </Suspense>
 
-      {/* Plan 2 will land 9 more <Suspense> sections here */}
+      <Suspense
+        fallback={
+          <SectionSkeleton title="mx" toolSlug="dossier-mx" domain={d} message="resolving mx…" />
+        }
+      >
+        <MxSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton title="spf" toolSlug="dossier-spf" domain={d} message="resolving spf…" />
+        }
+      >
+        <SpfSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton
+            title="dmarc"
+            toolSlug="dossier-dmarc"
+            domain={d}
+            message="resolving dmarc…"
+          />
+        }
+      >
+        <DmarcSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton
+            title="dkim"
+            toolSlug="dossier-dkim"
+            domain={d}
+            message="probing dkim selectors…"
+          />
+        }
+      >
+        <DkimSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton
+            title="tls"
+            toolSlug="dossier-tls"
+            domain={d}
+            message="fetching tls cert…"
+          />
+        }
+      >
+        <TlsSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton
+            title="redirects"
+            toolSlug="dossier-redirects"
+            domain={d}
+            message="tracing redirects…"
+          />
+        }
+      >
+        <RedirectsSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton
+            title="headers"
+            toolSlug="dossier-headers"
+            domain={d}
+            message="fetching headers…"
+          />
+        }
+      >
+        <HeadersSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton
+            title="cors"
+            toolSlug="dossier-cors"
+            domain={d}
+            message="sending preflight…"
+          />
+        }
+      >
+        <CorsSection domain={d} />
+      </Suspense>
+
+      <Suspense
+        fallback={
+          <SectionSkeleton
+            title="web-surface"
+            toolSlug="dossier-web-surface"
+            domain={d}
+            message="inspecting web surface…"
+          />
+        }
+      >
+        <WebSurfaceSection domain={d} />
+      </Suspense>
     </article>
   );
 }
