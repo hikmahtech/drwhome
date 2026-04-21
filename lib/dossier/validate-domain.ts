@@ -1,7 +1,7 @@
 export type ValidateResult = { ok: true; domain: string } | { ok: false; reason: string };
 
 const LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
-const BANNED_TLDS = new Set(["local", "internal", "test", "localhost"]);
+const BANNED_TLDS = new Set(["local", "internal", "test", "example", "localhost"]);
 const IPV4 = /^(\d{1,3}\.){3}\d{1,3}$/;
 const HAS_IPV6 = /:/;
 

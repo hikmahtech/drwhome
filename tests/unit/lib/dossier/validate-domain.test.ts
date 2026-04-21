@@ -6,7 +6,7 @@ describe("validateDomain", () => {
     ["example.com"],
     ["sub.example.com"],
     ["xn--bcher-kva.de"],
-    ["a-b.c-d.example"],
+    ["a-b.c-d.dev"],
   ])("accepts public FQDN %s", (d) => {
     const r = validateDomain(d);
     expect(r.ok).toBe(true);
@@ -28,6 +28,7 @@ describe("validateDomain", () => {
     ["example.local", ".local banned"],
     ["example.internal", ".internal banned"],
     ["example.test", ".test banned"],
+    ["a-b.c-d.example", "reserved TLD banned"],
     ["example.com:8080", "port banned"],
     ["example.com/path", "path banned"],
     ["example.com?q=1", "query banned"],
