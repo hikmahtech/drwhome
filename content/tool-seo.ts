@@ -1508,6 +1508,85 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
+  "dossier-redirects": {
+    lead: "trace the HTTP redirect chain from https://<domain>/ — every 301/302/307/308 hop, up to a 10-hop cap. part of the drwho.me domain dossier.",
+    overview:
+      "HTTP redirects (RFC 9110 §15.4) are how servers tell a client 'not here, go there' via a 3xx status + `Location` header. the common cases: 301 (moved permanently — cache it), 302 (found — don't cache), 307 (temporary redirect preserving method + body), 308 (permanent redirect preserving method + body). this tool issues a `GET https://<domain>/` with `redirect: manual` and walks the `Location` chain by hand, recording `{url, status}` for each hop, stopping on the first non-3xx response or when the 10-hop cap is hit. relative Locations are resolved against the current URL (so `/foo` after `https://a.example/` becomes `https://a.example/foo`). we deliberately start at `https://` — if you want to see the HTTP -> HTTPS upgrade, some hosts serve it as a real 301, others rely on HSTS preloading (which is invisible to this probe because the browser upgrades before the request leaves). common chains: apex -> www (`example.com` -> `www.example.com`), tracking-style path rewrites (`/?utm=...` -> `/`), locale detection (`/en`), auth gates (`/` -> `/login`). a 10-hop cap catches most real-world misconfigurations (classic: `a` redirects to `b`, `b` redirects back to `a`) while still finishing well under the 5s timeout budget.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, or paths." },
+      {
+        step: "read the chain",
+        detail:
+          "each hop shows `[status] url`. the first row is always `https://<your-domain>/`; subsequent rows come from the `Location` header of the previous response.",
+      },
+      {
+        step: "look at final status",
+        detail:
+          "the final status is the first non-3xx response the chain lands on — typically 200 (ok), 404 (not found), or 403 (forbidden). if the chain stops on a 3xx with no `Location`, or exceeds 10 hops, we report an error instead.",
+      },
+    ],
+    examples: [
+      {
+        input: "google.com",
+        output:
+          "chain: `https://google.com/` (301) -> `https://www.google.com/` (200). classic apex -> www redirect.",
+        note: "two hops, final 200. the apex is a pure redirector — `www` hosts the actual app.",
+      },
+      {
+        input: "bit.ly/<short>",
+        output:
+          "one 301 hop to the target URL, final 200 on the destination page. link shorteners are the canonical redirect use case.",
+        note: "some shorteners add tracking hops (e.g. via doubleclick) before landing.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "we start at https:// — no http upgrade visible",
+        body: "this tool always starts at `https://<domain>/`. sites that serve a literal `http://` -> `https://` 301 won't show it here because we never issue the plain http request. HSTS-preloaded domains never emit that redirect at all (the browser upgrades before the request leaves), so this is a less useful signal than it looks.",
+      },
+      {
+        title: "first-hop TLS failure surfaces as a network error, not a redirect error",
+        body: "if the https handshake itself fails (expired cert, self-signed, wrong SAN), `fetch` throws before any status is observed, so you'll see `error: <openssl code>` rather than an empty chain. use dossier-tls first when the redirects probe errors out with a TLS-shaped message.",
+      },
+      {
+        title: "cookies and auth can change the chain",
+        body: "we send no cookies, no auth header, and a fixed `User-Agent`. a site that varies its redirect on a logged-in session (e.g. `/` -> `/dashboard` for authed users, `/` -> `/login` for anons) will show you the anon path only. the chain a real browser sees may be shorter or longer.",
+      },
+    ],
+    faq: [
+      {
+        q: "why a 10-hop cap?",
+        a: "browsers cap at ~20 hops (chrome = 20, firefox = 20); 10 is already well past every legitimate chain we've seen. the cap exists to catch loops — sites that redirect `a` -> `b` -> `a` forever — and surface them as `redirect cap exceeded` rather than hanging until the 5s timeout.",
+      },
+      {
+        q: "301 vs 302 vs 307 vs 308 — which should i use?",
+        a: "301 (permanent, may rewrite method) and 302 (temporary, may rewrite method) are the classic pair — but 'may rewrite method' means a POST often becomes a GET on the next hop, which is why the HTTP/1.1 WG added 307 (temporary, preserve method + body) and 308 (permanent, preserve method + body). for apex -> www, use 301 for cacheability; for `/` -> `/login` gates, use 302 or 307. RFC 9110 §15.4 lays out the full matrix.",
+      },
+      {
+        q: "do we follow cross-scheme redirects (https -> http)?",
+        a: "yes — the loop has no scheme policy, it just follows `Location`. in practice https -> http is a security smell (you're about to leak the rest of the session over plaintext) and most modern browsers block it. if you see it in the chain, treat it as a bug on the server side.",
+      },
+      {
+        q: "what if the server returns 301 with no `Location` header?",
+        a: "RFC 9110 requires `Location` on all 3xx responses that aren't 304. a 301 without one is a spec violation; we report `redirect 301 with no Location header` as an error rather than guess where to go next.",
+      },
+      {
+        q: "why not use `redirect: 'follow'` and let fetch handle it?",
+        a: "because then you only see the final URL, not the chain. `redirect: manual` is the only way to record every `{url, status}` pair. it's the same reason curl has `-L --max-redirs N -w '%{url_effective}\\n'` — you pick manual when the chain IS the data.",
+      },
+    ],
+    related: ["dns", "dossier-dns", "dossier-tls"],
+    references: [
+      {
+        title: "RFC 9110 §15.4 — Redirection 3xx",
+        url: "https://www.rfc-editor.org/rfc/rfc9110#section-15.4",
+      },
+      {
+        title: "MDN — HTTP Redirections",
+        url: "https://developer.mozilla.org/en-US/docs/Web/HTTP/Redirections",
+      },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {

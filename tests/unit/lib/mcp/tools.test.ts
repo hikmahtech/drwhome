@@ -2,7 +2,7 @@ import { findMcpTool, mcpTools } from "@/lib/mcp/tools";
 import { describe, expect, it } from "vitest";
 
 describe("mcpTools", () => {
-  it("exposes exactly the 16 MCP tools from the design spec", () => {
+  it("exposes exactly the 17 MCP tools from the design spec", () => {
     const names = mcpTools.map((t) => t.name).sort();
     expect(names).toEqual(
       [
@@ -13,6 +13,7 @@ describe("mcpTools", () => {
         "dossier_dmarc",
         "dossier_dns",
         "dossier_mx",
+        "dossier_redirects",
         "dossier_spf",
         "dossier_tls",
         "ip_lookup",
@@ -45,6 +46,7 @@ describe("mcpTools", () => {
       "dossier-dmarc",
       "dossier-dns",
       "dossier-mx",
+      "dossier-redirects",
       "dossier-spf",
       "dossier-tls",
       "dns",

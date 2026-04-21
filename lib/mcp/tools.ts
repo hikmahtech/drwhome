@@ -3,6 +3,7 @@ import { dkimCheck } from "@/lib/dossier/checks/dkim";
 import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { mxCheck } from "@/lib/dossier/checks/mx";
+import { redirectsCheck } from "@/lib/dossier/checks/redirects";
 import { spfCheck } from "@/lib/dossier/checks/spf";
 import { tlsCheck } from "@/lib/dossier/checks/tls";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
@@ -152,6 +153,18 @@ const rawMcpTools: McpTool[] = [
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
       const r = await tlsCheck(domain);
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_redirects",
+    slug: "dossier-redirects",
+    description:
+      "Trace the HTTP redirect chain starting at https://<domain>/, up to 10 hops. Returns the hop list as a CheckResult.",
+    inputSchema: { domain: z.string().describe("Public FQDN.") },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const r = await redirectsCheck(domain);
       return ok(JSON.stringify(r, null, 2));
     },
   },

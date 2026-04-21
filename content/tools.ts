@@ -4,6 +4,7 @@ import { DossierDkim } from "@/components/tools/DossierDkim";
 import { DossierDmarc } from "@/components/tools/DossierDmarc";
 import { DossierDns } from "@/components/tools/DossierDns";
 import { DossierMx } from "@/components/tools/DossierMx";
+import { DossierRedirects } from "@/components/tools/DossierRedirects";
 import { DossierSpf } from "@/components/tools/DossierSpf";
 import { DossierTls } from "@/components/tools/DossierTls";
 import { Headers } from "@/components/tools/Headers";
@@ -176,6 +177,15 @@ export const tools: Tool[] = [
     keywords: ["tls", "ssl", "certificate", "dossier", "issuer", "san", "fingerprint"],
     component: DossierTls,
     mcpNames: ["dossier_tls"],
+  },
+  {
+    slug: "dossier-redirects",
+    name: "dossier / redirects",
+    description: "trace the HTTP(S) redirect chain from https://<domain>/ up to 10 hops.",
+    category: "network",
+    keywords: ["redirect", "301", "302", "chain", "dossier", "http"],
+    component: DossierRedirects,
+    mcpNames: ["dossier_redirects"],
   },
 ];
 

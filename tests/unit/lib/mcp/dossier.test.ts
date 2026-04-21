@@ -110,6 +110,22 @@ describe("mcp dossier_dns", () => {
     expect(parsed.status).toBe("error");
   });
 
+  it("dossier_redirects returns CheckResult ok on success", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      headers: { get: () => null },
+    }) as unknown as typeof fetch;
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const tool = findMcpTool("dossier_redirects");
+    expect(tool).toBeDefined();
+    if (!tool) throw new Error("tool missing");
+    const r = await tool.handler({ domain: "example.com" });
+    expect(r.isError).toBeFalsy();
+    const parsed = JSON.parse(r.content[0].text);
+    expect(parsed.status).toBe("ok");
+  });
+
   it("dossier_dmarc returns CheckResult ok on success", async () => {
     global.fetch = vi.fn().mockResolvedValue({
       ok: true,
