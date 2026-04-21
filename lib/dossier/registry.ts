@@ -1,3 +1,5 @@
+// lib/dossier/registry.ts
+import { withCache } from "@/lib/dossier/cache";
 import { corsCheck } from "@/lib/dossier/checks/cors";
 import { dkimCheck } from "@/lib/dossier/checks/dkim";
 import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
@@ -8,54 +10,80 @@ import { redirectsCheck } from "@/lib/dossier/checks/redirects";
 import { spfCheck } from "@/lib/dossier/checks/spf";
 import { tlsCheck } from "@/lib/dossier/checks/tls";
 import { webSurfaceCheck } from "@/lib/dossier/checks/web-surface";
+import { type DossierCheckId, dossierCheckIds } from "@/lib/dossier/ids";
 import type { CheckResult } from "@/lib/dossier/types";
 
-export type DossierCheckId =
-  | "dns"
-  | "mx"
-  | "spf"
-  | "dmarc"
-  | "dkim"
-  | "tls"
-  | "redirects"
-  | "headers"
-  | "cors"
-  | "web-surface";
+// Re-export so existing imports of DossierCheckId from registry keep working.
+export { dossierCheckIds, type DossierCheckId };
 
 export type DossierCheck = {
   id: DossierCheckId;
   title: string;
-  toolSlug: string; // matches content/tools.ts slug
-  run: (domain: string) => Promise<CheckResult<unknown>>;
+  toolSlug: string;
+  ttlSeconds: number;
+  run: (domain: string) => Promise<CheckResult<unknown>>; // cached
+  runUncached: (domain: string) => Promise<CheckResult<unknown>>; // raw
 };
 
-export const dossierChecks: DossierCheck[] = [
-  { id: "dns", title: "dns", toolSlug: "dossier-dns", run: dnsCheck },
-  { id: "mx", title: "mx", toolSlug: "dossier-mx", run: mxCheck },
-  { id: "spf", title: "spf", toolSlug: "dossier-spf", run: spfCheck },
-  { id: "dmarc", title: "dmarc", toolSlug: "dossier-dmarc", run: dmarcCheck },
-  { id: "dkim", title: "dkim", toolSlug: "dossier-dkim", run: dkimCheck },
-  { id: "tls", title: "tls", toolSlug: "dossier-tls", run: tlsCheck },
+type Raw = {
+  id: DossierCheckId;
+  title: string;
+  toolSlug: string;
+  ttlSeconds: number;
+  fn: (domain: string) => Promise<CheckResult<unknown>>;
+};
+
+const raw: Raw[] = [
+  { id: "dns", title: "dns", toolSlug: "dossier-dns", ttlSeconds: 3600, fn: dnsCheck },
+  { id: "mx", title: "mx", toolSlug: "dossier-mx", ttlSeconds: 3600, fn: mxCheck },
+  { id: "spf", title: "spf", toolSlug: "dossier-spf", ttlSeconds: 3600, fn: spfCheck },
+  { id: "dmarc", title: "dmarc", toolSlug: "dossier-dmarc", ttlSeconds: 3600, fn: dmarcCheck },
+  {
+    id: "dkim",
+    title: "dkim",
+    toolSlug: "dossier-dkim",
+    ttlSeconds: 900,
+    fn: (d: string) => dkimCheck(d),
+  },
+  { id: "tls", title: "tls", toolSlug: "dossier-tls", ttlSeconds: 21600, fn: tlsCheck },
   {
     id: "redirects",
     title: "redirects",
     toolSlug: "dossier-redirects",
-    run: redirectsCheck,
+    ttlSeconds: 900,
+    fn: redirectsCheck,
   },
   {
     id: "headers",
     title: "headers",
     toolSlug: "dossier-headers",
-    run: headersCheck,
+    ttlSeconds: 900,
+    fn: headersCheck,
   },
-  { id: "cors", title: "cors", toolSlug: "dossier-cors", run: corsCheck },
+  {
+    id: "cors",
+    title: "cors",
+    toolSlug: "dossier-cors",
+    ttlSeconds: 900,
+    fn: (d: string) => corsCheck(d),
+  },
   {
     id: "web-surface",
     title: "web-surface",
     toolSlug: "dossier-web-surface",
-    run: webSurfaceCheck,
+    ttlSeconds: 900,
+    fn: webSurfaceCheck,
   },
 ];
+
+export const dossierChecks: DossierCheck[] = raw.map((r) => ({
+  id: r.id,
+  title: r.title,
+  toolSlug: r.toolSlug,
+  ttlSeconds: r.ttlSeconds,
+  run: withCache(r.fn, { id: r.id, ttlSeconds: r.ttlSeconds }),
+  runUncached: r.fn,
+}));
 
 export function findCheck(id: DossierCheckId): DossierCheck | undefined {
   return dossierChecks.find((c) => c.id === id);
