@@ -21,10 +21,10 @@ describe("cache helpers", () => {
     expect(r.status).toBe("ok");
   });
 
-  it("revalidateAllTags invokes revalidateTag for every registered check", async () => {
-    const cache = await import("@/lib/dossier/cache");
+  it("revalidateAllTagsAction invokes revalidateTag for every registered check", async () => {
+    const { revalidateAllTagsAction } = await import("@/lib/dossier/cache-actions");
     const next = await import("next/cache");
-    await cache.revalidateAllTags("example.com");
+    await revalidateAllTagsAction("example.com");
     const calls = (next.revalidateTag as unknown as { mock: { calls: string[][] } }).mock.calls.map(
       (c) => c[0],
     );

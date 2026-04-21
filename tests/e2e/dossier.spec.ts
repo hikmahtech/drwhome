@@ -45,4 +45,14 @@ test.describe("domain dossier", () => {
       { timeout: 15_000 },
     );
   });
+
+  test("?refresh=1 still renders all 10 sections", async ({ page }) => {
+    await page.goto("/d/example.com?refresh=1");
+    for (const id of SECTION_IDS) {
+      await expect(page.locator(`#${id}`).last()).toContainText(
+        /\b(ok|error|timeout|not_applicable)\b/,
+        { timeout: 20_000 },
+      );
+    }
+  });
 });

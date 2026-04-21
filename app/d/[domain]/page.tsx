@@ -12,6 +12,7 @@ import { TlsSection } from "@/components/dossier/sections/TlsSection";
 import { WebSurfaceSection } from "@/components/dossier/sections/WebSurfaceSection";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { TerminalPrompt } from "@/components/terminal/TerminalPrompt";
+import { revalidateAllTagsAction } from "@/lib/dossier/cache-actions";
 import { validateDomain } from "@/lib/dossier/validate-domain";
 import { pageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
@@ -32,12 +33,25 @@ export async function generateMetadata({
   });
 }
 
-export default async function DossierPage({ params }: { params: Promise<{ domain: string }> }) {
+export default async function DossierPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ domain: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { domain: raw } = await params;
   const v = validateDomain(decodeURIComponent(raw));
   if (!v.ok) notFound();
 
   const d = v.domain;
+
+  const sp = await searchParams;
+  if (sp.refresh === "1") {
+    // Fire-and-forget: start the revalidation but don't await it to avoid blocking the render
+    revalidateAllTagsAction(d).catch(console.error);
+  }
+
   return (
     <article className="space-y-4">
       <Breadcrumb path={`~/d/${d}`} />

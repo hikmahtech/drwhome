@@ -22,8 +22,4 @@ export function withCache<T>(
   };
 }
 
-export async function revalidateAllTags(domain: string): Promise<void> {
-  for (const id of dossierCheckIds) {
-    revalidateTag(tagFor(id, domain));
-  }
-}
+export { revalidateAllTagsAction } from "./cache-actions";
