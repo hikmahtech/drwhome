@@ -2,6 +2,41 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
+---
+
+## Progress (paused 2026-04-22)
+
+**Worktree:** `/Users/arshad/Workspace/hikmah/drwho/.claude/worktrees/dossier-plan-3` (branch `dossier-plan-3`).
+
+**Completed (6 / 13 tasks, commits on branch):**
+
+- [x] **Task 1** — static denylist (`f40925c`)
+- [x] **Task 2** — client-IP extractor (`54f1a17`)
+- [x] **Task 3** — Upstash rate-limit helper w/ no-op fallback (`68ad49e`)
+- [x] **Task 4** — denylist + rate-limit banner components (`b4a8ae4`)
+- [x] **Task 5** — per-check cache wrapper + `lib/dossier/ids.ts` leaf + registry `run`/`runUncached`/`ttlSeconds` (`f8a12d1`)
+- [x] **Task 6** — `?refresh=1` bypass via Route Handler + redirect (`b9ac6a7` + fix `3347b61`). **Key learning:** Next 15 forbids `revalidateTag` during render even via server action — had to move invalidation into `app/api/dossier/revalidate/route.ts` and `redirect()` back. First impl was fire-and-forget and only refreshed the *next* load.
+
+**Remaining (7 tasks):**
+
+- [ ] **Task 7** — gate `/d/[domain]` on denylist + `consumeDossier` (30/h). Banner early-returns before Suspense sections. Must insert AFTER `const d = v.domain;` and BEFORE the `sp.refresh === "1"` redirect block. Spec in plan §Task 7.
+- [ ] **Task 8** — gate `/tools/[slug]` when slug matches `^dossier-`: standalone bucket (60/h), denylist on `?domain=`, per-tag `?refresh=1` invalidation for the single check.
+- [ ] **Task 9** — `withDenylist` wrapper on MCP dossier handlers (`lib/mcp/tools.ts`) + `tests/unit/lib/mcp/dossier.test.ts`.
+- [ ] **Task 10** — `dossier_full` aggregate MCP tool (virtual slug `dossier-full`, not in `content/tools.ts`). Bump tool-count assertion 20→21 in `tests/unit/lib/mcp/tools.test.ts`. Upgrade Task 9's `startsWith("dossier_")` heuristic to explicit `DENYLIST_GATED` Set including `dossier_full`.
+- [ ] **Task 11** — sitemap regression test (no `/d/` entries) + README env vars + dossier section.
+- [ ] **Task 12** — Lighthouse CI: add `/d/example.com` to `.lighthouserc.json`; add `lighthouse` job to `.github/workflows/ci.yml`.
+- [ ] **Task 13** — final gate: lint, typecheck, unit, e2e, `pnpm lh`, build, manual smoke, final commit.
+
+**Resume recipe:**
+1. `cd /Users/arshad/Workspace/hikmah/drwho/.claude/worktrees/dossier-plan-3`
+2. `git rev-parse --abbrev-ref HEAD` → must print `dossier-plan-3`.
+3. Invoke `superpowers:subagent-driven-development`, dispatch Task 7 implementer (haiku — mechanical edit). Task spec is verbatim in plan §Task 7.
+4. Streamlined review per task: implementer → spec review. Full three-stage only for Tasks 10 + 13 (judgment).
+5. Every subagent prompt MUST verify worktree branch before committing (Plan 1 incident).
+6. Commits: single-line conventional, no trailers.
+
+---
+
 **Goal:** Land the cross-cutting infrastructure layer for the domain dossier: Upstash Redis rate limiting, a static denylist, per-check `unstable_cache` TTLs with a `?refresh=1` bypass, the `dossier_full` aggregate MCP tool, and a Lighthouse CI gate on `/d/example.com`. After this plan, Plans 1 + 2 ship as a production-ready flagship.
 
 **Architecture:**
