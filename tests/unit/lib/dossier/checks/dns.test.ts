@@ -56,7 +56,7 @@ describe("dnsCheck", () => {
   });
 
   it("returns timeout when a fetch hangs past the timeout", async () => {
-    global.fetch = vi.fn((url: string, opts: any) => {
+    global.fetch = vi.fn((_url: string, opts?: RequestInit) => {
       return new Promise<Response>((_, reject) => {
         opts?.signal?.addEventListener("abort", () => {
           reject(new DOMException("Aborted", "AbortError"));
