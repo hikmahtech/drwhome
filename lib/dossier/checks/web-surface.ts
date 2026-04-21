@@ -14,6 +14,7 @@ export type WebSurfaceData = {
 
 const DEFAULT_TIMEOUT_MS = 5_000;
 const MAX_BODY_BYTES = 64 * 1024;
+const MAX_FETCH_BYTES = 64 * 1024;
 const ROBOTS_TRUNCATE = 4 * 1024;
 const UA = "drwho-dossier/1.0 (+https://drwho.me)";
 
@@ -26,8 +27,30 @@ async function getText(url: string, signal: AbortSignal): Promise<TextFetch> {
     headers: { "User-Agent": UA },
     signal,
   });
-  const body = await res.text();
-  return { ok: res.ok, status: res.status, body };
+
+  if (!res.body) {
+    const body = await res.text();
+    return { ok: res.ok, status: res.status, body: body.slice(0, MAX_FETCH_BYTES) };
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder("utf-8", { fatal: false });
+  let body = "";
+  let total = 0;
+  try {
+    while (total < MAX_FETCH_BYTES) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      body += decoder.decode(value, { stream: true });
+      if (total >= MAX_FETCH_BYTES) break;
+    }
+    body += decoder.decode();
+  } finally {
+    // Abort the rest of the stream so the server can stop sending.
+    await reader.cancel().catch(() => {});
+  }
+  return { ok: res.ok, status: res.status, body: body.slice(0, MAX_FETCH_BYTES) };
 }
 
 function countSitemapUrls(xml: string): number {
@@ -88,6 +111,8 @@ export async function webSurfaceCheck(
   const base = `https://${v.domain}`;
 
   try {
+    // robots + sitemap are optional signals (missing/failing → present:false);
+    // home-page fetch is un-caught so its failure becomes the whole check's error.
     const [robotsR, sitemapR, homeR] = await Promise.all([
       getText(`${base}/robots.txt`, controller.signal).catch(() => null),
       getText(`${base}/sitemap.xml`, controller.signal).catch(() => null),
