@@ -7,6 +7,7 @@
   --fg: #171717;
   --muted: #737373;
   --accent: #16a34a;
+  --danger: #dc2626;
   --border: #e5e5e5;
 }
 
@@ -15,6 +16,7 @@
   --fg: #d4d4d4;
   --muted: #737373;
   --accent: #4ade80;
+  --danger: #ef4444;
   --border: #1f1f1f;
 }
 
@@ -24,6 +26,7 @@
     --fg: #d4d4d4;
     --muted: #737373;
     --accent: #4ade80;
+    --danger: #ef4444;
     --border: #1f1f1f;
   }
 }

@@ -9,6 +9,7 @@ export default {
         fg: "var(--fg)",
         muted: "var(--muted)",
         accent: "var(--accent)",
+        danger: "var(--danger)",
         border: "var(--border)",
       },
       fontFamily: {
