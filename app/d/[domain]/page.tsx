@@ -12,11 +12,10 @@ import { TlsSection } from "@/components/dossier/sections/TlsSection";
 import { WebSurfaceSection } from "@/components/dossier/sections/WebSurfaceSection";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { TerminalPrompt } from "@/components/terminal/TerminalPrompt";
-import { revalidateAllTagsAction } from "@/lib/dossier/cache-actions";
 import { validateDomain } from "@/lib/dossier/validate-domain";
 import { pageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 export async function generateMetadata({
@@ -48,8 +47,9 @@ export default async function DossierPage({
 
   const sp = await searchParams;
   if (sp.refresh === "1") {
-    // Fire-and-forget: start the revalidation but don't await it to avoid blocking the render
-    revalidateAllTagsAction(d).catch(console.error);
+    // revalidateTag cannot be called during render; delegate to the Route Handler
+    // which runs outside the render pipeline, then redirects back to the clean URL.
+    redirect(`/api/dossier/revalidate?domain=${d}`);
   }
 
   return (
