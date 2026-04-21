@@ -76,4 +76,29 @@ describe("mcp dossier_dns", () => {
     const parsed = JSON.parse(r.content[0].text);
     expect(parsed.status).toBe("ok");
   });
+
+  it("dossier_dmarc returns CheckResult ok on success", async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        Status: 0,
+        Answer: [
+          {
+            name: "_dmarc.example.com.",
+            type: 16,
+            TTL: 300,
+            data: '"v=DMARC1; p=quarantine; rua=mailto:reports@example.com"',
+          },
+        ],
+      }),
+    }) as unknown as typeof fetch;
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const tool = findMcpTool("dossier_dmarc");
+    expect(tool).toBeDefined();
+    if (!tool) throw new Error("tool missing");
+    const r = await tool.handler({ domain: "example.com" });
+    expect(r.isError).toBeFalsy();
+    const parsed = JSON.parse(r.content[0].text);
+    expect(parsed.status).toBe("ok");
+  });
 });

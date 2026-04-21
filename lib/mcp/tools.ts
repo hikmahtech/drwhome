@@ -1,4 +1,5 @@
 import { sendMcpEvent } from "@/lib/analytics/server";
+import { dmarcCheck } from "@/lib/dossier/checks/dmarc";
 import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { mxCheck } from "@/lib/dossier/checks/mx";
 import { spfCheck } from "@/lib/dossier/checks/spf";
@@ -102,6 +103,18 @@ const rawMcpTools: McpTool[] = [
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
       const r = await spfCheck(domain);
+      return ok(JSON.stringify(r, null, 2));
+    },
+  },
+  {
+    name: "dossier_dmarc",
+    slug: "dossier-dmarc",
+    description:
+      "Return the DMARC record for a domain from _dmarc.<domain>, parsed into tags, as a CheckResult discriminated union.",
+    inputSchema: { domain: z.string().describe("Public FQDN.") },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const r = await dmarcCheck(domain);
       return ok(JSON.stringify(r, null, 2));
     },
   },

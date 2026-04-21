@@ -1,5 +1,6 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Dns } from "@/components/tools/Dns";
+import { DossierDmarc } from "@/components/tools/DossierDmarc";
 import { DossierDns } from "@/components/tools/DossierDns";
 import { DossierMx } from "@/components/tools/DossierMx";
 import { DossierSpf } from "@/components/tools/DossierSpf";
@@ -144,6 +145,15 @@ export const tools: Tool[] = [
     keywords: ["spf", "dossier", "email", "authentication", "sender"],
     component: DossierSpf,
     mcpNames: ["dossier_spf"],
+  },
+  {
+    slug: "dossier-dmarc",
+    name: "dossier / dmarc",
+    description: "find and parse a domain's DMARC policy record at _dmarc.<domain>.",
+    category: "network",
+    keywords: ["dmarc", "dossier", "email", "authentication", "policy"],
+    component: DossierDmarc,
+    mcpNames: ["dossier_dmarc"],
   },
 ];
 

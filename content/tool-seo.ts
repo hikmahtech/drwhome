@@ -1271,6 +1271,79 @@ export const toolContent: Record<string, ToolContent> = {
       { title: "dmarc.org — SPF overview", url: "https://dmarc.org/wiki/SPF" },
     ],
   },
+  "dossier-dmarc": {
+    lead: "find and parse a domain's DMARC (domain-based message authentication, reporting, and conformance) policy record. part of the drwho.me domain dossier.",
+    overview:
+      "dmarc (RFC 7489) is a TXT record published at `_dmarc.<domain>` that tells receivers what to do with mail that fails spf or dkim alignment, and where to send aggregate and forensic reports. the policy tag `p=` picks one of three actions: `none` (monitor only — deliver, just send reports), `quarantine` (route to spam), or `reject` (refuse at smtp). alignment is tuned with `adkim` and `aspf` (`r` relaxed — organisational-domain match — or `s` strict — exact fqdn match). `rua` addresses receive daily aggregate reports; `ruf` addresses receive per-message forensic reports. `pct` gates a gradual rollout by percentage, and `sp` applies a distinct policy to subdomains. this tool queries `_dmarc.<domain>` via cloudflare's doh resolver, insists on exactly one `v=DMARC1` record per RFC 7489, and splits the semicolon-separated `k=v` pairs into a tag map.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, paths." },
+      {
+        step: "run the check",
+        detail:
+          "a single TXT doh query at `_dmarc.<domain>`, not the apex. dmarc records never live at the apex.",
+      },
+      {
+        step: "read the policy + alignment",
+        detail:
+          "`p` is the enforcement level, `adkim`/`aspf` tune alignment strictness, `rua`/`ruf` are the reporting addresses, and `pct` gates rollout.",
+      },
+    ],
+    examples: [
+      {
+        input: "google.com",
+        output:
+          "v=DMARC1; p=reject; rua=mailto:mailauth-reports@google.com - policy reject, aggregate reports - relaxed alignment defaults",
+        note: "google enforces reject and collects aggregate reports; no forensic (`ruf`) subscription.",
+      },
+      {
+        input: "microsoft.com",
+        output:
+          "v=DMARC1; p=reject; pct=100; rua=mailto:d@rua.agari.com; ruf=mailto:d@ruf.agari.com; fo=1 - full reject - 100% rollout - both rua and ruf reporting",
+        note: "microsoft uses agari as its report aggregator and opts into per-message forensic feedback.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "dmarc requires spf OR dkim to align",
+        body: "dmarc does not authenticate mail on its own. it only enforces alignment between the visible From: header and an already-passing spf or dkim check. publishing a dmarc record without a working spf or dkim setup means every message fails dmarc regardless of policy.",
+      },
+      {
+        title: "`p=none` is monitor-only",
+        body: "many domains stop at `p=none` and assume they have dmarc protection. they don't — `none` only tells receivers to report, not to block or quarantine. spoofed mail still lands in the inbox. move to `quarantine` and then `reject` once reports show legitimate sources are all aligned.",
+      },
+      {
+        title: "external `rua`/`ruf` mailboxes need authorisation",
+        body: "if your `rua=mailto:` address is in a different domain than the policy domain, the receiving domain must publish `<your-domain>._report._dmarc.<their-domain>` TXT=`v=DMARC1` to opt in. miss this and reporters drop your aggregate reports silently.",
+      },
+    ],
+    faq: [
+      {
+        q: "why does the tool query `_dmarc.<domain>` and not the apex?",
+        a: "RFC 7489 §6.1 places the dmarc record at the `_dmarc` label under the policy domain, not at the apex. the apex TXT is where spf lives; putting dmarc there would collide with spf parsers.",
+      },
+      {
+        q: "what's the difference between `adkim=r` and `adkim=s`?",
+        a: "relaxed (`r`) accepts any subdomain under the same organisational domain — e.g. `mail.example.com` aligned with From: `example.com`. strict (`s`) requires an exact fqdn match. `aspf` works the same way for spf alignment.",
+      },
+      {
+        q: "does `p=reject` mean receivers must reject?",
+        a: "receivers are advised to reject, but dmarc is a policy signal, not a mandate. large mailbox providers (gmail, outlook) honor it; some smaller operators ignore it entirely. `pct` can gate rollout — `p=reject; pct=10` means only 10% of failing mail is rejected; the rest falls back to the `sp` or `quarantine` treatment.",
+      },
+      {
+        q: "can subdomains have their own dmarc policy?",
+        a: "yes. a subdomain may publish its own `_dmarc.sub.example.com` TXT, which overrides the parent. if it doesn't, receivers inherit the parent's policy but apply the `sp` tag instead of `p` when scoring the subdomain.",
+      },
+      {
+        q: "what's `fo` for?",
+        a: "`fo` controls when forensic reports fire: `0` (default) = report only on total dmarc failure; `1` = report when any auth check fails; `d` = dkim failure; `s` = spf failure. it only matters if you publish a `ruf` address.",
+      },
+    ],
+    related: ["dns", "dossier-dns", "dossier-mx", "dossier-spf"],
+    references: [
+      { title: "RFC 7489 — DMARC", url: "https://www.rfc-editor.org/rfc/rfc7489" },
+      { title: "RFC 8617 — ARC", url: "https://www.rfc-editor.org/rfc/rfc8617" },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {
