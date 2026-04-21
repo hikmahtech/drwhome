@@ -1,5 +1,6 @@
 import { Base64 } from "@/components/tools/Base64";
 import { Dns } from "@/components/tools/Dns";
+import { DossierDns } from "@/components/tools/DossierDns";
 import { Headers } from "@/components/tools/Headers";
 import { IpLookup } from "@/components/tools/IpLookup";
 import { Json } from "@/components/tools/Json";
@@ -18,7 +19,7 @@ export type Tool = {
   description: string;
   category: ToolCategory;
   keywords: string[];
-  component: ComponentType;
+  component: ComponentType<{ domain?: string }>;
   /**
    * MCP tool name(s) that map to this web tool. Undefined = not MCP-exposed.
    * Multiple entries for tools that expose >1 MCP function (e.g. base64 has encode + decode).
@@ -114,6 +115,15 @@ export const tools: Tool[] = [
     keywords: ["dns", "lookup", "record", "A", "AAAA", "MX", "TXT", "cloudflare"],
     component: Dns,
     mcpNames: ["dns_lookup"],
+  },
+  {
+    slug: "dossier-dns",
+    name: "dossier / dns",
+    description: "resolve A, AAAA, NS, SOA, CAA, and TXT records for a domain in one go.",
+    category: "network",
+    keywords: ["dns", "dossier", "records", "soa", "caa", "nameserver"],
+    component: DossierDns,
+    mcpNames: ["dossier_dns"],
   },
 ];
 

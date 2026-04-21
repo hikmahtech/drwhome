@@ -39,8 +39,17 @@ export async function generateMetadata({
   };
 }
 
-export default async function ToolPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ToolPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { slug } = await params;
+  const sp = await searchParams;
+  const domainRaw = sp.domain;
+  const domain = typeof domainRaw === "string" ? domainRaw : undefined;
   const tool = findTool(slug);
   if (!tool) notFound();
   const Component = tool.component;
@@ -69,7 +78,7 @@ export default async function ToolPage({ params }: { params: Promise<{ slug: str
       <p className="text-sm">
         {content?.lead ?? <span className="text-muted">{tool.description}</span>}
       </p>
-      <Component />
+      <Component domain={domain} />
 
       {content && (
         <div className="space-y-8 mt-8">
