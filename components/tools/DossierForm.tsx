@@ -4,7 +4,7 @@ import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-export function DossierDnsForm({ initial }: { initial: string }) {
+export function DossierForm({ slug, initial }: { slug: string; initial: string }) {
   const router = useRouter();
   const [input, setInput] = useState(initial);
   const [, start] = useTransition();
@@ -14,7 +14,7 @@ export function DossierDnsForm({ initial }: { initial: string }) {
         e.preventDefault();
         const q = input.trim();
         if (!q) return;
-        start(() => router.push(`/tools/dossier-dns?domain=${encodeURIComponent(q)}` as Route));
+        start(() => router.push(`/tools/${slug}?domain=${encodeURIComponent(q)}` as Route));
       }}
       className="flex gap-2"
     >

@@ -1,9 +1,7 @@
-import { CheckSection } from "@/components/dossier/CheckSection";
+import { SectionSkeleton } from "@/components/dossier/sections/SectionSkeleton";
 
 export function DnsSectionSkeleton({ domain }: { domain: string }) {
   return (
-    <CheckSection title="dns" toolSlug="dossier-dns" domain={domain} status="not_applicable">
-      <p className="text-muted">resolving…</p>
-    </CheckSection>
+    <SectionSkeleton title="dns" toolSlug="dossier-dns" domain={domain} message="resolving…" />
   );
 }
