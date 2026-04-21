@@ -10,9 +10,10 @@ test.describe("domain dossier", () => {
     await expect(dnsSection).toContainText(/\b(ok|error|timeout|not_applicable)\b/);
   });
 
-  test("invalid domain returns not-found body", async ({ page }) => {
+  test("invalid domain renders not-found body", async ({ page }) => {
     await page.goto("/d/not..valid");
-    // Next.js renders not-found.tsx with 200 status, not 404
+    // Next.js 15 App Router dynamic routes return 200 after streaming starts
+    // even when notFound() fires; the not-found.tsx body is what users see.
     await expect(page.getByText(/not a valid public domain/i)).toBeVisible();
   });
 

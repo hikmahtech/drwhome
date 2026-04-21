@@ -21,6 +21,7 @@ export function DossierDnsForm({ initial }: { initial: string }) {
       <input
         type="text"
         name="domain"
+        aria-label="domain"
         placeholder="example.com"
         value={input}
         onChange={(e) => setInput(e.target.value)}

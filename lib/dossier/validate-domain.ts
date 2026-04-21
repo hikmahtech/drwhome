@@ -34,7 +34,6 @@ export function validateDomain(raw: string): ValidateResult {
 
   const tld = labels[labels.length - 1];
   if (BANNED_TLDS.has(tld)) return { ok: false, reason: `banned tld: .${tld}` };
-  if (domain === "localhost") return { ok: false, reason: "localhost not allowed" };
 
   return { ok: true, domain };
 }
