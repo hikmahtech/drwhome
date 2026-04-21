@@ -1,6 +1,7 @@
 import { sendMcpEvent } from "@/lib/analytics/server";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
+import { dnsCheck } from "@/lib/dossier/checks/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
 import { formatJson } from "@/lib/tools/json";
 import { decodeJwt } from "@/lib/tools/jwt";
@@ -62,6 +63,20 @@ const rawMcpTools: McpTool[] = [
       const r = await resolveDns(name, type);
       if (!r.ok) return fail(r.error);
       return ok(JSON.stringify(r.answers, null, 2));
+    },
+  },
+  {
+    name: "dossier_dns",
+    slug: "dossier-dns",
+    description:
+      "Run the DNS section of the domain dossier: resolves A, AAAA, NS, SOA, CAA, TXT in parallel. Returns a CheckResult discriminated union.",
+    inputSchema: {
+      domain: z.string().describe("Public FQDN, e.g. example.com. IPs, ports, and paths rejected."),
+    },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const r = await dnsCheck(domain);
+      return ok(JSON.stringify(r, null, 2));
     },
   },
   {
