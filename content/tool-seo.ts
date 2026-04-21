@@ -1200,6 +1200,77 @@ export const toolContent: Record<string, ToolContent> = {
       { title: "RFC 7505 — null MX", url: "https://www.rfc-editor.org/rfc/rfc7505" },
     ],
   },
+  "dossier-spf": {
+    lead: "find and parse a domain's SPF (sender policy framework) record. part of the drwho.me domain dossier.",
+    overview:
+      "spf (RFC 7208) lets a domain owner publish, via a single TXT record at the apex, which hosts are authorized to send mail on its behalf. the record begins with `v=spf1` and is followed by mechanisms (`include`, `a`, `mx`, `ip4`, `ip6`, `exists`, `ptr`) and a final `all` with a qualifier (`+` pass, `~` softfail, `-` fail, `?` neutral). receivers evaluate mechanisms left-to-right and apply the first match. this tool queries the TXT rrset via cloudflare's doh resolver, concatenates the quoted segments doh returns (spf strings are published as one or more 255-byte chunks), filters for the single record starting with `v=spf1`, and splits it into its mechanisms.",
+    howTo: [
+      { step: "enter a bare domain", detail: "public fqdn only. no schemes, ports, paths." },
+      {
+        step: "run the check",
+        detail: "a single TXT doh query at the apex, then filtered for `v=spf1`.",
+      },
+      {
+        step: "read the mechanisms",
+        detail:
+          "left-to-right evaluation. the final `all` qualifier decides what happens to unmatched senders.",
+      },
+    ],
+    examples: [
+      {
+        input: "google.com",
+        output: "v=spf1 include:_spf.google.com ~all",
+        note: "google workspace delegates its sender set through a single include.",
+      },
+      {
+        input: "github.com",
+        output:
+          "v=spf1 ip4:192.30.252.0/22 include:_spf.google.com include:spf.protection.outlook.com -all",
+        note: "mixes an explicit ip4 range with two includes and a hard fail.",
+      },
+    ],
+    gotchas: [
+      {
+        title: "multiple spf records are forbidden",
+        body: "RFC 7208 §3.2 requires exactly one `v=spf1` TXT record at the apex. some operators split policies into two records thinking it helps — receivers are required to treat that as permerror. this tool reports it as an error.",
+      },
+      {
+        title: "10-DNS-lookup limit",
+        body: "each `include`, `a`, `mx`, `exists`, `ptr`, and `redirect` costs one dns lookup during evaluation. the total across the whole record (including nested includes) must stay at or below 10, or receivers return permerror. this tool surfaces the record but does not yet walk includes to count lookups.",
+      },
+      {
+        title: "`~all` vs `-all` vs `?all`",
+        body: "`-all` is a hard fail — receivers should reject. `~all` is a softfail — accept but mark suspicious. `?all` is neutral — no opinion. `+all` is authorize-everything and is almost always wrong. dmarc policy amplifies whichever you pick.",
+      },
+    ],
+    faq: [
+      {
+        q: "why does the tool flag multiple spf records as an error?",
+        a: "RFC 7208 §3.2 forbids it. conformant receivers treat multi-record cases as permerror, so mail from the domain may fail delivery until it's collapsed into one.",
+      },
+      {
+        q: "does spf alone stop spoofing?",
+        a: "no. spf authenticates the envelope sender (RFC 5321 MAIL FROM), not the visible From: header. pairing spf with dkim and publishing a dmarc policy is what closes the gap.",
+      },
+      {
+        q: "what if the record is split across quoted segments?",
+        a: 'doh returns long TXT values as multiple quoted strings separated by whitespace; the spec says receivers must concatenate them with no separator. the tool does that before parsing, so `"v=spf1 include:_spf.google.com " "-all"` becomes `v=spf1 include:_spf.google.com -all`.',
+      },
+      {
+        q: "why is `ptr` considered harmful?",
+        a: "`ptr` forces the receiver to do reverse-dns on the connecting ip, which is slow and unreliable. RFC 7208 explicitly discourages it. prefer `ip4`/`ip6` ranges or `include`.",
+      },
+      {
+        q: "can a subdomain have its own spf record?",
+        a: "yes. spf is checked at whatever name appears in the MAIL FROM, so a subdomain publishes its own TXT. this tool checks the apex you entered — query `mail.example.com` directly if that's the sender.",
+      },
+    ],
+    related: ["dns", "dossier-dns", "dossier-mx"],
+    references: [
+      { title: "RFC 7208 — SPF", url: "https://www.rfc-editor.org/rfc/rfc7208" },
+      { title: "dmarc.org — SPF overview", url: "https://dmarc.org/wiki/SPF" },
+    ],
+  },
 };
 
 export function findToolContent(slug: string): ToolContent | undefined {

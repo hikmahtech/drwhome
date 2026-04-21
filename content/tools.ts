@@ -2,6 +2,7 @@ import { Base64 } from "@/components/tools/Base64";
 import { Dns } from "@/components/tools/Dns";
 import { DossierDns } from "@/components/tools/DossierDns";
 import { DossierMx } from "@/components/tools/DossierMx";
+import { DossierSpf } from "@/components/tools/DossierSpf";
 import { Headers } from "@/components/tools/Headers";
 import { IpLookup } from "@/components/tools/IpLookup";
 import { Json } from "@/components/tools/Json";
@@ -134,6 +135,15 @@ export const tools: Tool[] = [
     keywords: ["mx", "mail", "dossier", "exchange", "email", "smtp"],
     component: DossierMx,
     mcpNames: ["dossier_mx"],
+  },
+  {
+    slug: "dossier-spf",
+    name: "dossier / spf",
+    description: "find and parse a domain's SPF (sender policy framework) record.",
+    category: "network",
+    keywords: ["spf", "dossier", "email", "authentication", "sender"],
+    component: DossierSpf,
+    mcpNames: ["dossier_spf"],
   },
 ];
 
