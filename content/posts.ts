@@ -5,6 +5,7 @@ import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-ve
 import Dkim, { frontmatter as dkimFm } from "@/content/posts/dkim-selectors-explained.mdx";
 import Dns, { frontmatter as dnsFm } from "@/content/posts/dns-over-https-cloudflare-primer.mdx";
 import Deliv, { frontmatter as delivFm } from "@/content/posts/email-deliverability-checklist.mdx";
+import JwtClaims, { frontmatter as jwtClaimsFm } from "@/content/posts/jwt-claims-reference.mdx";
 import Ip, { frontmatter as ipFm } from "@/content/posts/reading-ip-from-vercel-edge-headers.mdx";
 import SecHdr, { frontmatter as secHdrFm } from "@/content/posts/security-headers-guide.mdx";
 import Spf10, { frontmatter as spf10Fm } from "@/content/posts/spf-10-lookup-limit.mdx";
@@ -37,6 +38,7 @@ export const posts: PostRecord[] = [
   record("security-headers-guide", secHdrFm, SecHdr),
   record("cors-preflight-explained", corsFm, Cors),
   record("tls-certificate-guide", tlsFm, Tls),
+  record("jwt-claims-reference", jwtClaimsFm, JwtClaims),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));
