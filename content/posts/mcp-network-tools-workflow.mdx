@@ -1,0 +1,60 @@
+---
+title: "Using MCP servers for network diagnostics in your AI workflow"
+date: "2026-05-08"
+description: The current generation of AI assistants can hold the context, reason about failure modes, and call tools in parallel — three things that turn network diagnostics from a twenty-tab browser session into a five-line chat thread. Here is a concrete workflow.
+tags: [mcp, ai, workflow, networking]
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+Network diagnostics is a category of work where the value is not in running a single check — it is in running the right sequence of checks based on what the last one returned. That loop is exactly what an LLM with tool-use is good at. Setting up MCP network tools once and then using them inside conversations is a real productivity shift.
+
+## What changes when MCP enters the loop
+
+The traditional flow for "something is wrong with email delivery for example.com":
+
+1. Check the MX record in terminal A.
+2. Resolve the SPF record in terminal B.
+3. Paste the SPF into an SPF validator in browser tab C.
+4. Check the DKIM selector in tab D.
+5. Check the DMARC record.
+6. Read three different documentation pages to remember what each field means.
+7. Aggregate a conclusion.
+
+Twenty-odd browser tabs and several terminals. Maybe fifteen minutes for someone who has done this before; an hour for someone who has not.
+
+With MCP configured, the same flow:
+
+1. Paste the domain into chat, ask "run the email auth stack on example.com and tell me what's wrong."
+2. Read the single-paragraph summary the model produces.
+
+The model calls `dossier_mx`, `dossier_spf`, `dossier_dmarc`, `dossier_dkim` in parallel (MCP tool calls are concurrent), collates the four JSON responses, and summarises.
+
+## Concrete workflows
+
+**Pre-launch domain audit.** Before pointing a new domain at production: "Run a full dossier on newdomain.example and tell me which checks would block me from sending email, what my TLS setup looks like, and whether the security headers are acceptable." One tool call (`dossier_full`), one reply.
+
+**Cross-domain comparison.** "Compare the response headers and TLS expiry on our domain and two of our competitors." Three parallel tool calls, a table comparing them.
+
+**Change verification.** "I just updated the DMARC policy from none to quarantine. Confirm the new record is live." Single tool call, plus the model reads the response and confirms the `p=` value matches expectations.
+
+**On-call triage.** "Why is mail from our domain getting rejected by gmail?" The model runs the email-auth checks, reads the SPF lookup count, spots that it is over 10, and reports `permerror` as the likely cause.
+
+## Practical tips
+
+**Keep the prompt specific.** "Run a dossier on X" is clearer than "debug our email for X." The model will do more of the right thing when the scope is explicit.
+
+**Ask for the JSON.** If you are building on top of the output, end your prompt with "return the raw dossier JSON." The model will include a code block of the tool response alongside its summary.
+
+**Use `dossier_full` for parallel runs.** The aggregate tool runs all ten checks concurrently server-side and counts as one tool call. Asking the model to call each tool individually works but takes longer and runs through more context.
+
+**Cache is shared with the web UI.** If you already loaded `/d/example.com` in the browser, the MCP call hits the same cache and returns instantly.
+
+<ToolCtaLink postSlug="mcp-network-tools-workflow" toolSlug="dns-records-lookup">
+  Try the browser version of the dossier →
+</ToolCtaLink>
+
+## Further reading
+
+- [How to check any domain's DNS and email setup from Claude](/blog/check-domain-dns-from-claude)
+- [Set up the drwho.me MCP server in Claude Desktop](/mcp/claude)

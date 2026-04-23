@@ -11,6 +11,7 @@ import Deliv, { frontmatter as delivFm } from "@/content/posts/email-deliverabil
 import IpGeo, { frontmatter as ipGeoFm } from "@/content/posts/ip-geolocation-accuracy.mdx";
 import JsonLogs, { frontmatter as jsonLogsFm } from "@/content/posts/json-formatting-for-logs.mdx";
 import JwtClaims, { frontmatter as jwtClaimsFm } from "@/content/posts/jwt-claims-reference.mdx";
+import McpFlow, { frontmatter as mcpFlowFm } from "@/content/posts/mcp-network-tools-workflow.mdx";
 import Ip, { frontmatter as ipFm } from "@/content/posts/reading-ip-from-vercel-edge-headers.mdx";
 import SecHdr, { frontmatter as secHdrFm } from "@/content/posts/security-headers-guide.mdx";
 import Spf10, { frontmatter as spf10Fm } from "@/content/posts/spf-10-lookup-limit.mdx";
@@ -49,6 +50,7 @@ export const posts: PostRecord[] = [
   record("ip-geolocation-accuracy", ipGeoFm, IpGeo),
   record("json-formatting-for-logs", jsonLogsFm, JsonLogs),
   record("check-domain-dns-from-claude", mcpClaudeFm, McpClaude),
+  record("mcp-network-tools-workflow", mcpFlowFm, McpFlow),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));

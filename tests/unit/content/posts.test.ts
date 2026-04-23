@@ -20,6 +20,7 @@ describe("posts registry", () => {
       "ip-geolocation-accuracy",
       "json-formatting-for-logs",
       "jwt-claims-reference",
+      "mcp-network-tools-workflow",
       "reading-ip-from-vercel-edge-headers",
       "security-headers-guide",
       "spf-10-lookup-limit",
