@@ -9,7 +9,8 @@
         "http://localhost:3000/tools/jwt",
         "http://localhost:3000/tools/dns",
         "http://localhost:3000/blog",
-        "http://localhost:3000/blog/decode-jwt-without-verifying"
+        "http://localhost:3000/blog/decode-jwt-without-verifying",
+        "http://localhost:3000/d/example.com"
       ],
       "numberOfRuns": 1,
       "settings": {
