@@ -1,0 +1,79 @@
+---
+title: "What is DMARC? (and how to check if yours is configured correctly)"
+date: "2026-04-25"
+description: DMARC is the email-authentication policy layer that tells receiving mail servers what to do when an SPF or DKIM check fails. This post covers the record format, policy levels, reporting, and how to verify your setup in thirty seconds.
+tags: [dmarc, email, spf, dkim, deliverability]
+relatedTool: dmarc-checker
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+DMARC stands for Domain-based Message Authentication, Reporting, and Conformance. It is the layer on top of SPF and DKIM that tells receiving mail servers what to do when one or both of those checks fail. Without a DMARC record, receivers fall back to their own heuristics — which is why a freshly registered domain can legitimately impersonate yours unless you publish a policy.
+
+## The record format
+
+A DMARC record is a TXT record published at `_dmarc.<yourdomain>`. The minimum usable record looks like this:
+
+```
+v=DMARC1; p=none; rua=mailto:dmarc-reports@yourdomain.com
+```
+
+Three fields, three jobs:
+
+- `v=DMARC1` — the version tag. Always this exact string.
+- `p=none` — the policy. Tells receivers what to do with failing mail: `none` (collect reports, deliver anyway), `quarantine` (spam folder), or `reject` (bounce at the SMTP edge).
+- `rua=mailto:...` — the aggregate report address. Major receivers (Google, Microsoft, Yahoo) send XML reports here every 24 hours listing which IPs sent mail claiming to be from your domain.
+
+Optional fields layer on top: `sp` for subdomain policy, `adkim`/`aspf` for alignment mode (`s` strict, `r` relaxed), `pct` for partial rollout, `ruf` for per-message forensic reports, `fo` for failure-report options.
+
+## What alignment actually means
+
+DMARC passes if *either* SPF or DKIM passes **and** the authenticated domain aligns with the `From:` header domain.
+
+Alignment is the piece people miss. SPF can pass because the mail relay is in your SPF record, but if the `return-path` domain is your ESP's bounce domain and not your brand domain, SPF alignment fails. DKIM can pass because your ESP signed the message, but if the `d=` tag in the signature is the ESP's domain, DKIM alignment fails. DMARC requires that the passing mechanism used *your* domain.
+
+Relaxed alignment (`adkim=r`, the default) lets subdomains count: `mail.example.com` aligns with `example.com`. Strict alignment requires an exact match. Most setups use relaxed.
+
+## Rolling out a policy
+
+The recommended rollout sequence is `p=none` → `p=quarantine; pct=10` → ramp `pct` up → `p=quarantine; pct=100` → `p=reject`. Each step gives you time to read aggregate reports and find unauthenticated mail streams you did not know you had (a forgotten marketing platform, a legacy crm, a misconfigured transactional service). Moving to `p=reject` while legitimate mail still fails alignment bounces your own traffic — the DMARC equivalent of a forward-deployed self-inflicted DoS.
+
+Most domains stay at `p=none` for a month before moving. Aim for at least two full weekly cycles at each level.
+
+## What the aggregate report tells you
+
+The daily XML from Google, Microsoft, and Yahoo lists: sending IP, SPF result, DKIM result, DMARC result, and message count per (sender, disposition) tuple. It does not contain message bodies, subject lines, or recipients — only the envelope-level fields.
+
+Read reports for a week and you will find three things:
+1. Your legitimate senders, now properly aligned.
+2. Legitimate-but-forgotten senders that need to be added to SPF or signed with DKIM.
+3. Actual impersonation attempts — spikes of traffic from random IPs claiming to send from your domain.
+
+The third category is why DMARC exists. Before you deploy DMARC, you have no visibility into (3) at all.
+
+## How to check your record in thirty seconds
+
+The fastest way is a one-line dig:
+
+```
+dig +short TXT _dmarc.example.com
+```
+
+If the response is empty, you have no DMARC record. If the response is a quoted string starting `v=DMARC1`, parse the fields: policy, alignment, reporting address.
+
+Common mistakes the tool catches:
+
+- **No record at all.** The most common state. Receivers fall back to per-provider heuristics.
+- **Syntax error.** A missing semicolon, a trailing comma, or a stray `p =  reject` with spaces. The DNS lookup succeeds but receivers ignore the record.
+- **Bad reporting address.** `rua=dmarc@example.com` without the `mailto:` prefix is invalid.
+- **External report authorization missing.** If `rua=mailto:reports@other-domain.com`, the other domain must publish `_report._dmarc.yourdomain.com` authorizing it — otherwise reports are silently dropped.
+
+<ToolCtaLink postSlug="what-is-dmarc" toolSlug="dmarc-checker">
+  Check your DMARC record now →
+</ToolCtaLink>
+
+## Further reading
+
+- [Email deliverability checklist: SPF, DKIM, and DMARC in order](/blog/email-deliverability-checklist)
+- [The SPF 10-lookup limit](/blog/spf-10-lookup-limit)
+- RFC 7489 — Domain-based Message Authentication, Reporting, and Conformance

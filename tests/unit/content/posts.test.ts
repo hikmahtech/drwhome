@@ -6,7 +6,7 @@ describe("posts registry", () => {
     expect(posts.length).toBeGreaterThan(0);
   });
 
-  it("contains all 5 launch articles", () => {
+  it("contains all launch articles", () => {
     const slugs = posts.map((p) => p.slug).sort();
     expect(slugs).toEqual([
       "base64-isnt-encryption",
@@ -14,6 +14,7 @@ describe("posts registry", () => {
       "dns-over-https-cloudflare-primer",
       "reading-ip-from-vercel-edge-headers",
       "uuidv4-vs-uuidv7",
+      "what-is-dmarc",
     ]);
   });
 
