@@ -1,3 +1,4 @@
+import { isDenied } from "@/lib/dossier/denylist";
 import { type OgBadgeState, summarizeForOg } from "@/lib/dossier/og-summary";
 import { dossierChecks } from "@/lib/dossier/registry";
 import type { CheckResult } from "@/lib/dossier/types";
@@ -37,6 +38,7 @@ export default async function OG({
   const v = validateDomain(decodeURIComponent(raw));
   if (!v.ok) notFound();
   const domain = v.domain;
+  if (isDenied(domain).denied) notFound();
   const font = loadMonoFont();
 
   const results = await Promise.all(dossierChecks.map((c) => timed(c.run(domain))));

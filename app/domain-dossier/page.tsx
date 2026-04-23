@@ -113,7 +113,7 @@ export default function DomainDossier() {
       <TerminalPrompt>domain dossier</TerminalPrompt>
 
       <section className="space-y-3">
-        <h1 className="text-lg">domain health checker</h1>
+        <h2 className="text-lg">domain health checker</h2>
         <p className="text-sm text-muted">
           run ten independent checks on any domain — dns, email authentication, tls, redirects,
           headers, cors, and public-web surface — in one page.

@@ -70,12 +70,12 @@ export default function McpLanding() {
 
       <section className="space-y-2">
         <h2 className="text-sm text-muted">endpoint</h2>
-        <TerminalCard label="$ url">{MCP_URL}</TerminalCard>
+        <TerminalCard label="url">{MCP_URL}</TerminalCard>
       </section>
 
       <section className="space-y-2">
         <h2 className="text-sm text-muted">claude desktop config</h2>
-        <TerminalCard label="$ claude_desktop_config.json">
+        <TerminalCard label="claude_desktop_config.json">
           <pre className="text-xs whitespace-pre overflow-x-auto">{claudeConfig}</pre>
         </TerminalCard>
         <p className="text-xs text-muted">
