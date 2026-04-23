@@ -1,5 +1,10 @@
 import { findMcpTool } from "@/lib/mcp/tools";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/cache", () => ({
+  unstable_cache: <T extends (...args: unknown[]) => Promise<unknown>>(fn: T) => fn,
+  revalidateTag: vi.fn(),
+}));
 
 describe("dossier_full", () => {
   it("is registered in mcpTools", () => {
