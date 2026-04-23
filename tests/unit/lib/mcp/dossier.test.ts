@@ -245,3 +245,30 @@ describe("mcp dossier_dns", () => {
     expect(parsed.status).toBe("ok");
   });
 });
+
+describe("dossier MCP denylist integration", () => {
+  it("rejects denylisted domains with isError on every dossier_* tool", async () => {
+    const { DENYLIST } = await import("@/lib/dossier/denylist");
+    const entry = [...DENYLIST][0];
+    if (!entry) throw new Error("DENYLIST seed missing");
+    const { findMcpTool } = await import("@/lib/mcp/tools");
+    const names = [
+      "dossier_dns",
+      "dossier_mx",
+      "dossier_spf",
+      "dossier_dmarc",
+      "dossier_dkim",
+      "dossier_tls",
+      "dossier_redirects",
+      "dossier_headers",
+      "dossier_cors",
+      "dossier_web_surface",
+    ] as const;
+    for (const n of names) {
+      const tool = findMcpTool(n);
+      if (!tool) throw new Error(`${n} not found`);
+      const r = await tool.handler({ domain: entry });
+      expect(r.isError, `${n} should error on denylisted domain`).toBe(true);
+    }
+  });
+});

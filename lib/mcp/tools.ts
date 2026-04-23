@@ -9,6 +9,7 @@ import { redirectsCheck } from "@/lib/dossier/checks/redirects";
 import { spfCheck } from "@/lib/dossier/checks/spf";
 import { tlsCheck } from "@/lib/dossier/checks/tls";
 import { webSurfaceCheck } from "@/lib/dossier/checks/web-surface";
+import { isDenied } from "@/lib/dossier/denylist";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
@@ -322,6 +323,22 @@ const rawMcpTools: McpTool[] = [
   },
 ];
 
+function withDenylist(tool: McpTool): McpTool {
+  return {
+    ...tool,
+    handler: async (input) => {
+      const domain = (input as { domain?: unknown }).domain;
+      if (typeof domain === "string") {
+        const r = isDenied(domain);
+        if (r.denied) return fail(r.reason);
+      }
+      return tool.handler(input);
+    },
+  };
+}
+
+const DOSSIER_PREFIX = "dossier_";
+
 function withTracking(tool: McpTool): McpTool {
   return {
     ...tool,
@@ -333,7 +350,9 @@ function withTracking(tool: McpTool): McpTool {
   };
 }
 
-export const mcpTools: McpTool[] = rawMcpTools.map(withTracking);
+export const mcpTools: McpTool[] = rawMcpTools.map((t) =>
+  withTracking(t.name.startsWith(DOSSIER_PREFIX) ? withDenylist(t) : t),
+);
 
 export function findMcpTool(name: string): McpTool | undefined {
   return mcpTools.find((t) => t.name === name);
