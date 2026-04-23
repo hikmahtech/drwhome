@@ -10,6 +10,7 @@ import Ip, { frontmatter as ipFm } from "@/content/posts/reading-ip-from-vercel-
 import SecHdr, { frontmatter as secHdrFm } from "@/content/posts/security-headers-guide.mdx";
 import Spf10, { frontmatter as spf10Fm } from "@/content/posts/spf-10-lookup-limit.mdx";
 import Tls, { frontmatter as tlsFm } from "@/content/posts/tls-certificate-guide.mdx";
+import UrlEnc, { frontmatter as urlEncFm } from "@/content/posts/url-encoding-guide.mdx";
 import Uuid, { frontmatter as uuidFm } from "@/content/posts/uuidv4-vs-uuidv7.mdx";
 import Dmarc, { frontmatter as dmarcFm } from "@/content/posts/what-is-dmarc.mdx";
 import type { Post } from "@/lib/blog";
@@ -39,6 +40,7 @@ export const posts: PostRecord[] = [
   record("cors-preflight-explained", corsFm, Cors),
   record("tls-certificate-guide", tlsFm, Tls),
   record("jwt-claims-reference", jwtClaimsFm, JwtClaims),
+  record("url-encoding-guide", urlEncFm, UrlEnc),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));

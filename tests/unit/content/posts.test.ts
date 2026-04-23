@@ -21,6 +21,7 @@ describe("posts registry", () => {
       "security-headers-guide",
       "spf-10-lookup-limit",
       "tls-certificate-guide",
+      "url-encoding-guide",
       "uuidv4-vs-uuidv7",
       "what-is-dmarc",
     ]);

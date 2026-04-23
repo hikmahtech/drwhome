@@ -1,0 +1,77 @@
+---
+title: "URL encoding: encodeURIComponent vs encodeURI (and when to use each)"
+date: "2026-05-04"
+description: JavaScript exposes two URL-encoding functions with overlapping but different behavior. Using the wrong one is a security bug, not a style bug. This post walks through the character sets each encodes, the exact set of exceptions, and concrete examples of when each is correct.
+tags: [url, javascript, encoding]
+relatedTool: url-codec
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+JavaScript ships two URL-encoding functions on the global object: `encodeURI` and `encodeURIComponent`. They do different things. Picking the wrong one is how query strings break in subtle ways and how bad URLs get bounced through middleware that happens to normalize them into worse URLs.
+
+## The rules
+
+`encodeURI` encodes a full URL. It assumes the input is a syntactically valid URL and it preserves the reserved characters that have structural meaning: `/`, `?`, `#`, `&`, `=`, `:`, `;`, `@`, `+`, `$`, `,`.
+
+`encodeURIComponent` encodes a single component — a path segment, a query parameter name, or a query parameter value. It encodes the reserved characters too because a component should never contain structural URL syntax; those characters need to travel through as literal data.
+
+In both cases the encoding is RFC 3986 percent-encoding: unsafe characters become `%XX` where `XX` is the UTF-8 byte value in hex.
+
+## When each is correct
+
+**Use `encodeURI`** when you have a URL string that is structurally correct (has a scheme, host, path, query) but may contain spaces or non-ASCII characters that need encoding for safe transport. Example: you got a user-typed URL from an input field and want to store or display it.
+
+**Use `encodeURIComponent`** when you are building a URL by concatenating components, and any of those components came from untrusted input or contains characters that would otherwise conflict with URL syntax.
+
+```js
+// Building a search URL
+const query = 'hello world & goodbye';
+const url = `https://example.com/search?q=${encodeURIComponent(query)}`;
+// → https://example.com/search?q=hello%20world%20%26%20goodbye
+
+// WRONG — using encodeURI lets the & through, corrupting the query
+const bad = `https://example.com/search?q=${encodeURI(query)}`;
+// → https://example.com/search?q=hello%20world%20&%20goodbye
+// The server sees two parameters: q=hello world  and an empty parameter
+```
+
+## What neither function does
+
+Neither encodes `'`, `(`, `)`, `*`, or `!`, even though RFC 3986 flags them as reserved in some contexts. Some environments (email template systems, certain search engines) break on these. When you need RFC-3986-strict encoding, post-process:
+
+```js
+function strictEncode(s) {
+  return encodeURIComponent(s).replace(
+    /[!'()*]/g,
+    (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase(),
+  );
+}
+```
+
+Neither function decodes. Use `decodeURI` and `decodeURIComponent` as the inverses — with the same component-vs-whole-URL distinction.
+
+Neither function handles `application/x-www-form-urlencoded` correctly by default. That format encodes spaces as `+`, not `%20`. If you are building a form body, use `URLSearchParams`:
+
+```js
+const body = new URLSearchParams({ q: 'hello world' }).toString();
+// → q=hello+world
+```
+
+`URLSearchParams` is also the correct tool for composing query strings when you have a set of parameters. It encodes each value with the form-urlencoded variant and handles the `&` joining. Reach for `URLSearchParams` before manual concatenation with `encodeURIComponent`.
+
+## The security angle
+
+User input that flows into a URL component unencoded is a redirect-injection or SSRF vector. A URL like `https://api.example.com/proxy?u=<user input>` where `<user input>` is not encoded lets an attacker supply `https://evil.com&auth=stolen` and smuggle parameters into the inner URL your server constructs.
+
+Always encode components. Never trust that an intermediate layer encoded for you.
+
+<ToolCtaLink postSlug="url-encoding-guide" toolSlug="url-codec">
+  Try encoding and decoding URL strings →
+</ToolCtaLink>
+
+## Further reading
+
+- [Base64 isn't encryption](/blog/base64-isnt-encryption)
+- RFC 3986 — URI: Generic Syntax
+- MDN — `encodeURIComponent`
