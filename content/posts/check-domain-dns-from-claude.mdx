@@ -1,0 +1,65 @@
+---
+title: "How to check any domain's DNS and email setup directly from Claude"
+date: "2026-05-07"
+description: Claude Desktop supports remote MCP servers, which means any tool a server advertises becomes a first-class capability inside your chat. drwho.me's MCP endpoint ships ten domain-dossier checks; here is how to wire it up.
+tags: [mcp, claude, ai, dns]
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+Model Context Protocol is Anthropic's standard for letting LLMs call external tools. Once configured, Claude Desktop treats an MCP server's tools the same as its built-in capabilities — you ask "what's the DMARC record for stripe.com?" and Claude invokes `dossier_dmarc` directly, parses the response, and writes up the answer.
+
+## What drwho.me exposes
+
+The MCP endpoint at `https://drwho.me/mcp/mcp` advertises 21 tools:
+
+- 10 per-check dossier functions: `dossier_dns`, `dossier_mx`, `dossier_spf`, `dossier_dmarc`, `dossier_dkim`, `dossier_tls`, `dossier_redirects`, `dossier_headers`, `dossier_cors`, `dossier_web_surface`.
+- `dossier_full` — runs all ten checks in parallel and returns one JSON object. One tool call, ten checks.
+- 10 developer utilities: `base64_encode`, `base64_decode`, `dns_lookup`, `jwt_decode`, `uuid_generate`, `url_encode`, `url_decode`, `json_format`, `user_agent_parse`, `ip_lookup`.
+
+Same results as the web UI. Same cache. Same rate limits.
+
+## Adding the server to Claude Desktop
+
+Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or the platform equivalent:
+
+```json
+{
+  "mcpServers": {
+    "drwho.me": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://drwho.me/mcp/mcp"]
+    }
+  }
+}
+```
+
+Claude Desktop only accepts stdio-style entries, so `mcp-remote` runs as a local proxy to the remote endpoint. Restart Claude Desktop after editing. The next conversation will see the tools.
+
+## What the conversation looks like
+
+You ask: "Check whether stripe.com has a DMARC record and what policy it publishes."
+
+Claude calls `dossier_dmarc(stripe.com)`, receives a JSON result with the record text, policy, and reporting address, then writes a human-readable summary. You never see the raw tool call unless you expand the tool-use block.
+
+Multi-domain questions work too: "Compare the TLS cert expiry dates for stripe.com, paypal.com, and chase.com." Claude issues three `dossier_tls` calls in parallel, collates the results, and presents a table.
+
+## When to use MCP vs the web UI
+
+MCP wins for:
+- Workflow integration — you are already in a chat discussing a system, and pulling up a browser breaks context.
+- Aggregation — asking for a report across 20 domains is faster than clicking 20 pages.
+- Composition — combining dossier output with Claude's knowledge ("this DMARC policy is misconfigured because X, which is why you are seeing Y in the aggregate reports").
+
+The web UI wins for:
+- Shareable links — you want to send a co-worker the report.
+- Browser-native UX — sticky sections, copy buttons, and the fixed terminal styling.
+
+<ToolCtaLink postSlug="check-domain-dns-from-claude" toolSlug="dns-records-lookup">
+  Or check DNS records in the browser →
+</ToolCtaLink>
+
+## Further reading
+
+- [Set up the drwho.me MCP server in Claude Desktop](/mcp/claude)
+- Model Context Protocol — official spec

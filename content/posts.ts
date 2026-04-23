@@ -1,4 +1,7 @@
 import Base64Article, { frontmatter as base64Fm } from "@/content/posts/base64-isnt-encryption.mdx";
+import McpClaude, {
+  frontmatter as mcpClaudeFm,
+} from "@/content/posts/check-domain-dns-from-claude.mdx";
 import Cors, { frontmatter as corsFm } from "@/content/posts/cors-preflight-explained.mdx";
 import Redir, { frontmatter as redirFm } from "@/content/posts/debug-redirect-chain.mdx";
 import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-verifying.mdx";
@@ -45,6 +48,7 @@ export const posts: PostRecord[] = [
   record("url-encoding-guide", urlEncFm, UrlEnc),
   record("ip-geolocation-accuracy", ipGeoFm, IpGeo),
   record("json-formatting-for-logs", jsonLogsFm, JsonLogs),
+  record("check-domain-dns-from-claude", mcpClaudeFm, McpClaude),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));
