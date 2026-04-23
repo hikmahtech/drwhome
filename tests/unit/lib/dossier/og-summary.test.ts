@@ -1,5 +1,5 @@
-import type { CheckResult } from "@/lib/dossier/types";
 import { summarizeForOg } from "@/lib/dossier/og-summary";
+import type { CheckResult } from "@/lib/dossier/types";
 import { describe, expect, it } from "vitest";
 
 function ok<T>(data: T): CheckResult<T> {
@@ -23,10 +23,7 @@ describe("summarizeForOg", () => {
 
   it("maps null to pending badge", () => {
     const s = summarizeForOg([null, null]);
-    expect(s.badges).toEqual([
-      { state: "pending" },
-      { state: "pending" },
-    ]);
+    expect(s.badges).toEqual([{ state: "pending" }, { state: "pending" }]);
   });
 
   it("maps ok to pass and error/timeout to fail", () => {
