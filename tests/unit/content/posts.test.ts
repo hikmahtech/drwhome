@@ -11,6 +11,7 @@ describe("posts registry", () => {
     expect(slugs).toEqual([
       "base64-isnt-encryption",
       "decode-jwt-without-verifying",
+      "dkim-selectors-explained",
       "dns-over-https-cloudflare-primer",
       "reading-ip-from-vercel-edge-headers",
       "spf-10-lookup-limit",

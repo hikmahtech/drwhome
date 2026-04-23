@@ -1,5 +1,6 @@
 import Base64Article, { frontmatter as base64Fm } from "@/content/posts/base64-isnt-encryption.mdx";
 import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-verifying.mdx";
+import Dkim, { frontmatter as dkimFm } from "@/content/posts/dkim-selectors-explained.mdx";
 import Dns, { frontmatter as dnsFm } from "@/content/posts/dns-over-https-cloudflare-primer.mdx";
 import Ip, { frontmatter as ipFm } from "@/content/posts/reading-ip-from-vercel-edge-headers.mdx";
 import Spf10, { frontmatter as spf10Fm } from "@/content/posts/spf-10-lookup-limit.mdx";
@@ -25,6 +26,7 @@ export const posts: PostRecord[] = [
   record("uuidv4-vs-uuidv7", uuidFm, Uuid),
   record("what-is-dmarc", dmarcFm, Dmarc),
   record("spf-10-lookup-limit", spf10Fm, Spf10),
+  record("dkim-selectors-explained", dkimFm, Dkim),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));

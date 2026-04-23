@@ -1,0 +1,85 @@
+---
+title: "DKIM selectors explained: how email signing actually works"
+date: "2026-04-27"
+description: DKIM signatures are signed by a key identified by a selector, but the selector is not documented anywhere your receivers can find. This post explains how selectors work, why discovery is hard, and which selectors the common senders use.
+tags: [dkim, email, dns, cryptography]
+relatedTool: dkim-lookup
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+DKIM (DomainKeys Identified Mail, RFC 6376) signs outgoing email with a private key held by the sending server. The receiver verifies the signature against a public key published in DNS. Simple in principle — until you ask where the public key lives, and the answer is "at a name only the sender knows."
+
+## The selector mechanism
+
+A DKIM signature header looks like this:
+
+```
+DKIM-Signature: v=1; a=rsa-sha256; d=example.com; s=selector1;
+  c=relaxed/relaxed; h=from:to:subject:date;
+  bh=...; b=...
+```
+
+The `d=` tag is the signing domain. The `s=` tag is the **selector**. The public key is published at `<selector>._domainkey.<domain>`. So for the signature above, the receiver looks up `selector1._domainkey.example.com` and finds a TXT record like:
+
+```
+v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ...
+```
+
+The `p=` value is the base64-encoded public key. The receiver verifies the `b=` signature from the header against the message body hash (`bh=`) using this key.
+
+## Why selectors exist
+
+Selectors let a domain rotate keys and run multiple senders without re-issuing keys globally. You can:
+
+- Sign with `selector2025` for two years, then publish `selector2026` alongside and start signing with it.
+- Let Postmark sign with `pm._domainkey.example.com` while Sendgrid signs with `s1._domainkey.example.com`.
+- Retire a key by removing its DNS record — the next signed message with the old selector fails verification, rest of your mail keeps flowing.
+
+The design is clean. The discovery story is not.
+
+## The discovery problem
+
+There is no registry of selectors. You cannot enumerate them. DNS does not let you list everything under `_domainkey.<domain>`; the zone is effectively opaque except for names you already know to query.
+
+In practice everyone ends up probing a handful of common selectors:
+
+| Selector | Sender |
+|---|---|
+| `google` | Google Workspace (default for Workspace domains) |
+| `selector1`, `selector2` | Microsoft 365 (primary/rotation pair) |
+| `k1`, `k2`, `k3` | Mailchimp, Mandrill, some older platforms |
+| `mxvault` | MX-level signing on some ESPs |
+| `default` | Self-hosted Postfix/OpenDKIM defaults |
+| `pm` | Postmark |
+| `scph0920` (or similar timestamp) | SparkPost (dated selectors) |
+| `s1`, `s2` | SendGrid (later rotated) |
+
+If the domain uses something custom (e.g. `auth01._domainkey.example.com`), the only way to find it is to observe a real signed message and parse the `DKIM-Signature` header.
+
+## What "valid" means
+
+The TXT at `<selector>._domainkey.<domain>` must contain at minimum:
+
+- `v=DKIM1` — version tag (optional but recommended; absent is treated as DKIM1).
+- `k=rsa` — key type. `ed25519` is the modern alternative (RFC 8463) but ecosystem support lagged for years; RSA is still the safe default.
+- `p=<base64>` — the public key itself.
+
+An empty `p=` (i.e. `v=DKIM1; k=rsa; p=`) means "this key is revoked, reject any signature that uses it." This is how you retire a selector safely without deleting the record immediately.
+
+Common problems a tool catches:
+
+- **No record at all.** Selector does not exist. Receivers treat the signature as failed.
+- **`p=` missing or malformed.** Base64 with stray line breaks from copy-pasting is the usual culprit. DNS servers split long TXT records into multiple chunks — the concatenation must be correct.
+- **Wrong key size.** 1024-bit RSA keys are still accepted but deprecated; 2048-bit is the minimum anyone should be using in 2026.
+
+<ToolCtaLink postSlug="dkim-selectors-explained" toolSlug="dkim-lookup">
+  Probe common DKIM selectors for a domain →
+</ToolCtaLink>
+
+## Further reading
+
+- [What is DMARC?](/blog/what-is-dmarc)
+- [Email deliverability checklist](/blog/email-deliverability-checklist)
+- RFC 6376 — DomainKeys Identified Mail Signatures
+- RFC 8463 — ed25519 keys for DKIM
