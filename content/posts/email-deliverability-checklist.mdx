@@ -1,0 +1,87 @@
+---
+title: "Email deliverability checklist: SPF, DKIM, and DMARC in order"
+date: "2026-04-28"
+description: If your transactional email keeps landing in spam, the problem is almost always an authentication stack that is incomplete or misaligned. This checklist walks SPF, DKIM, and DMARC in the order you should configure them, with verification checks at each step.
+tags: [email, spf, dkim, dmarc, deliverability]
+relatedTool: spf-checker
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+Most "my emails are going to spam" threads end with one of three answers: SPF is missing, DKIM is unaligned, or DMARC reports are being ignored. Configure them in order and verify each step before moving to the next. Skipping ahead is how domains end up with a DMARC policy rejecting their own legitimate mail.
+
+## Step 1: Inventory every sender
+
+Before any DNS change, list every service that sends mail claiming to be from your domain: the primary mailbox provider (Google Workspace or Microsoft 365), the transactional ESP (SendGrid, Postmark, AWS SES), the marketing platform (Mailchimp, Customer.io, Klaviyo), and the long tail (your crm that sends receipts, your support tool, that one legacy php script that nobody wants to touch).
+
+Write them down. The aggregate DMARC report will surface anything you miss, but starting from a real list cuts the audit time in half.
+
+## Step 2: Publish SPF
+
+Create a TXT record at the apex domain:
+
+```
+v=spf1 include:_spf.google.com include:sendgrid.net include:servers.mcsv.net ~all
+```
+
+Adjust `include:` for your senders. End with `~all` (soft fail) during rollout; move to `-all` (hard fail) after DMARC reports confirm all legitimate senders pass.
+
+Verify:
+- Total DNS lookup count stays under ten (see [the SPF 10-lookup-limit post](/blog/spf-10-lookup-limit)).
+- The record is on the apex, not a subdomain (unless you explicitly want subdomain-only coverage).
+- No more than one `v=spf1` record exists — two records means receivers use the first they parse, which is undefined behavior.
+
+## Step 3: Enable DKIM for every sender
+
+Each sending platform has a "verify sending domain" flow that gives you one or more CNAME or TXT records to publish at `<selector>._domainkey.<domain>`. Publish them all. Send a test message through each platform and confirm the `DKIM-Signature` header in the received message has `d=<yourdomain>` (not `d=<esp-domain>`).
+
+If `d=` is the ESP's domain, DKIM is passing but **not aligned with your domain**, which means DMARC will not consider it. This is the single most common deliverability bug in 2026.
+
+## Step 4: Deploy DMARC at `p=none`
+
+Publish a TXT record at `_dmarc.<domain>`:
+
+```
+v=DMARC1; p=none; rua=mailto:dmarc-reports@yourdomain.com
+```
+
+`p=none` means "collect reports, take no enforcement action." This is the right starting state — you want visibility first, policy second.
+
+Wait two weeks. Read every aggregate report. Look for:
+
+- Legitimate senders failing alignment.
+- Unknown IPs sending mail as your domain (either unmanaged internal senders or outright impersonation).
+
+## Step 5: Ramp to `p=quarantine`
+
+Once the reports are clean, move to partial quarantine:
+
+```
+v=DMARC1; p=quarantine; pct=10; rua=mailto:dmarc-reports@yourdomain.com
+```
+
+`pct=10` applies the policy to 10% of failing mail. Watch reports for a week, ramp to 25, 50, 75, 100.
+
+## Step 6: Move to `p=reject`
+
+After a full cycle at `p=quarantine; pct=100` with clean reports:
+
+```
+v=DMARC1; p=reject; rua=mailto:dmarc-reports@yourdomain.com
+```
+
+At this point impersonation attempts are rejected at the recipient's SMTP edge. Your own legitimate mail is aligned and unaffected.
+
+## Verification at each step
+
+Run the dossier on your domain between steps. If any check goes from green to red, pause the rollout until you understand why.
+
+<ToolCtaLink postSlug="email-deliverability-checklist" toolSlug="spf-checker">
+  Run the full email authentication check on your domain →
+</ToolCtaLink>
+
+## Further reading
+
+- [What is DMARC?](/blog/what-is-dmarc)
+- [The SPF 10-lookup limit](/blog/spf-10-lookup-limit)
+- [DKIM selectors explained](/blog/dkim-selectors-explained)

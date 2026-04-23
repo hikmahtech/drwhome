@@ -13,6 +13,7 @@ describe("posts registry", () => {
       "decode-jwt-without-verifying",
       "dkim-selectors-explained",
       "dns-over-https-cloudflare-primer",
+      "email-deliverability-checklist",
       "reading-ip-from-vercel-edge-headers",
       "spf-10-lookup-limit",
       "uuidv4-vs-uuidv7",
