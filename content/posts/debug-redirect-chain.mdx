@@ -1,0 +1,59 @@
+---
+title: "How to debug a redirect chain (and why it matters for SEO)"
+date: "2026-04-29"
+description: Long redirect chains bleed SEO link equity, eat mobile latency, and mask misconfiguration. This post walks through how browsers and crawlers handle redirects, what counts as too many hops, and how to trace a chain end-to-end.
+tags: [redirects, http, seo, performance]
+relatedTool: redirect-checker
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+A redirect chain is any request that returns a `3xx` response that points to another URL which itself returns another `3xx`, and so on until a `200`. Each hop is a full TCP + TLS + HTTP round trip; each hop is a chance for something to break; each hop dilutes the signal search crawlers use to attribute link equity. Long chains are a quiet source of traffic loss.
+
+## What browsers and crawlers actually do
+
+Chrome and Firefox stop after roughly 20 redirects and show an error page. Safari stops at 16. Most HTTP libraries default to 10 or less; `curl` defaults to unlimited unless you set `--max-redirs`.
+
+Search crawlers are stricter. Google Search Central documents "up to five redirects" as the reliable limit before a URL is treated as uncrawlable for that fetch. Bingbot has a similar threshold. Anything past that either gets dropped from the index or costs a second crawler visit to resolve, which hurts crawl budget.
+
+## The five-hop budget
+
+The practical target in 2026: one redirect. A `http://` → `https://` upgrade, a naked `example.com` → `www.example.com` (or the inverse), or a trailing-slash normalization. Two hops is acceptable. Three starts costing. Five is where SEO problems become measurable.
+
+Common patterns that quietly blow the budget:
+
+1. `http://example.com` → `https://example.com` → `https://www.example.com` → `https://www.example.com/en` → `https://www.example.com/en/home` → landed. Five hops from a plain http link.
+2. Third-party link trackers: `utm.example.com/abc` → `example.com/abc` → `www.example.com/abc` → canonical. Three hops before the campaign URL reaches the real landing page.
+3. Mixed-case domain names forcing a normalization hop (`Example.com` → `example.com`) in middleware you forgot you had.
+
+## How to trace a chain
+
+Use `curl -I -L` with verbose output:
+
+```
+curl -ILsk -A "Mozilla/5.0" https://example.com 2>&1 | grep -E 'HTTP/|^Location:'
+```
+
+For each hop, record:
+- status code (`301`, `302`, `307`, `308`)
+- `location` header target
+- any `cache-control` differences between hops (crawlers cache `301`s aggressively; `302` is re-requested every time)
+
+The status code matters: `301` and `308` are permanent (index the target); `302` and `307` are temporary (keep indexing the source). A `302` where you meant `301` means search engines keep requesting the old URL indefinitely.
+
+## Common fixes
+
+**Collapse protocol + subdomain hops.** Publish the apex canonical (`example.com` or `www.example.com`) and do a single redirect at the edge. HSTS preload handles the http→https upgrade after the first visit; your redirect only fires for never-visited-before traffic.
+
+**Strip tracker hops.** Use client-side UTM parameters, not URL rewrites. `/?utm_source=x` on the canonical URL is one hop; `utm.example.com/x` → `example.com/x?utm_source=x` is two.
+
+**Do not redirect to redirects.** When migrating a page, point the old URL at the current canonical directly — not at the intermediate URL that itself redirects. After any sitemap migration, re-run a redirect check against the full list of old URLs.
+
+<ToolCtaLink postSlug="debug-redirect-chain" toolSlug="redirect-checker">
+  Trace a domain's redirect chain →
+</ToolCtaLink>
+
+## Further reading
+
+- [Security headers every site should have in 2026](/blog/security-headers-guide)
+- Google Search Central — "How redirects affect Google Search"

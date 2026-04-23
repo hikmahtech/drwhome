@@ -1,4 +1,5 @@
 import Base64Article, { frontmatter as base64Fm } from "@/content/posts/base64-isnt-encryption.mdx";
+import Redir, { frontmatter as redirFm } from "@/content/posts/debug-redirect-chain.mdx";
 import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-verifying.mdx";
 import Dkim, { frontmatter as dkimFm } from "@/content/posts/dkim-selectors-explained.mdx";
 import Dns, { frontmatter as dnsFm } from "@/content/posts/dns-over-https-cloudflare-primer.mdx";
@@ -29,6 +30,7 @@ export const posts: PostRecord[] = [
   record("spf-10-lookup-limit", spf10Fm, Spf10),
   record("dkim-selectors-explained", dkimFm, Dkim),
   record("email-deliverability-checklist", delivFm, Deliv),
+  record("debug-redirect-chain", redirFm, Redir),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));
