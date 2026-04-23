@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierHeaders({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-headers" initial={domain ?? ""} />
+      <DossierForm slug="security-headers-checker" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="headers"
-              toolSlug="dossier-headers"
+              toolSlug="security-headers-checker"
               domain={domain}
               message="fetching…"
             />

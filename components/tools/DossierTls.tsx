@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierTls({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-tls" initial={domain ?? ""} />
+      <DossierForm slug="tls-certificate-checker" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="tls"
-              toolSlug="dossier-tls"
+              toolSlug="tls-certificate-checker"
               domain={domain}
               message="resolving…"
             />

@@ -33,13 +33,13 @@ test.describe("domain dossier", () => {
     await expect(page.getByText(/not a valid public domain/i)).toBeVisible();
   });
 
-  test("standalone /tools/dossier-dns accepts ?domain=", async ({ page }) => {
-    await page.goto("/tools/dossier-dns?domain=example.com");
+  test("standalone /tools/dns-records-lookup accepts ?domain=", async ({ page }) => {
+    await page.goto("/tools/dns-records-lookup?domain=example.com");
     await expect(page.locator("#dns").last()).toBeVisible({ timeout: 15_000 });
   });
 
-  test("standalone /tools/dossier-mx accepts ?domain=", async ({ page }) => {
-    await page.goto("/tools/dossier-mx?domain=gmail.com");
+  test("standalone /tools/mx-lookup accepts ?domain=", async ({ page }) => {
+    await page.goto("/tools/mx-lookup?domain=gmail.com");
     await expect(page.locator("#mx").last()).toContainText(
       /\b(ok|error|timeout|not_applicable)\b/,
       { timeout: 15_000 },

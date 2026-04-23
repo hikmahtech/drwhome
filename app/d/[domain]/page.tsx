@@ -100,7 +100,7 @@ export default async function DossierPage({
 
       <Suspense
         fallback={
-          <SectionSkeleton title="mx" toolSlug="dossier-mx" domain={d} message="resolving mx…" />
+          <SectionSkeleton title="mx" toolSlug="mx-lookup" domain={d} message="resolving mx…" />
         }
       >
         <MxSection domain={d} />
@@ -108,7 +108,7 @@ export default async function DossierPage({
 
       <Suspense
         fallback={
-          <SectionSkeleton title="spf" toolSlug="dossier-spf" domain={d} message="resolving spf…" />
+          <SectionSkeleton title="spf" toolSlug="spf-checker" domain={d} message="resolving spf…" />
         }
       >
         <SpfSection domain={d} />
@@ -118,7 +118,7 @@ export default async function DossierPage({
         fallback={
           <SectionSkeleton
             title="dmarc"
-            toolSlug="dossier-dmarc"
+            toolSlug="dmarc-checker"
             domain={d}
             message="resolving dmarc…"
           />
@@ -131,7 +131,7 @@ export default async function DossierPage({
         fallback={
           <SectionSkeleton
             title="dkim"
-            toolSlug="dossier-dkim"
+            toolSlug="dkim-lookup"
             domain={d}
             message="probing dkim selectors…"
           />
@@ -144,7 +144,7 @@ export default async function DossierPage({
         fallback={
           <SectionSkeleton
             title="tls"
-            toolSlug="dossier-tls"
+            toolSlug="tls-certificate-checker"
             domain={d}
             message="fetching tls cert…"
           />
@@ -157,7 +157,7 @@ export default async function DossierPage({
         fallback={
           <SectionSkeleton
             title="redirects"
-            toolSlug="dossier-redirects"
+            toolSlug="redirect-checker"
             domain={d}
             message="tracing redirects…"
           />
@@ -170,7 +170,7 @@ export default async function DossierPage({
         fallback={
           <SectionSkeleton
             title="headers"
-            toolSlug="dossier-headers"
+            toolSlug="security-headers-checker"
             domain={d}
             message="fetching headers…"
           />
@@ -183,7 +183,7 @@ export default async function DossierPage({
         fallback={
           <SectionSkeleton
             title="cors"
-            toolSlug="dossier-cors"
+            toolSlug="cors-checker"
             domain={d}
             message="sending preflight…"
           />
@@ -196,7 +196,7 @@ export default async function DossierPage({
         fallback={
           <SectionSkeleton
             title="web-surface"
-            toolSlug="dossier-web-surface"
+            toolSlug="web-surface-inspector"
             domain={d}
             message="inspecting web surface…"
           />

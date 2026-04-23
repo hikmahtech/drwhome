@@ -6,7 +6,7 @@ import { Suspense } from "react";
 export function DossierDns({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-dns" initial={domain ?? ""} />
+      <DossierForm slug="dns-records-lookup" initial={domain ?? ""} />
       {domain && (
         <Suspense fallback={<DnsSectionSkeleton domain={domain} />}>
           <DnsSection domain={domain} />

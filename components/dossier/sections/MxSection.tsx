@@ -6,21 +6,21 @@ export async function MxSection({ domain }: { domain: string }) {
 
   if (r.status === "error") {
     return (
-      <CheckSection title="mx" toolSlug="dossier-mx" domain={domain} status="error">
+      <CheckSection title="mx" toolSlug="mx-lookup" domain={domain} status="error">
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="mx" toolSlug="dossier-mx" domain={domain} status="timeout">
+      <CheckSection title="mx" toolSlug="mx-lookup" domain={domain} status="timeout">
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
   }
   if (r.status === "not_applicable") {
     return (
-      <CheckSection title="mx" toolSlug="dossier-mx" domain={domain} status="not_applicable">
+      <CheckSection title="mx" toolSlug="mx-lookup" domain={domain} status="not_applicable">
         <p className="text-muted">{r.reason}</p>
       </CheckSection>
     );
@@ -29,7 +29,7 @@ export async function MxSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="mx"
-      toolSlug="dossier-mx"
+      toolSlug="mx-lookup"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

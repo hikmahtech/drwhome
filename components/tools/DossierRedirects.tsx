@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierRedirects({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-redirects" initial={domain ?? ""} />
+      <DossierForm slug="redirect-checker" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="redirects"
-              toolSlug="dossier-redirects"
+              toolSlug="redirect-checker"
               domain={domain}
               message="resolving…"
             />

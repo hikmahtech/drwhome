@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierSpf({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-spf" initial={domain ?? ""} />
+      <DossierForm slug="spf-checker" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="spf"
-              toolSlug="dossier-spf"
+              toolSlug="spf-checker"
               domain={domain}
               message="resolving…"
             />

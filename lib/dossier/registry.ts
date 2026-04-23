@@ -34,43 +34,43 @@ type Raw = {
 };
 
 const raw: Raw[] = [
-  { id: "dns", title: "dns", toolSlug: "dossier-dns", ttlSeconds: 3600, fn: dnsCheck },
-  { id: "mx", title: "mx", toolSlug: "dossier-mx", ttlSeconds: 3600, fn: mxCheck },
-  { id: "spf", title: "spf", toolSlug: "dossier-spf", ttlSeconds: 3600, fn: spfCheck },
-  { id: "dmarc", title: "dmarc", toolSlug: "dossier-dmarc", ttlSeconds: 3600, fn: dmarcCheck },
+  { id: "dns", title: "dns", toolSlug: "dns-records-lookup", ttlSeconds: 3600, fn: dnsCheck },
+  { id: "mx", title: "mx", toolSlug: "mx-lookup", ttlSeconds: 3600, fn: mxCheck },
+  { id: "spf", title: "spf", toolSlug: "spf-checker", ttlSeconds: 3600, fn: spfCheck },
+  { id: "dmarc", title: "dmarc", toolSlug: "dmarc-checker", ttlSeconds: 3600, fn: dmarcCheck },
   {
     id: "dkim",
     title: "dkim",
-    toolSlug: "dossier-dkim",
+    toolSlug: "dkim-lookup",
     ttlSeconds: 900,
     fn: (d: string) => dkimCheck(d),
   },
-  { id: "tls", title: "tls", toolSlug: "dossier-tls", ttlSeconds: 21600, fn: tlsCheck },
+  { id: "tls", title: "tls", toolSlug: "tls-certificate-checker", ttlSeconds: 21600, fn: tlsCheck },
   {
     id: "redirects",
     title: "redirects",
-    toolSlug: "dossier-redirects",
+    toolSlug: "redirect-checker",
     ttlSeconds: 900,
     fn: redirectsCheck,
   },
   {
     id: "headers",
     title: "headers",
-    toolSlug: "dossier-headers",
+    toolSlug: "security-headers-checker",
     ttlSeconds: 900,
     fn: headersCheck,
   },
   {
     id: "cors",
     title: "cors",
-    toolSlug: "dossier-cors",
+    toolSlug: "cors-checker",
     ttlSeconds: 900,
     fn: (d: string) => corsCheck(d),
   },
   {
     id: "web-surface",
     title: "web-surface",
-    toolSlug: "dossier-web-surface",
+    toolSlug: "web-surface-inspector",
     ttlSeconds: 900,
     fn: webSurfaceCheck,
   },
@@ -87,4 +87,8 @@ export const dossierChecks: DossierCheck[] = raw.map((r) => ({
 
 export function findCheck(id: DossierCheckId): DossierCheck | undefined {
   return dossierChecks.find((c) => c.id === id);
+}
+
+export function findCheckByToolSlug(toolSlug: string): DossierCheck | undefined {
+  return dossierChecks.find((c) => c.toolSlug === toolSlug);
 }

@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierCors({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-cors" initial={domain ?? ""} />
+      <DossierForm slug="cors-checker" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="cors"
-              toolSlug="dossier-cors"
+              toolSlug="cors-checker"
               domain={domain}
               message="fetching…"
             />

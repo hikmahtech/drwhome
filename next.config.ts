@@ -20,6 +20,25 @@ const config: NextConfig = {
   // list) snapshots the DOM before the streamed metadata resolves, failing the
   // SEO meta-description audit. Matching all UAs forces blocking metadata.
   htmlLimitedBots: /.*/,
+  async redirects() {
+    const map: Array<[string, string]> = [
+      ["dossier-dns", "dns-records-lookup"],
+      ["dossier-mx", "mx-lookup"],
+      ["dossier-spf", "spf-checker"],
+      ["dossier-dmarc", "dmarc-checker"],
+      ["dossier-dkim", "dkim-lookup"],
+      ["dossier-tls", "tls-certificate-checker"],
+      ["dossier-redirects", "redirect-checker"],
+      ["dossier-headers", "security-headers-checker"],
+      ["dossier-cors", "cors-checker"],
+      ["dossier-web-surface", "web-surface-inspector"],
+    ];
+    return map.map(([from, to]) => ({
+      source: `/tools/${from}`,
+      destination: `/tools/${to}`,
+      permanent: true,
+    }));
+  },
 };
 
 const withMDX = createMDX({

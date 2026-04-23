@@ -5,14 +5,24 @@ export async function HeadersSection({ domain }: { domain: string }) {
   const r = await headersCheck(domain);
   if (r.status === "error") {
     return (
-      <CheckSection title="headers" toolSlug="dossier-headers" domain={domain} status="error">
+      <CheckSection
+        title="headers"
+        toolSlug="security-headers-checker"
+        domain={domain}
+        status="error"
+      >
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="headers" toolSlug="dossier-headers" domain={domain} status="timeout">
+      <CheckSection
+        title="headers"
+        toolSlug="security-headers-checker"
+        domain={domain}
+        status="timeout"
+      >
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
@@ -21,7 +31,7 @@ export async function HeadersSection({ domain }: { domain: string }) {
     return (
       <CheckSection
         title="headers"
-        toolSlug="dossier-headers"
+        toolSlug="security-headers-checker"
         domain={domain}
         status="not_applicable"
       >
@@ -38,7 +48,7 @@ export async function HeadersSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="headers"
-      toolSlug="dossier-headers"
+      toolSlug="security-headers-checker"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

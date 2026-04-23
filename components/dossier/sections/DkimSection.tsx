@@ -6,21 +6,21 @@ export async function DkimSection({ domain }: { domain: string }) {
 
   if (r.status === "error") {
     return (
-      <CheckSection title="dkim" toolSlug="dossier-dkim" domain={domain} status="error">
+      <CheckSection title="dkim" toolSlug="dkim-lookup" domain={domain} status="error">
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="dkim" toolSlug="dossier-dkim" domain={domain} status="timeout">
+      <CheckSection title="dkim" toolSlug="dkim-lookup" domain={domain} status="timeout">
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
   }
   if (r.status === "not_applicable") {
     return (
-      <CheckSection title="dkim" toolSlug="dossier-dkim" domain={domain} status="not_applicable">
+      <CheckSection title="dkim" toolSlug="dkim-lookup" domain={domain} status="not_applicable">
         <p className="text-muted">{r.reason}</p>
       </CheckSection>
     );
@@ -29,7 +29,7 @@ export async function DkimSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="dkim"
-      toolSlug="dossier-dkim"
+      toolSlug="dkim-lookup"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

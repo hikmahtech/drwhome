@@ -7,7 +7,7 @@ describe("CheckSection", () => {
     render(
       <CheckSection
         title="dns"
-        toolSlug="dossier-dns"
+        toolSlug="dns-records-lookup"
         domain="example.com"
         status="ok"
         fetchedAt="2026-04-21T00:00:00Z"
@@ -19,12 +19,12 @@ describe("CheckSection", () => {
     expect(screen.getByText(/ok/)).toBeInTheDocument();
     expect(screen.getByText("body")).toBeInTheDocument();
     const link = screen.getByRole("link", { name: /open standalone/i });
-    expect(link).toHaveAttribute("href", "/tools/dossier-dns?domain=example.com");
+    expect(link).toHaveAttribute("href", "/tools/dns-records-lookup?domain=example.com");
   });
 
   it("does not render fetchedAt when missing", () => {
     render(
-      <CheckSection title="dns" toolSlug="dossier-dns" domain="example.com" status="timeout">
+      <CheckSection title="dns" toolSlug="dns-records-lookup" domain="example.com" status="timeout">
         <div>body</div>
       </CheckSection>,
     );

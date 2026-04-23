@@ -7,7 +7,7 @@ export async function WebSurfaceSection({ domain }: { domain: string }) {
     return (
       <CheckSection
         title="web-surface"
-        toolSlug="dossier-web-surface"
+        toolSlug="web-surface-inspector"
         domain={domain}
         status="error"
       >
@@ -19,7 +19,7 @@ export async function WebSurfaceSection({ domain }: { domain: string }) {
     return (
       <CheckSection
         title="web-surface"
-        toolSlug="dossier-web-surface"
+        toolSlug="web-surface-inspector"
         domain={domain}
         status="timeout"
       >
@@ -31,7 +31,7 @@ export async function WebSurfaceSection({ domain }: { domain: string }) {
     return (
       <CheckSection
         title="web-surface"
-        toolSlug="dossier-web-surface"
+        toolSlug="web-surface-inspector"
         domain={domain}
         status="not_applicable"
       >
@@ -47,7 +47,7 @@ export async function WebSurfaceSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="web-surface"
-      toolSlug="dossier-web-surface"
+      toolSlug="web-surface-inspector"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

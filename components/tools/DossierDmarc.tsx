@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierDmarc({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-dmarc" initial={domain ?? ""} />
+      <DossierForm slug="dmarc-checker" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="dmarc"
-              toolSlug="dossier-dmarc"
+              toolSlug="dmarc-checker"
               domain={domain}
               message="resolving…"
             />

@@ -5,21 +5,26 @@ export async function TlsSection({ domain }: { domain: string }) {
   const r = await tlsCheck(domain);
   if (r.status === "error") {
     return (
-      <CheckSection title="tls" toolSlug="dossier-tls" domain={domain} status="error">
+      <CheckSection title="tls" toolSlug="tls-certificate-checker" domain={domain} status="error">
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="tls" toolSlug="dossier-tls" domain={domain} status="timeout">
+      <CheckSection title="tls" toolSlug="tls-certificate-checker" domain={domain} status="timeout">
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
   }
   if (r.status === "not_applicable") {
     return (
-      <CheckSection title="tls" toolSlug="dossier-tls" domain={domain} status="not_applicable">
+      <CheckSection
+        title="tls"
+        toolSlug="tls-certificate-checker"
+        domain={domain}
+        status="not_applicable"
+      >
         <p className="text-muted">{r.reason}</p>
       </CheckSection>
     );
@@ -37,7 +42,7 @@ export async function TlsSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="tls"
-      toolSlug="dossier-tls"
+      toolSlug="tls-certificate-checker"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

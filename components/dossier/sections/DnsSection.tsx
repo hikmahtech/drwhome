@@ -6,21 +6,26 @@ export async function DnsSection({ domain }: { domain: string }) {
 
   if (r.status === "error") {
     return (
-      <CheckSection title="dns" toolSlug="dossier-dns" domain={domain} status="error">
+      <CheckSection title="dns" toolSlug="dns-records-lookup" domain={domain} status="error">
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="dns" toolSlug="dossier-dns" domain={domain} status="timeout">
+      <CheckSection title="dns" toolSlug="dns-records-lookup" domain={domain} status="timeout">
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
   }
   if (r.status === "not_applicable") {
     return (
-      <CheckSection title="dns" toolSlug="dossier-dns" domain={domain} status="not_applicable">
+      <CheckSection
+        title="dns"
+        toolSlug="dns-records-lookup"
+        domain={domain}
+        status="not_applicable"
+      >
         <p className="text-muted">{r.reason}</p>
       </CheckSection>
     );
@@ -29,7 +34,7 @@ export async function DnsSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="dns"
-      toolSlug="dossier-dns"
+      toolSlug="dns-records-lookup"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

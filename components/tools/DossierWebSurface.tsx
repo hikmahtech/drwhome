@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierWebSurface({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-web-surface" initial={domain ?? ""} />
+      <DossierForm slug="web-surface-inspector" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="web-surface"
-              toolSlug="dossier-web-surface"
+              toolSlug="web-surface-inspector"
               domain={domain}
               message="fetching…"
             />

@@ -8,7 +8,7 @@ import { TerminalPrompt } from "@/components/terminal/TerminalPrompt";
 import { findToolContent } from "@/content/tool-seo";
 import { findTool, tools } from "@/content/tools";
 import { isDenied } from "@/lib/dossier/denylist";
-import type { DossierCheckId } from "@/lib/dossier/registry";
+import { findCheckByToolSlug } from "@/lib/dossier/registry";
 import { extractClientIp } from "@/lib/rate-limit/client-ip";
 import { consumeStandaloneDossier } from "@/lib/rate-limit/ratelimit";
 import {
@@ -60,8 +60,8 @@ export default async function ToolPage({
   const tool = findTool(slug);
   if (!tool) notFound();
 
-  const isDossierSlug = slug.startsWith("dossier-");
-  if (isDossierSlug && typeof domain === "string" && domain.length > 0) {
+  const dossierCheck = findCheckByToolSlug(slug);
+  if (dossierCheck && typeof domain === "string" && domain.length > 0) {
     const denied = isDenied(domain);
     if (denied.denied) {
       return (
@@ -86,7 +86,7 @@ export default async function ToolPage({
     if (sp.refresh === "1") {
       // Cannot call revalidateTag during render (Next.js 15 constraint).
       // Delegate to Route Handler which runs outside the render pipeline.
-      const id = slug.slice("dossier-".length) as DossierCheckId;
+      const id = dossierCheck.id;
       const returnTo = encodeURIComponent(`/tools/${slug}?domain=${domain}`);
       redirect(`/api/dossier/revalidate?domain=${domain}&check=${id}&return_to=${returnTo}`);
     }

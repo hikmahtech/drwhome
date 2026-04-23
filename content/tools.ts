@@ -126,8 +126,8 @@ export const tools: Tool[] = [
     mcpNames: ["dns_lookup"],
   },
   {
-    slug: "dossier-dns",
-    name: "dossier / dns",
+    slug: "dns-records-lookup",
+    name: "dns records lookup",
     description: "resolve A, AAAA, NS, SOA, CAA, and TXT records for a domain in one go.",
     category: "network",
     keywords: ["dns", "dossier", "records", "soa", "caa", "nameserver"],
@@ -135,8 +135,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_dns"],
   },
   {
-    slug: "dossier-mx",
-    name: "dossier / mx",
+    slug: "mx-lookup",
+    name: "mx lookup",
     description: "list the mail exchangers (MX records) a domain advertises, sorted by priority.",
     category: "network",
     keywords: ["mx", "mail", "dossier", "exchange", "email", "smtp"],
@@ -144,8 +144,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_mx"],
   },
   {
-    slug: "dossier-spf",
-    name: "dossier / spf",
+    slug: "spf-checker",
+    name: "spf checker",
     description: "find and parse a domain's SPF (sender policy framework) record.",
     category: "network",
     keywords: ["spf", "dossier", "email", "authentication", "sender"],
@@ -153,8 +153,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_spf"],
   },
   {
-    slug: "dossier-dmarc",
-    name: "dossier / dmarc",
+    slug: "dmarc-checker",
+    name: "dmarc checker",
     description: "find and parse a domain's DMARC policy record at _dmarc.<domain>.",
     category: "network",
     keywords: ["dmarc", "dossier", "email", "authentication", "policy"],
@@ -162,8 +162,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_dmarc"],
   },
   {
-    slug: "dossier-dkim",
-    name: "dossier / dkim",
+    slug: "dkim-lookup",
+    name: "dkim lookup",
     description:
       "probe common DKIM selectors (default, google, k1, selector1/2, mxvault) for a domain.",
     category: "network",
@@ -172,8 +172,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_dkim"],
   },
   {
-    slug: "dossier-tls",
-    name: "dossier / tls",
+    slug: "tls-certificate-checker",
+    name: "tls certificate checker",
     description:
       "inspect a domain's TLS certificate: subject, issuer, validity, SANs, fingerprint.",
     category: "network",
@@ -182,8 +182,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_tls"],
   },
   {
-    slug: "dossier-redirects",
-    name: "dossier / redirects",
+    slug: "redirect-checker",
+    name: "redirect checker",
     description: "trace the HTTP(S) redirect chain from https://<domain>/ up to 10 hops.",
     category: "network",
     keywords: ["redirect", "301", "302", "chain", "dossier", "http"],
@@ -191,8 +191,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_redirects"],
   },
   {
-    slug: "dossier-headers",
-    name: "dossier / headers",
+    slug: "security-headers-checker",
+    name: "security headers checker",
     description:
       "inspect the response headers served at https://<domain>/ — HSTS, CSP, X-Frame-Options, etc.",
     category: "network",
@@ -201,8 +201,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_headers"],
   },
   {
-    slug: "dossier-cors",
-    name: "dossier / cors",
+    slug: "cors-checker",
+    name: "cors checker",
     description:
       "run a CORS preflight (OPTIONS) against a domain and surface the access-control-* response headers.",
     category: "network",
@@ -211,8 +211,8 @@ export const tools: Tool[] = [
     mcpNames: ["dossier_cors"],
   },
   {
-    slug: "dossier-web-surface",
-    name: "dossier / web surface",
+    slug: "web-surface-inspector",
+    name: "web surface inspector",
     description:
       "fetch robots.txt, sitemap.xml, and the home page's <head> to summarise a domain's public-web surface.",
     category: "network",

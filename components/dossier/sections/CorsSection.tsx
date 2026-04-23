@@ -5,21 +5,21 @@ export async function CorsSection({ domain }: { domain: string }) {
   const r = await corsCheck(domain);
   if (r.status === "error") {
     return (
-      <CheckSection title="cors" toolSlug="dossier-cors" domain={domain} status="error">
+      <CheckSection title="cors" toolSlug="cors-checker" domain={domain} status="error">
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="cors" toolSlug="dossier-cors" domain={domain} status="timeout">
+      <CheckSection title="cors" toolSlug="cors-checker" domain={domain} status="timeout">
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
   }
   if (r.status === "not_applicable") {
     return (
-      <CheckSection title="cors" toolSlug="dossier-cors" domain={domain} status="not_applicable">
+      <CheckSection title="cors" toolSlug="cors-checker" domain={domain} status="not_applicable">
         <p className="text-muted">{r.reason}</p>
       </CheckSection>
     );
@@ -37,7 +37,7 @@ export async function CorsSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="cors"
-      toolSlug="dossier-cors"
+      toolSlug="cors-checker"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

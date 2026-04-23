@@ -1058,7 +1058,7 @@ export const toolContent: Record<string, ToolContent> = {
       { title: "Cloudflare 1.1.1.1 — public resolver", url: "https://1.1.1.1" },
     ],
   },
-  "dossier-dns": {
+  "dns-records-lookup": {
     lead: "resolve a, aaaa, ns, soa, caa, and txt records for a domain in one shot. part of the drwho.me domain dossier.",
     overview:
       "a single pass that fans out six parallel doh queries against cloudflare's resolver and gathers the answers into one view. the same pure function powers the domain dossier page (`/d/<domain>`), the standalone tool, and the mcp tool — no logic duplication. this is the first satellite of the domain dossier; more sections (tls, email auth, headers, cors, redirects) are landing across subsequent plans.",
@@ -1134,7 +1134,7 @@ export const toolContent: Record<string, ToolContent> = {
       { title: "RFC 8484 — dns over https (doh)", url: "https://www.rfc-editor.org/rfc/rfc8484" },
     ],
   },
-  "dossier-mx": {
+  "mx-lookup": {
     lead: "list the mail exchangers (MX records) a domain advertises, sorted by priority.",
     overview:
       "mx records tell senders which smtp servers handle email for a domain. lower priority numbers win; multiple hosts at the same priority load-balance. this tool resolves the mx rrset via cloudflare's doh resolver, parses each record into (priority, exchange) pairs, and returns them sorted. it is part of the drwho.me domain dossier — the same result appears as the mx section at `/d/<domain>` and as the `dossier_mx` mcp tool.",
@@ -1194,13 +1194,13 @@ export const toolContent: Record<string, ToolContent> = {
         a: "no. mx is a domain-level record. ip-level lookups belong in the ip-lookup tool.",
       },
     ],
-    related: ["dns", "dossier-dns"],
+    related: ["dns", "dns-records-lookup"],
     references: [
       { title: "RFC 5321 — SMTP", url: "https://www.rfc-editor.org/rfc/rfc5321" },
       { title: "RFC 7505 — null MX", url: "https://www.rfc-editor.org/rfc/rfc7505" },
     ],
   },
-  "dossier-spf": {
+  "spf-checker": {
     lead: "find and parse a domain's SPF (sender policy framework) record. part of the drwho.me domain dossier.",
     overview:
       "spf (RFC 7208) lets a domain owner publish, via a single TXT record at the apex, which hosts are authorized to send mail on its behalf. the record begins with `v=spf1` and is followed by mechanisms (`include`, `a`, `mx`, `ip4`, `ip6`, `exists`, `ptr`) and a final `all` with a qualifier (`+` pass, `~` softfail, `-` fail, `?` neutral). receivers evaluate mechanisms left-to-right and apply the first match. this tool queries the TXT rrset via cloudflare's doh resolver, concatenates the quoted segments doh returns (spf strings are published as one or more 255-byte chunks), filters for the single record starting with `v=spf1`, and splits it into its mechanisms.",
@@ -1265,13 +1265,13 @@ export const toolContent: Record<string, ToolContent> = {
         a: "yes. spf is checked at whatever name appears in the MAIL FROM, so a subdomain publishes its own TXT. this tool checks the apex you entered — query `mail.example.com` directly if that's the sender.",
       },
     ],
-    related: ["dns", "dossier-dns", "dossier-mx"],
+    related: ["dns", "dns-records-lookup", "mx-lookup"],
     references: [
       { title: "RFC 7208 — SPF", url: "https://www.rfc-editor.org/rfc/rfc7208" },
       { title: "dmarc.org — SPF overview", url: "https://dmarc.org/wiki/SPF" },
     ],
   },
-  "dossier-dmarc": {
+  "dmarc-checker": {
     lead: "find and parse a domain's DMARC (domain-based message authentication, reporting, and conformance) policy record. part of the drwho.me domain dossier.",
     overview:
       "dmarc (RFC 7489) is a TXT record published at `_dmarc.<domain>` that tells receivers what to do with mail that fails spf or dkim alignment, and where to send aggregate and forensic reports. the policy tag `p=` picks one of three actions: `none` (monitor only — deliver, just send reports), `quarantine` (route to spam), or `reject` (refuse at smtp). alignment is tuned with `adkim` and `aspf` (`r` relaxed — organisational-domain match — or `s` strict — exact fqdn match). `rua` addresses receive daily aggregate reports; `ruf` addresses receive per-message forensic reports. `pct` gates a gradual rollout by percentage, and `sp` applies a distinct policy to subdomains. this tool queries `_dmarc.<domain>` via cloudflare's doh resolver, insists on exactly one `v=DMARC1` record per RFC 7489, and splits the semicolon-separated `k=v` pairs into a tag map.",
@@ -1338,13 +1338,13 @@ export const toolContent: Record<string, ToolContent> = {
         a: "`fo` controls when forensic reports fire: `0` (default) = report only on total dmarc failure; `1` = report when any auth check fails; `d` = dkim failure; `s` = spf failure. it only matters if you publish a `ruf` address.",
       },
     ],
-    related: ["dns", "dossier-dns", "dossier-mx", "dossier-spf"],
+    related: ["dns", "dns-records-lookup", "mx-lookup", "spf-checker"],
     references: [
       { title: "RFC 7489 — DMARC", url: "https://www.rfc-editor.org/rfc/rfc7489" },
       { title: "RFC 8617 — ARC", url: "https://www.rfc-editor.org/rfc/rfc8617" },
     ],
   },
-  "dossier-dkim": {
+  "dkim-lookup": {
     lead: "probe common DKIM selectors for a domain and surface the public-key TXT record. part of the drwho.me domain dossier.",
     overview:
       "dkim (RFC 6376) signs outgoing mail with a per-sender private key; receivers verify by fetching the matching public key at `<selector>._domainkey.<domain>`. unlike spf or dmarc, dkim has no canonical record location — each sender picks its own `selector` label, and the selector in use is announced per-message via the `DKIM-Signature: s=...` header tag. there is no public-dns api to enumerate a domain's selectors, so this tool probes a fixed list of common defaults in parallel: `default`, `google` (google workspace / gmail), `k1` (mailchimp / mandrill), `selector1` and `selector2` (microsoft 365 rotate between them), and `mxvault` (mxroute). each probe is a TXT doh lookup; a selector is reported as `found` if the record starts with `v=DKIM1` or with a bare `p=` (RFC 8301 minimum marker). supply `selectors=[...]` to the `dossier_dkim` MCP tool to override the defaults.",
@@ -1415,7 +1415,7 @@ export const toolContent: Record<string, ToolContent> = {
         a: "it fires six doh queries instead of one. they run in parallel under a single 5-second abort controller, so the wall-clock cost is close to a single query when the resolver is responsive.",
       },
     ],
-    related: ["dns", "dossier-dns", "dossier-spf", "dossier-dmarc"],
+    related: ["dns", "dns-records-lookup", "spf-checker", "dmarc-checker"],
     references: [
       { title: "RFC 6376 — DKIM Signatures", url: "https://www.rfc-editor.org/rfc/rfc6376" },
       {
@@ -1424,7 +1424,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
-  "dossier-tls": {
+  "tls-certificate-checker": {
     lead: "inspect a domain's TLS certificate served on port 443 - subject, issuer, validity, SANs, sha256 fingerprint. part of the drwho.me domain dossier.",
     overview:
       "tls (RFC 8446 for 1.3, RFC 5246 for 1.2) wraps tcp with an x.509 certificate chain so clients can authenticate the server and negotiate an encrypted channel. this tool opens a raw tls socket to `<domain>:443`, completes the handshake with SNI set to the requested domain, reads the peer certificate (the leaf, not the intermediates), and closes. we report the leaf's subject common-name, issuer common-name and organization, `valid_from` -> `valid_to` window, any `subjectAltName` DNS entries, and the sha256 fingerprint. browsers validate the full chain against a trust store; we deliberately pass `rejectUnauthorized: false` so we can surface an expired, self-signed, or hostname-mismatched certificate as data (`authorized: false` plus the openssl error code) instead of refusing the handshake. the dominant public CA today is Let's Encrypt via ACME (RFC 8555) which issues 90-day certs for free; SaaS platforms (Vercel, Cloudflare, Fly) proxy that for you. v1 scope is the peer cert only - we do NOT walk the chain, check OCSP, or probe weak ciphers; use sslyze or testssl.sh for the full audit surface.",
@@ -1496,7 +1496,7 @@ export const toolContent: Record<string, ToolContent> = {
         a: "short validity forces automation (certbot, traefik, caddy, acme.sh), which means revocations propagate fast and operational mistakes self-heal on the next renewal. Let's Encrypt published the rationale in 2015 and the whole acme ecosystem now defaults to it; Apple's trust store is even moving toward a 45-day max in 2027.",
       },
     ],
-    related: ["dns", "dossier-dns", "dossier-mx"],
+    related: ["dns", "dns-records-lookup", "mx-lookup"],
     references: [
       {
         title: "RFC 5280 — Internet X.509 Public Key Infrastructure",
@@ -1508,7 +1508,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
-  "dossier-redirects": {
+  "redirect-checker": {
     lead: "trace the HTTP redirect chain from https://<domain>/ — every 301/302/307/308 hop, up to a 10-hop cap. part of the drwho.me domain dossier.",
     overview:
       "HTTP redirects (RFC 9110 §15.4) are how servers tell a client 'not here, go there' via a 3xx status + `Location` header. the common cases: 301 (moved permanently — cache it), 302 (found — don't cache), 307 (temporary redirect preserving method + body), 308 (permanent redirect preserving method + body). this tool issues a `GET https://<domain>/` with `redirect: manual` and walks the `Location` chain by hand, recording `{url, status}` for each hop, stopping on the first non-3xx response or when the 10-hop cap is hit. relative Locations are resolved against the current URL (so `/foo` after `https://a.example/` becomes `https://a.example/foo`). we deliberately start at `https://` — if you want to see the HTTP -> HTTPS upgrade, some hosts serve it as a real 301, others rely on HSTS preloading (which is invisible to this probe because the browser upgrades before the request leaves). common chains: apex -> www (`example.com` -> `www.example.com`), tracking-style path rewrites (`/?utm=...` -> `/`), locale detection (`/en`), auth gates (`/` -> `/login`). a 10-hop cap catches most real-world misconfigurations (classic: `a` redirects to `b`, `b` redirects back to `a`) while still finishing well under the 5s timeout budget.",
@@ -1546,7 +1546,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
       {
         title: "first-hop TLS failure surfaces as a network error, not a redirect error",
-        body: "if the https handshake itself fails (expired cert, self-signed, wrong SAN), `fetch` throws before any status is observed, so you'll see `error: <openssl code>` rather than an empty chain. use dossier-tls first when the redirects probe errors out with a TLS-shaped message.",
+        body: "if the https handshake itself fails (expired cert, self-signed, wrong SAN), `fetch` throws before any status is observed, so you'll see `error: <openssl code>` rather than an empty chain. use tls-certificate-checker first when the redirects probe errors out with a TLS-shaped message.",
       },
       {
         title: "cookies and auth can change the chain",
@@ -1575,7 +1575,7 @@ export const toolContent: Record<string, ToolContent> = {
         a: "because then you only see the final URL, not the chain. `redirect: manual` is the only way to record every `{url, status}` pair. it's the same reason curl has `-L --max-redirs N -w '%{url_effective}\\n'` — you pick manual when the chain IS the data.",
       },
     ],
-    related: ["dns", "dossier-dns", "dossier-tls"],
+    related: ["dns", "dns-records-lookup", "tls-certificate-checker"],
     references: [
       {
         title: "RFC 9110 §15.4 — Redirection 3xx",
@@ -1587,7 +1587,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
-  "dossier-headers": {
+  "security-headers-checker": {
     lead: "inspect the response headers served at https://<domain>/ — HSTS, CSP, X-Frame-Options, and the rest of the security crew. part of the drwho.me domain dossier.",
     overview:
       "response headers are how a server tells a browser how to treat a page: cache it, frame it, execute which scripts, upgrade future requests to https, and so on. the six headers this tool highlights as `security headers` are the modern defensive set — `strict-transport-security` (HSTS: force https for a max-age window, optionally joining the preload list with `max-age=63072000; includeSubDomains; preload`), `content-security-policy` (CSP: a per-directive allowlist of script/style/img/connect sources, the single biggest lever against XSS when a `nonce` or `strict-dynamic` is in play), `x-frame-options` (DENY/SAMEORIGIN — clickjacking protection, largely superseded by CSP's `frame-ancestors`), `x-content-type-options` (`nosniff` — disable MIME sniffing so a rogue image can't be interpreted as javascript), `referrer-policy` (what gets leaked in the `Referer` header on outbound navigations; `strict-origin-when-cross-origin` is the safe default), `permissions-policy` (formerly `feature-policy` — opt-out of geolocation, camera, mic, etc. per-origin). this tool issues a single `GET https://<domain>/` with `redirect: follow`, collects every response header into a lowercased map, and renders the security set first with `—` where absent, then the remaining headers sorted alphabetically. CSP tradeoff worth calling out: a perfect CSP is restrictive enough to break obvious XSS but permissive enough to not break analytics, A/B tests, third-party widgets — most real-world CSPs either include `'unsafe-inline'` (and provide almost no XSS protection) or use a per-request nonce injected by the server. there's no middle ground that's both safe and cheap.",
@@ -1650,11 +1650,11 @@ export const toolContent: Record<string, ToolContent> = {
         a: "CSP itself has no max-age. you're thinking of HSTS. for HSTS: `max-age=31536000` (1 year) is the preload minimum; `max-age=63072000` (2 years) is the common production setting. lower max-ages defeat HSTS's purpose (an attacker only needs to feint-out for a few seconds to serve a downgraded response before a short TTL expires).",
       },
       {
-        q: "why `redirect: follow` here but `redirect: manual` in dossier-redirects?",
-        a: "different questions. dossier-redirects wants the chain as data (every hop's url + status), so it walks manually. dossier-headers wants the headers of whatever page a browser would actually land on, so it lets fetch follow the chain and reports the final URL + its headers. if you want both — walk the chain AND inspect headers at each hop — run both tools side-by-side.",
+        q: "why `redirect: follow` here but `redirect: manual` in redirect-checker?",
+        a: "different questions. redirect-checker wants the chain as data (every hop's url + status), so it walks manually. security-headers-checker wants the headers of whatever page a browser would actually land on, so it lets fetch follow the chain and reports the final URL + its headers. if you want both — walk the chain AND inspect headers at each hop — run both tools side-by-side.",
       },
     ],
-    related: ["dns", "dossier-redirects", "dossier-tls"],
+    related: ["dns", "redirect-checker", "tls-certificate-checker"],
     references: [
       {
         title: "MDN — HTTP security headers (Security on the web)",
@@ -1666,7 +1666,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
-  "dossier-cors": {
+  "cors-checker": {
     lead: "send a CORS preflight (OPTIONS) to https://<domain>/ with an `Origin` and `Access-Control-Request-Method`, then surface the `access-control-*` response headers. part of the drwho.me domain dossier.",
     overview:
       "CORS (cross-origin resource sharing) is how a server tells a browser which cross-origin pages are allowed to read its responses. before any non-simple request the browser issues a preflight `OPTIONS` carrying `Origin: <caller>` and `Access-Control-Request-Method: <method>` (plus `Access-Control-Request-Headers` if any non-simple headers will be sent), and the server responds with a matching set of `Access-Control-Allow-*` headers: `Allow-Origin` (either `*` or the echoed origin — never a list), `Allow-Methods`, `Allow-Headers`, optional `Allow-Credentials: true` (which is *incompatible* with `Allow-Origin: *` — the browser will reject the response), `Max-Age` (how long the preflight can be cached), and `Expose-Headers` (which response headers become readable to JS beyond the CORS-safelisted set). this tool fires exactly that preflight with `Origin` defaulting to `https://drwho.me` and method defaulting to `GET`, and renders the six AC-* headers side by side. if none come back, the site does not advertise CORS to that origin — which is the common case for sites that are consumed only by their own frontend.",
@@ -1733,7 +1733,7 @@ export const toolContent: Record<string, ToolContent> = {
         a: "no. we send a fixed `User-Agent: drwho-dossier/1.0`, the `Origin` header, and `Access-Control-Request-Method`. no cookies, no `Authorization`. servers that vary CORS by auth state (e.g. a tighter allowlist for anonymous users) will show you the anonymous variant.",
       },
     ],
-    related: ["dossier-headers", "dossier-redirects", "dossier-dns"],
+    related: ["security-headers-checker", "redirect-checker", "dns-records-lookup"],
     references: [
       {
         title: "Fetch Standard §3.2 — CORS protocol",
@@ -1745,7 +1745,7 @@ export const toolContent: Record<string, ToolContent> = {
       },
     ],
   },
-  "dossier-web-surface": {
+  "web-surface-inspector": {
     lead: "fetch robots.txt, sitemap.xml, and the home page's <head> in parallel to summarise the public web surface a domain advertises. part of the drwho.me domain dossier.",
     overview:
       'three signals, one glance. `robots.txt` at the domain root declares crawler rules (which user-agents may fetch which paths) — its presence and contents hint at indexability intent. `sitemap.xml` (or a linked `sitemap_index.xml`) enumerates the URLs a site wants indexed; the count of `<loc>` entries is a crude measure of site footprint. the home-page `<head>` carries the visible-to-search-and-social-previews metadata: the `<title>`, the `<meta name="description">`, the OpenGraph (`og:*`) set used by facebook/linkedin/slack link unfurls, and the twitter card (`twitter:*`) set. this tool issues three parallel GETs with a shared 5s timeout, truncates bodies for safety (4KB for robots, 64KB for head), and does best-effort regex extraction — not a full HTML parser. if the home page fails, the whole check errors; robots and sitemap are treated as optional and silently marked absent on non-2xx or connection errors.',
@@ -1812,7 +1812,7 @@ export const toolContent: Record<string, ToolContent> = {
         a: "we send a fixed `User-Agent: drwho-dossier/1.0 (+https://drwho.me)` and no cookies. sites that serve a different home page to logged-in users or that bot-detect on the UA will show you the anonymous-crawler view, which is also what search engines and social-preview bots see. so this view is what the public web sees, which is usually what you want for an SEO dossier.",
       },
     ],
-    related: ["dossier-dns", "dossier-headers", "dossier-redirects"],
+    related: ["dns-records-lookup", "security-headers-checker", "redirect-checker"],
     references: [
       { title: "robotstxt.org — the Robots Exclusion Protocol", url: "https://www.robotstxt.org/" },
       { title: "ogp.me — The Open Graph protocol", url: "https://ogp.me/" },

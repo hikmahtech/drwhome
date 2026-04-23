@@ -78,7 +78,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_dns",
-    slug: "dossier-dns",
+    slug: "dns-records-lookup",
     description:
       "Run the DNS section of the domain dossier: resolves A, AAAA, NS, SOA, CAA, TXT in parallel. Returns a CheckResult discriminated union.",
     inputSchema: {
@@ -92,7 +92,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_mx",
-    slug: "dossier-mx",
+    slug: "mx-lookup",
     description:
       "Return the MX records for a domain, sorted by priority, as a CheckResult discriminated union.",
     inputSchema: { domain: z.string().describe("Public FQDN.") },
@@ -104,7 +104,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_spf",
-    slug: "dossier-spf",
+    slug: "spf-checker",
     description:
       "Return the SPF record for a domain, parsed into mechanisms, as a CheckResult discriminated union.",
     inputSchema: { domain: z.string().describe("Public FQDN.") },
@@ -116,7 +116,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_dmarc",
-    slug: "dossier-dmarc",
+    slug: "dmarc-checker",
     description:
       "Return the DMARC record for a domain from _dmarc.<domain>, parsed into tags, as a CheckResult discriminated union.",
     inputSchema: { domain: z.string().describe("Public FQDN.") },
@@ -128,7 +128,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_dkim",
-    slug: "dossier-dkim",
+    slug: "dkim-lookup",
     description:
       "Probe DKIM selectors for a domain. Defaults to common selectors (default, google, k1, selector1, selector2, mxvault). Supply `selectors` to probe a custom list. Returns a CheckResult.",
     inputSchema: {
@@ -151,7 +151,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_tls",
-    slug: "dossier-tls",
+    slug: "tls-certificate-checker",
     description:
       "Fetch the TLS peer certificate for a domain on port 443 and return subject, issuer, validity, SANs, and fingerprint as a CheckResult.",
     inputSchema: { domain: z.string().describe("Public FQDN.") },
@@ -163,7 +163,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_redirects",
-    slug: "dossier-redirects",
+    slug: "redirect-checker",
     description:
       "Trace the HTTP redirect chain starting at https://<domain>/, up to 10 hops. Returns the hop list as a CheckResult.",
     inputSchema: { domain: z.string().describe("Public FQDN.") },
@@ -175,7 +175,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_headers",
-    slug: "dossier-headers",
+    slug: "security-headers-checker",
     description: "Fetch https://<domain>/ and return the response headers as a CheckResult.",
     inputSchema: { domain: z.string().describe("Public FQDN.") },
     handler: async (input) => {
@@ -186,7 +186,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_cors",
-    slug: "dossier-cors",
+    slug: "cors-checker",
     description:
       "Send a CORS preflight OPTIONS to https://<domain>/ and return the access-control-* headers. Optional `origin` and `method` inputs.",
     inputSchema: {
@@ -204,7 +204,7 @@ const rawMcpTools: McpTool[] = [
   },
   {
     name: "dossier_web_surface",
-    slug: "dossier-web-surface",
+    slug: "web-surface-inspector",
     description:
       "Summarise a domain's public web surface: robots.txt, sitemap.xml, home-page <head> metadata (title, description, OpenGraph, Twitter). Returns a composite CheckResult.",
     inputSchema: { domain: z.string().describe("Public FQDN.") },

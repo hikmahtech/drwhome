@@ -6,16 +6,11 @@ import { Suspense } from "react";
 export function DossierMx({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-mx" initial={domain ?? ""} />
+      <DossierForm slug="mx-lookup" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
-            <SectionSkeleton
-              title="mx"
-              toolSlug="dossier-mx"
-              domain={domain}
-              message="resolving…"
-            />
+            <SectionSkeleton title="mx" toolSlug="mx-lookup" domain={domain} message="resolving…" />
           }
         >
           <MxSection domain={domain} />

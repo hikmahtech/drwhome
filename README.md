@@ -47,7 +47,7 @@ A remote MCP endpoint lives at `/mcp/mcp` (Streamable HTTP). The handshake and t
 
 - `/d/<domain>` streams 10 independent checks (DNS, MX, SPF, DMARC, DKIM, TLS, redirects, headers, CORS, web-surface) as a single dossier.
 - Append `?refresh=1` to bypass caches and revalidate that dossier load.
-- Rate limits (per client IP): 30 `/d/<domain>` loads per hour, plus a separate 60/hour shared bucket across `/tools/dossier-*`. Unset Upstash env vars disable rate limiting (dev default).
+- Rate limits (per client IP): 30 `/d/<domain>` loads per hour, plus a separate 60/hour shared bucket across the standalone dossier tool pages (`/tools/dns-records-lookup`, `/tools/mx-lookup`, `/tools/spf-checker`, etc.). Unset Upstash env vars disable rate limiting (dev default).
 - Abuse-prone targets are rejected at the route + MCP layer via a committed denylist in `lib/dossier/denylist.ts`.
 
 ## Layout

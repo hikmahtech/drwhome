@@ -6,13 +6,13 @@ import { Suspense } from "react";
 export function DossierDkim({ domain }: { domain?: string }) {
   return (
     <div className="space-y-4">
-      <DossierForm slug="dossier-dkim" initial={domain ?? ""} />
+      <DossierForm slug="dkim-lookup" initial={domain ?? ""} />
       {domain && (
         <Suspense
           fallback={
             <SectionSkeleton
               title="dkim"
-              toolSlug="dossier-dkim"
+              toolSlug="dkim-lookup"
               domain={domain}
               message="resolving…"
             />

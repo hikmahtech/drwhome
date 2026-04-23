@@ -6,21 +6,21 @@ export async function SpfSection({ domain }: { domain: string }) {
 
   if (r.status === "error") {
     return (
-      <CheckSection title="spf" toolSlug="dossier-spf" domain={domain} status="error">
+      <CheckSection title="spf" toolSlug="spf-checker" domain={domain} status="error">
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="spf" toolSlug="dossier-spf" domain={domain} status="timeout">
+      <CheckSection title="spf" toolSlug="spf-checker" domain={domain} status="timeout">
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
   }
   if (r.status === "not_applicable") {
     return (
-      <CheckSection title="spf" toolSlug="dossier-spf" domain={domain} status="not_applicable">
+      <CheckSection title="spf" toolSlug="spf-checker" domain={domain} status="not_applicable">
         <p className="text-muted">{r.reason}</p>
       </CheckSection>
     );
@@ -29,7 +29,7 @@ export async function SpfSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="spf"
-      toolSlug="dossier-spf"
+      toolSlug="spf-checker"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}

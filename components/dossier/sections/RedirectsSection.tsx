@@ -5,14 +5,14 @@ export async function RedirectsSection({ domain }: { domain: string }) {
   const r = await redirectsCheck(domain);
   if (r.status === "error") {
     return (
-      <CheckSection title="redirects" toolSlug="dossier-redirects" domain={domain} status="error">
+      <CheckSection title="redirects" toolSlug="redirect-checker" domain={domain} status="error">
         <p className="text-danger">{r.message}</p>
       </CheckSection>
     );
   }
   if (r.status === "timeout") {
     return (
-      <CheckSection title="redirects" toolSlug="dossier-redirects" domain={domain} status="timeout">
+      <CheckSection title="redirects" toolSlug="redirect-checker" domain={domain} status="timeout">
         <p className="text-muted">timed out after {r.ms}ms</p>
       </CheckSection>
     );
@@ -21,7 +21,7 @@ export async function RedirectsSection({ domain }: { domain: string }) {
     return (
       <CheckSection
         title="redirects"
-        toolSlug="dossier-redirects"
+        toolSlug="redirect-checker"
         domain={domain}
         status="not_applicable"
       >
@@ -33,7 +33,7 @@ export async function RedirectsSection({ domain }: { domain: string }) {
   return (
     <CheckSection
       title="redirects"
-      toolSlug="dossier-redirects"
+      toolSlug="redirect-checker"
       domain={domain}
       status="ok"
       fetchedAt={r.fetchedAt}
