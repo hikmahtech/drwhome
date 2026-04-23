@@ -1,0 +1,60 @@
+---
+title: "The SPF 10-lookup limit: what it means and how to fix it"
+date: "2026-04-26"
+description: RFC 7208 caps SPF evaluation at ten DNS lookups. Exceed that and your SPF record returns PermError, which DMARC treats as a hard fail. This post covers why the limit exists, how include chains explode the count, and three practical fixes.
+tags: [spf, email, dns, deliverability]
+relatedTool: spf-checker
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+Section 4.6.4 of RFC 7208 caps an SPF record evaluation at ten DNS lookups. Go over and the evaluator returns `permerror`, which DMARC treats as a hard authentication failure. Most deliverability problems that look like "SPF is broken" are actually "SPF is evaluating but hitting the limit."
+
+## Why the limit exists
+
+SPF records can nest: an `include:` mechanism pulls in another domain's SPF, which can itself contain more `include:` or `a`/`mx`/`exists`/`ptr` lookups. Without a cap a single lookup could trigger unbounded DNS traffic. Ten is the RFC's chosen balance between expressive-enough-to-be-useful and bounded-enough-to-be-safe.
+
+The count includes:
+- every `include:` mechanism
+- every `a` and `mx` mechanism (each `mx` charges one for the MX lookup plus one per returned host)
+- every `exists` mechanism
+- every `redirect=` modifier
+- `ptr` (which is deprecated and you should remove anyway)
+
+It does not include the initial TXT lookup for the SPF record itself, `ip4:` and `ip6:` mechanisms (those are inline), or the `all` mechanism.
+
+## How include chains explode
+
+The sneaky part: a `include:spf.google.com` counts as one lookup **in your record**, but when the evaluator resolves `spf.google.com`, its record contains more `include:` mechanisms. Those each count against your budget too.
+
+A real-world example: Google Workspace's `_spf.google.com` expands to `include:_netblocks.google.com`, `include:_netblocks2.google.com`, `include:_netblocks3.google.com`. That is four lookups from one `include:spf.google.com`. Add Microsoft 365's `include:spf.protection.outlook.com` (one lookup), SendGrid's `include:sendgrid.net` (one), Mailchimp's `include:servers.mcsv.net` (one), and a couple of transactional senders and you are at the limit before you have added your own infrastructure.
+
+## How to measure your current count
+
+A manual walk:
+
+1. Resolve `example.com` TXT, find the `v=spf1` record.
+2. For each mechanism, count it against the budget.
+3. For each `include:`, resolve that domain's SPF and recurse.
+
+Tools automate this — point one at your domain and it returns the total. If you are over ten, it returns `permerror` and lists which mechanisms pushed you over.
+
+## Three fixes
+
+**Fix 1: audit and remove.** The highest-leverage fix is usually deletion. List every `include:` against actual sending traffic from the DMARC aggregate reports. A `include:` for a platform you stopped using a year ago still eats a lookup. Most domains can drop two or three mechanisms with no deliverability impact.
+
+**Fix 2: flatten.** Replace `include:` chains with inline `ip4:`/`ip6:` ranges. The platform publishes its sending IPs; you pin them in your SPF. This works but breaks the day the platform changes their IP ranges without telling you. Only do this if you monitor a feed of changes or run an automated flattener on a cron.
+
+**Fix 3: DKIM-first alignment.** DMARC only requires *one* of SPF or DKIM to pass with alignment. If all your important senders sign with DKIM using your domain, SPF failures for those same senders stop mattering. This is the modern approach: rely on DKIM for alignment and use SPF as a soft signal.
+
+Flattening and DKIM-first each have trade-offs. The "permerror" state is always worse than either fix.
+
+<ToolCtaLink postSlug="spf-10-lookup-limit" toolSlug="spf-checker">
+  Check your SPF lookup count →
+</ToolCtaLink>
+
+## Further reading
+
+- [What is DMARC?](/blog/what-is-dmarc)
+- [Email deliverability checklist](/blog/email-deliverability-checklist)
+- RFC 7208 — Sender Policy Framework (especially §4.6.4)

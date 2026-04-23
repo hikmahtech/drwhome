@@ -13,6 +13,7 @@ describe("posts registry", () => {
       "decode-jwt-without-verifying",
       "dns-over-https-cloudflare-primer",
       "reading-ip-from-vercel-edge-headers",
+      "spf-10-lookup-limit",
       "uuidv4-vs-uuidv7",
       "what-is-dmarc",
     ]);
