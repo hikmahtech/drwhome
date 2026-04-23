@@ -1,5 +1,5 @@
+import { type OgBadgeState, summarizeForOg } from "@/lib/dossier/og-summary";
 import { dossierChecks } from "@/lib/dossier/registry";
-import { summarizeForOg, type OgBadgeState } from "@/lib/dossier/og-summary";
 import type { CheckResult } from "@/lib/dossier/types";
 import { validateDomain } from "@/lib/dossier/validate-domain";
 import { OG_COLORS, OG_CONTENT_TYPE, OG_SIZE, loadMonoFont } from "@/lib/og";
@@ -11,9 +11,7 @@ export const size = OG_SIZE;
 
 const PER_CHECK_TIMEOUT_MS = 1500;
 
-async function timed(
-  p: Promise<CheckResult<unknown>>,
-): Promise<CheckResult<unknown> | null> {
+async function timed(p: Promise<CheckResult<unknown>>): Promise<CheckResult<unknown> | null> {
   try {
     return await Promise.race([
       p,
@@ -41,9 +39,7 @@ export default async function OG({
   const domain = v.domain;
   const font = loadMonoFont();
 
-  const results = await Promise.all(
-    dossierChecks.map((c) => timed(c.run(domain))),
-  );
+  const results = await Promise.all(dossierChecks.map((c) => timed(c.run(domain))));
   const summary = summarizeForOg(results);
 
   return new ImageResponse(
@@ -60,9 +56,7 @@ export default async function OG({
         fontFamily: "JetBrains Mono",
       }}
     >
-      <div style={{ display: "flex", fontSize: 24, color: OG_COLORS.muted }}>
-        ~/d/{domain}
-      </div>
+      <div style={{ display: "flex", fontSize: 24, color: OG_COLORS.muted }}>~/d/{domain}</div>
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", fontSize: 72, color: OG_COLORS.fg, lineHeight: 1.1 }}>
           {domain}

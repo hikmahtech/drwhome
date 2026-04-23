@@ -10,9 +10,7 @@ export type OgSummary = {
   badges: OgBadge[];
 };
 
-export function summarizeForOg(
-  results: Array<CheckResult<unknown> | null>,
-): OgSummary {
+export function summarizeForOg(results: Array<CheckResult<unknown> | null>): OgSummary {
   const badges: OgBadge[] = results.map((r) => {
     if (r === null) return { state: "pending" };
     if (r.status === "ok") return { state: "pass" };
