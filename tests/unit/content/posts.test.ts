@@ -19,6 +19,7 @@ describe("posts registry", () => {
       "reading-ip-from-vercel-edge-headers",
       "security-headers-guide",
       "spf-10-lookup-limit",
+      "tls-certificate-guide",
       "uuidv4-vs-uuidv7",
       "what-is-dmarc",
     ]);

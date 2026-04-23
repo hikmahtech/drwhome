@@ -1,0 +1,61 @@
+---
+title: "TLS certificates: what to check before yours expires"
+date: "2026-05-02"
+description: A certificate outage is never unlucky — it is the predictable outcome of not knowing what you have deployed. This post covers what to inspect on a live TLS certificate and the surprises that only show up in the final week.
+tags: [tls, ssl, certificates, security]
+relatedTool: tls-certificate-checker
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+Every public TLS certificate expires. Most shops have auto-renewal — Let's Encrypt certbot, cert-manager, ACM, Cloudflare's managed certs. Auto-renewal fixes expiry; it does not catch the other ways a certificate goes wrong. The annual "oh it expired" outage is usually about something the certificate never promised in the first place.
+
+## What a certificate actually claims
+
+A TLS certificate is a signed statement by a certificate authority that a specific public key belongs to specific domain names, valid between two dates. The statement carries:
+
+- **Subject common name** (legacy; browsers ignore this for name validation).
+- **Subject alternative names (SANs)** — the list of domains the cert vouches for. Browsers check the SNI against this list.
+- **Not Before / Not After** — validity window.
+- **Signature by the issuing CA** — the intermediate certificate, which itself is signed by a root trusted by the client.
+- **Public key** — what the server uses for the TLS key exchange.
+- **Signature algorithm** — SHA-256 minimum; SHA-1 is rejected.
+
+Every browser and client cares about the same fields. A cert that "works in Chrome but not in curl" almost always has a broken intermediate chain, which Chrome will fetch automatically via AIA extensions and curl will not.
+
+## What to check on a live cert
+
+- **Not After vs today.** Clearly. Alert at 30 days.
+- **SAN list contains every domain you serve.** A common miss: cert covers `example.com` but not `www.example.com` (or vice versa). A single-name cert breaks the second your marketing team links to the other host.
+- **Intermediate chain is complete.** Run `openssl s_client -connect example.com:443 -showcerts` and confirm you see at least two certs — your leaf and the intermediate. If you only see one, clients with empty intermediate caches fail. Fix: reconfigure your server to serve the full chain.
+- **Algorithm: ECDSA or RSA ≥ 2048.** Smaller RSA keys still exist but are deprecated. ECDSA is preferred for smaller handshake size.
+- **OCSP stapling present.** `openssl s_client -status` should return an OCSP response. Without stapling, clients make a second round-trip to the CA's OCSP server, which adds latency and leaks which sites you visit to the CA.
+- **Hostname matches SNI.** If the server has many certs and picks based on SNI, a misconfigured SNI selector can serve the wrong cert for a valid hostname.
+
+## Surprises that only appear in the final week
+
+**Shorter validity than you expected.** CA/B Forum reduced max validity from 825 days to 398 days in 2020, and may shorten further. If your renewal cadence is annual, it is now too slow — you need automation that renews monthly.
+
+**CAA record rejects the renewing CA.** Your DNS has `CAA 0 issue "letsencrypt.org"`, but last year someone migrated to a different CA. Renewal fails silently because the new CA can't issue. Fix: audit CAA whenever you change CAs, or leave CAA empty if you don't have a strong reason.
+
+**Intermediate rotation.** The CA rotates their intermediate. Your server is still serving the old intermediate that's about to expire. The leaf is valid, but the chain is broken. Fix: serve the chain your CA currently publishes, not what you exported two years ago.
+
+**Client clock skew.** A client with a wildly wrong local clock rejects valid certs because "not before" appears to be in the future. Rare but real on IoT devices and any environment without NTP.
+
+## Renewal automation is the floor, not the ceiling
+
+Set it up, but also monitor:
+- Days until expiry (alert at 30).
+- SAN coverage against actual served hostnames (alert if any served host is missing).
+- OCSP stapling enabled (alert if stops responding).
+- Chain validity (alert if intermediate is expiring within 14 days).
+
+<ToolCtaLink postSlug="tls-certificate-guide" toolSlug="tls-certificate-checker">
+  Inspect a domain's TLS certificate →
+</ToolCtaLink>
+
+## Further reading
+
+- [Security headers every site should have in 2026](/blog/security-headers-guide)
+- SSL Labs — "SSL and TLS Deployment Best Practices"
+- Mozilla — Server Side TLS configuration generator
