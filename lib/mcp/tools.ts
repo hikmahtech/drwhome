@@ -331,7 +331,7 @@ const rawMcpTools: McpTool[] = [
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
       const results = await Promise.all(
-        dossierChecks.map(async (c) => [c.id, await c.runUncached(domain)] as const),
+        dossierChecks.map(async (c) => [c.id, await c.run(domain)] as const),
       );
       const payload: Record<string, unknown> = {};
       for (const [id, r] of results) payload[id] = r;
