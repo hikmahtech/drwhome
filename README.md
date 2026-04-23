@@ -36,10 +36,19 @@ Set in Vercel dashboard (do not commit):
 | `ADSENSE_CLIENT_ID` | AdSense client id (Plan 5) |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | GA4 measurement ID, `G-XXXXXXXXXX`. Unset → no analytics |
 | `GA_API_SECRET` | GA4 Measurement Protocol API secret (server-side MCP events) |
+| `UPSTASH_REDIS_REST_URL` | Upstash Redis REST endpoint (dossier rate limits) |
+| `UPSTASH_REDIS_REST_TOKEN` | Upstash Redis REST token |
 
 ## MCP
 
 A remote MCP endpoint lives at `/mcp/mcp` (Streamable HTTP). The handshake and tool listing are open; `tools/call` is paywalled (HTTP 402, JSON-RPC error -32001) until the paid tier opens. See `/mcp` on the site for config snippets and the waitlist.
+
+## Dossier
+
+- `/d/<domain>` streams 10 independent checks (DNS, MX, SPF, DMARC, DKIM, TLS, redirects, headers, CORS, web-surface) as a single dossier.
+- Append `?refresh=1` to bypass caches and revalidate that dossier load.
+- Rate limits (per client IP): 30 `/d/<domain>` loads per hour, plus a separate 60/hour shared bucket across `/tools/dossier-*`. Unset Upstash env vars disable rate limiting (dev default).
+- Abuse-prone targets are rejected at the route + MCP layer via a committed denylist in `lib/dossier/denylist.ts`.
 
 ## Layout
 
