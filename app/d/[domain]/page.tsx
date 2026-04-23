@@ -1,3 +1,5 @@
+import { DenylistBanner } from "@/components/dossier/DenylistBanner";
+import { RateLimitBanner } from "@/components/dossier/RateLimitBanner";
 import { CorsSection } from "@/components/dossier/sections/CorsSection";
 import { DkimSection } from "@/components/dossier/sections/DkimSection";
 import { DmarcSection } from "@/components/dossier/sections/DmarcSection";
@@ -12,9 +14,13 @@ import { TlsSection } from "@/components/dossier/sections/TlsSection";
 import { WebSurfaceSection } from "@/components/dossier/sections/WebSurfaceSection";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { TerminalPrompt } from "@/components/terminal/TerminalPrompt";
+import { isDenied } from "@/lib/dossier/denylist";
 import { validateDomain } from "@/lib/dossier/validate-domain";
+import { extractClientIp } from "@/lib/rate-limit/client-ip";
+import { consumeDossier } from "@/lib/rate-limit/ratelimit";
 import { pageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
@@ -44,6 +50,28 @@ export default async function DossierPage({
   if (!v.ok) notFound();
 
   const d = v.domain;
+
+  const denied = isDenied(d);
+  if (denied.denied) {
+    return (
+      <article className="space-y-4">
+        <Breadcrumb path={`~/d/${d}`} />
+        <TerminalPrompt>dossier for {d}</TerminalPrompt>
+        <DenylistBanner domain={d} reason={denied.reason} />
+      </article>
+    );
+  }
+  const ip = extractClientIp(await headers());
+  const rl = await consumeDossier(ip);
+  if (!rl.allowed) {
+    return (
+      <article className="space-y-4">
+        <Breadcrumb path={`~/d/${d}`} />
+        <TerminalPrompt>dossier for {d}</TerminalPrompt>
+        <RateLimitBanner domain={d} resetAt={rl.resetAt} />
+      </article>
+    );
+  }
 
   const sp = await searchParams;
   if (sp.refresh === "1") {
