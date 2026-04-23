@@ -4,10 +4,11 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 describe("ToolsHub", () => {
-  it("lists every tool by name", () => {
+  it("renders a link to every tool by slug", () => {
     render(<ToolsHub />);
+    const hrefs = screen.getAllByRole("link").map((l) => l.getAttribute("href"));
     for (const t of tools) {
-      expect(screen.getByText(t.name, { exact: false })).toBeDefined();
+      expect(hrefs).toContain(`/tools/${t.slug}`);
     }
   });
 

@@ -37,13 +37,10 @@ export default function ToolsHub() {
         <h2 className="text-sm text-muted">network</h2>
         <ul className="space-y-2 list-none p-0">
           {network.map((t) => (
-            <li key={t.slug} className="text-sm">
-              <Link
-                href={`/tools/${t.slug}` as Route}
-                className="text-accent"
-                title={t.description}
-              >
-                {t.name}
+            <li key={t.slug}>
+              <Link href={`/tools/${t.slug}` as Route} className="text-sm">
+                <span className="text-accent">{t.name}</span>{" "}
+                <span className="text-muted">— {t.description}</span>
               </Link>
             </li>
           ))}
@@ -54,13 +51,10 @@ export default function ToolsHub() {
         <h2 className="text-sm text-muted">dev</h2>
         <ul className="space-y-2 list-none p-0">
           {dev.map((t) => (
-            <li key={t.slug} className="text-sm">
-              <Link
-                href={`/tools/${t.slug}` as Route}
-                className="text-accent"
-                title={t.description}
-              >
-                {t.name}
+            <li key={t.slug}>
+              <Link href={`/tools/${t.slug}` as Route} className="text-sm">
+                <span className="text-accent">{t.name}</span>{" "}
+                <span className="text-muted">— {t.description}</span>
               </Link>
             </li>
           ))}
