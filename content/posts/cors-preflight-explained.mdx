@@ -1,0 +1,75 @@
+---
+title: "CORS preflight requests: why they fail and how to fix them"
+date: "2026-05-01"
+description: CORS preflight is the OPTIONS request a browser sends before a "non-simple" cross-origin fetch to verify the server allows the real request. This post explains what triggers a preflight, what the server must return, and the five failure modes you will actually encounter.
+tags: [cors, http, browsers, api]
+relatedTool: cors-checker
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+CORS is a browser feature. The server is a participant but not the enforcer — it only advertises permissions via headers, and the browser decides whether to let JavaScript read the response. The preflight is the browser asking "before I send the real request, will you accept it?"
+
+## What triggers a preflight
+
+A browser sends an `OPTIONS` preflight before a cross-origin `fetch()` or `XMLHttpRequest` when *any* of the following hold:
+
+1. The HTTP method is anything other than `GET`, `HEAD`, or `POST`.
+2. The request has a custom header — anything outside the "CORS-safelisted request headers" (`Accept`, `Accept-Language`, `Content-Language`, `Content-Type`, `Range`).
+3. The `Content-Type` is not `application/x-www-form-urlencoded`, `multipart/form-data`, or `text/plain`. In particular, `application/json` triggers a preflight.
+4. The request body is a `ReadableStream`.
+
+Plain `GET` to a public JSON endpoint without custom headers? No preflight — the browser sends it directly. `POST` with `Content-Type: application/json`? Preflight first.
+
+## The preflight request
+
+```
+OPTIONS /api/v1/things HTTP/1.1
+Host: api.example.com
+Origin: https://app.example.com
+Access-Control-Request-Method: POST
+Access-Control-Request-Headers: content-type, authorization
+```
+
+The browser declares: "I'm at origin X, I want to send method Y with headers Z. Will you accept?"
+
+## The server response
+
+```
+HTTP/1.1 204 No Content
+Access-Control-Allow-Origin: https://app.example.com
+Access-Control-Allow-Methods: POST, GET, DELETE
+Access-Control-Allow-Headers: content-type, authorization
+Access-Control-Allow-Credentials: true
+Access-Control-Max-Age: 86400
+Vary: Origin
+```
+
+- `Access-Control-Allow-Origin` must echo the `Origin` header exactly, or be `*` (which disallows credentialed requests — see below).
+- `Access-Control-Allow-Methods` lists methods the server accepts.
+- `Access-Control-Allow-Headers` must include *every* header the browser asked about.
+- `Access-Control-Allow-Credentials: true` is required if the real request will include cookies or an `Authorization` header. Only valid with a specific origin, never `*`.
+- `Access-Control-Max-Age` caches the preflight result for N seconds so the browser doesn't preflight every single request.
+- `Vary: Origin` is essential if the server varies `Allow-Origin` per origin — without it, a CDN caches the first response and serves it to every origin.
+
+## Five failures you will actually see
+
+**1. `Access-Control-Allow-Origin` is `*` but the request is credentialed.** The browser console reads: *"The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'."* Fix: echo the specific origin.
+
+**2. Missing `Access-Control-Allow-Headers` entry.** You added `Authorization` to the client fetch, the server forgot to list it. The browser refuses to send the real request. Fix: add the header to the allow list.
+
+**3. CDN caches the preflight without `Vary`.** First browser from origin A gets a response with `Allow-Origin: A`. Second browser from origin B gets the same cached response, sees `Allow-Origin: A`, fails. Fix: `Vary: Origin` on every preflight response.
+
+**4. The origin is not the one you think.** Mobile apps, Chrome extensions, and cross-tab iframes all have origins that may not match what you whitelisted. Check the real `Origin` header before blaming the server config.
+
+**5. Preflight returns `4xx`.** Often a misconfigured route guard (auth middleware) rejecting the `OPTIONS` before CORS middleware runs. Fix: allow `OPTIONS` through authentication-free, or move the CORS middleware earlier in the chain.
+
+<ToolCtaLink postSlug="cors-preflight-explained" toolSlug="cors-checker">
+  Run a CORS preflight against any domain →
+</ToolCtaLink>
+
+## Further reading
+
+- [Security headers every site should have in 2026](/blog/security-headers-guide)
+- MDN — CORS
+- Fetch Standard — §3.2 CORS protocol

@@ -10,6 +10,7 @@ describe("posts registry", () => {
     const slugs = posts.map((p) => p.slug).sort();
     expect(slugs).toEqual([
       "base64-isnt-encryption",
+      "cors-preflight-explained",
       "debug-redirect-chain",
       "decode-jwt-without-verifying",
       "dkim-selectors-explained",

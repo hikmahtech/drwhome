@@ -1,4 +1,5 @@
 import Base64Article, { frontmatter as base64Fm } from "@/content/posts/base64-isnt-encryption.mdx";
+import Cors, { frontmatter as corsFm } from "@/content/posts/cors-preflight-explained.mdx";
 import Redir, { frontmatter as redirFm } from "@/content/posts/debug-redirect-chain.mdx";
 import Jwt, { frontmatter as jwtFm } from "@/content/posts/decode-jwt-without-verifying.mdx";
 import Dkim, { frontmatter as dkimFm } from "@/content/posts/dkim-selectors-explained.mdx";
@@ -33,6 +34,7 @@ export const posts: PostRecord[] = [
   record("email-deliverability-checklist", delivFm, Deliv),
   record("debug-redirect-chain", redirFm, Redir),
   record("security-headers-guide", secHdrFm, SecHdr),
+  record("cors-preflight-explained", corsFm, Cors),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));
