@@ -5,6 +5,7 @@ import Dkim, { frontmatter as dkimFm } from "@/content/posts/dkim-selectors-expl
 import Dns, { frontmatter as dnsFm } from "@/content/posts/dns-over-https-cloudflare-primer.mdx";
 import Deliv, { frontmatter as delivFm } from "@/content/posts/email-deliverability-checklist.mdx";
 import Ip, { frontmatter as ipFm } from "@/content/posts/reading-ip-from-vercel-edge-headers.mdx";
+import SecHdr, { frontmatter as secHdrFm } from "@/content/posts/security-headers-guide.mdx";
 import Spf10, { frontmatter as spf10Fm } from "@/content/posts/spf-10-lookup-limit.mdx";
 import Uuid, { frontmatter as uuidFm } from "@/content/posts/uuidv4-vs-uuidv7.mdx";
 import Dmarc, { frontmatter as dmarcFm } from "@/content/posts/what-is-dmarc.mdx";
@@ -31,6 +32,7 @@ export const posts: PostRecord[] = [
   record("dkim-selectors-explained", dkimFm, Dkim),
   record("email-deliverability-checklist", delivFm, Deliv),
   record("debug-redirect-chain", redirFm, Redir),
+  record("security-headers-guide", secHdrFm, SecHdr),
 ]
   .filter((p) => !p.slug.startsWith("_"))
   .sort((a, b) => b.date.localeCompare(a.date));

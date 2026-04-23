@@ -1,0 +1,94 @@
+---
+title: "Security headers every site should have in 2026"
+date: "2026-04-30"
+description: A focused tour of the HTTP response headers that protect modern web applications — HSTS, Content-Security-Policy, X-Content-Type-Options, Referrer-Policy, Permissions-Policy — with the minimum-viable value for each and the common misconfigurations to avoid.
+tags: [security, http, headers, csp, hsts]
+relatedTool: security-headers-checker
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+Six HTTP response headers handle 90% of the browser-enforced security surface for a modern web application. Sending them correctly is cheap; sending them wrong is subtle. Here is the 2026 baseline.
+
+## `Strict-Transport-Security`
+
+```
+Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+```
+
+Tells browsers to upgrade every request to this domain (and subdomains) to HTTPS for two years. After the first hit, http-only links never reach the network — the browser rewrites them.
+
+The `preload` directive is an opt-in to the HSTS preload list compiled into Chrome, Firefox, Safari, and Edge. Once preloaded, the upgrade applies even for never-visited-before traffic. Submit at [hstspreload.org](https://hstspreload.org). Reversal takes months, so test `includeSubDomains` carefully first.
+
+## `Content-Security-Policy`
+
+The hardest header to get right. A starter policy for a modern SPA:
+
+```
+Content-Security-Policy:
+  default-src 'self';
+  script-src 'self' 'nonce-<request-nonce>';
+  style-src 'self' 'unsafe-inline';
+  img-src 'self' data: https:;
+  font-src 'self' data:;
+  connect-src 'self' https://api.example.com;
+  frame-ancestors 'none';
+  base-uri 'self';
+  form-action 'self';
+  upgrade-insecure-requests;
+```
+
+Key principles:
+
+- `default-src 'self'` makes everything same-origin by default. You whitelist exceptions.
+- `'nonce-...'` generated per-request is the modern replacement for `'unsafe-inline'`. Every `<script>` tag echoes the same nonce.
+- `frame-ancestors 'none'` is the CSP-level replacement for `X-Frame-Options: DENY`. Send both during transition; CSP wins in modern browsers.
+- `report-uri` (or the newer `report-to`) sends violations as JSON to a collector. Deploy in report-only mode (`Content-Security-Policy-Report-Only`) for a week before enforcing.
+
+## `X-Content-Type-Options`
+
+```
+X-Content-Type-Options: nosniff
+```
+
+Disables MIME sniffing. Without it, a browser that receives a file served as `text/plain` but starting with `<script>` may execute it as JS. The fix is one header. There is no reason not to send it.
+
+## `Referrer-Policy`
+
+```
+Referrer-Policy: strict-origin-when-cross-origin
+```
+
+Default in modern Chrome/Firefox. Sends the full URL to same-origin requests, only the origin to cross-origin HTTPS requests, and nothing downgrading to HTTP. Prevents leaking private URL paths to third-party analytics, ad networks, and CDNs.
+
+## `Permissions-Policy`
+
+The successor to `Feature-Policy`. Gates access to powerful browser APIs:
+
+```
+Permissions-Policy: camera=(), microphone=(), geolocation=(), browsing-topics=()
+```
+
+Each empty list means "no origin, not even self, may call this API on this document." If your app genuinely needs one, allow it: `camera=(self)`. The important disables in 2026 are `browsing-topics` (Chrome's replacement for third-party cookies for ad targeting) and any of the sensor APIs you do not explicitly use.
+
+## `X-Frame-Options`
+
+```
+X-Frame-Options: DENY
+```
+
+Legacy but still respected. Send it in addition to `frame-ancestors 'none'` to cover old browsers. Only drop it when analytics say your traffic is exclusively on browsers that support CSP Level 2+ (i.e. everyone in 2026).
+
+## What to send, minimally
+
+A single response should carry all six. Configure them in one edge function or middleware so you don't have to patch each route individually. Re-verify after any infra change that touches the response path.
+
+<ToolCtaLink postSlug="security-headers-guide" toolSlug="security-headers-checker">
+  Inspect a domain's response headers →
+</ToolCtaLink>
+
+## Further reading
+
+- MDN — HTTP headers (security)
+- [CORS preflight requests: why they fail](/blog/cors-preflight-explained)
+- [TLS certificates: what to check before yours expires](/blog/tls-certificate-guide)

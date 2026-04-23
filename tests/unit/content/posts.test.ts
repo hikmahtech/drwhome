@@ -16,6 +16,7 @@ describe("posts registry", () => {
       "dns-over-https-cloudflare-primer",
       "email-deliverability-checklist",
       "reading-ip-from-vercel-edge-headers",
+      "security-headers-guide",
       "spf-10-lookup-limit",
       "uuidv4-vs-uuidv7",
       "what-is-dmarc",
