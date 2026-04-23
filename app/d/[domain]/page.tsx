@@ -1,5 +1,7 @@
 import { DenylistBanner } from "@/components/dossier/DenylistBanner";
+import { DossierViewTracker } from "@/components/dossier/DossierViewTracker";
 import { RateLimitBanner } from "@/components/dossier/RateLimitBanner";
+import { ShareButton } from "@/components/dossier/ShareButton";
 import { CorsSection } from "@/components/dossier/sections/CorsSection";
 import { DkimSection } from "@/components/dossier/sections/DkimSection";
 import { DmarcSection } from "@/components/dossier/sections/DmarcSection";
@@ -18,7 +20,7 @@ import { isDenied } from "@/lib/dossier/denylist";
 import { validateDomain } from "@/lib/dossier/validate-domain";
 import { extractClientIp } from "@/lib/rate-limit/client-ip";
 import { consumeDossier } from "@/lib/rate-limit/ratelimit";
-import { pageMetadata } from "@/lib/seo";
+import { pageMetadata, siteUrl } from "@/lib/seo";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
@@ -84,9 +86,13 @@ export default async function DossierPage({
     <article className="space-y-4">
       <Breadcrumb path={`~/d/${d}`} />
       <TerminalPrompt>dossier for {d}</TerminalPrompt>
-      <p className="text-sm text-muted">
-        an at-a-glance snapshot. each section streams in independently.
-      </p>
+      <DossierViewTracker domain={d} />
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm text-muted">
+          an at-a-glance snapshot. each section streams in independently.
+        </p>
+        <ShareButton domain={d} href={`${siteUrl()}/d/${d}`} />
+      </div>
 
       <Suspense fallback={<DnsSectionSkeleton domain={d} />}>
         <DnsSection domain={d} />
