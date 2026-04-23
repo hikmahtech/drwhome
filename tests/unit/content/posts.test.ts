@@ -16,6 +16,7 @@ describe("posts registry", () => {
       "dkim-selectors-explained",
       "dns-over-https-cloudflare-primer",
       "email-deliverability-checklist",
+      "ip-geolocation-accuracy",
       "jwt-claims-reference",
       "reading-ip-from-vercel-edge-headers",
       "security-headers-guide",

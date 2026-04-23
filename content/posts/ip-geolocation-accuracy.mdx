@@ -1,0 +1,61 @@
+---
+title: "IP geolocation accuracy: what ASN, ISP, and org data actually tell you"
+date: "2026-05-05"
+description: IP geolocation is a series of inferences from public routing data. City-level accuracy is the best you should expect; rural and mobile IPs are much worse. This post walks through what ASN, ISP, and org fields actually represent and when each is trustworthy.
+tags: [ip, networking, geolocation, asn]
+relatedTool: ip-lookup
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+IP geolocation databases sell you a city, a region, and a country for any public IP. What they are actually selling is an informed guess, constructed from BGP announcements, WHOIS records, reverse DNS heuristics, and occasionally some crowd-sourced location pings. The quality of the guess varies enormously with the type of IP.
+
+## What the fields mean
+
+**ASN** (Autonomous System Number) is the most concrete field. An ASN identifies a network operator — Amazon is AS16509, Cloudflare is AS13335, Comcast has many ASes including AS7922. Every IP on the public internet belongs to exactly one ASN at a time; this mapping is public in BGP announcements and rarely wrong.
+
+**ISP** is a human-readable name for the ASN's operator. Derived from ASN, essentially the same data in a different format.
+
+**Org** is the organization that was delegated the specific IP block. Sometimes equals the ISP (home broadband); sometimes a tenant of the ISP (a business that leases a /24 from their telco). For cloud IPs, "org" is often the cloud provider and not the customer running on that IP.
+
+**City, region, country** are the lookups. These come from proprietary databases (MaxMind, IP2Location, ipinfo) that merge the public routing data with WHOIS registrations, latency measurements, and whatever else they can get their hands on.
+
+## What "accurate" means by IP type
+
+**Cloud IPs (AWS, GCP, Azure, Cloudflare).** The city tells you which datacenter region the IP is in — usually accurate to the city level because cloud providers advertise IP ranges per region. The org tells you the cloud provider, not the customer. If you see "AWS us-east-1" that's an EC2 instance in Virginia; you have no idea whose instance it is.
+
+**Home broadband IPs.** City-level accuracy is generally real. The ISP's WHOIS records the city where the IP block was delegated, and most ISPs stick to that geographically. Subscriber-level accuracy (street address) is fiction — that data is not public.
+
+**Mobile carrier IPs.** Wildly inaccurate. A single IP may carry traffic from anywhere in the country (or continent) because the carrier NATs millions of subscribers behind a handful of gateways. "Accurate to country" is the best you should expect.
+
+**VPN and proxy IPs.** Whatever the VPN exit node's location is — which is not where the user is. Commercial VPNs sell "exit nodes in 50 countries"; each node's geolocation is roughly correct for itself and meaningless for the user.
+
+**Anycast IPs (CDN, DNS resolvers).** Meaningless. `1.1.1.1` is announced from dozens of physical locations; the "location" returned depends on the database's choice of which announcement to privilege.
+
+## When to trust geolocation
+
+Three legitimate uses:
+
+1. **Routing.** Serve a closer CDN edge, show a locally-relevant homepage, default to a likely currency. Getting it wrong is mildly annoying, never critical.
+2. **Fraud signals.** A credit-card transaction from a city that doesn't match the billing address is one signal among many. Not a decision, a factor.
+3. **Aggregate analytics.** "15% of our visitors are from France" is accurate even though the location of any specific visitor is noisy.
+
+## When not to trust it
+
+- Compliance decisions (geo-fencing, age-of-consent gating). Too many false positives from VPNs and mobile IPs.
+- Security alerts on a per-IP basis. A user travels; their home router gets a new CGNAT; a family member opens a VPN. All cause spurious "login from unusual location" noise.
+- Anything advertised as "pinpointing user location." No public IP database does this reliably.
+
+## ASN is usually more useful than city
+
+For most of the analytical questions people ask of IP data, ASN answers better than city does. "Is this user on a residential connection or a cloud IP?" is the question behind most "is this a bot?" checks — and ASN tells you.
+
+<ToolCtaLink postSlug="ip-geolocation-accuracy" toolSlug="ip-lookup">
+  Look up an IP's ASN, ISP, and location →
+</ToolCtaLink>
+
+## Further reading
+
+- [Reading IP from Vercel edge headers](/blog/reading-ip-from-vercel-edge-headers)
+- MaxMind — GeoIP2 accuracy methodology
+- RFC 7020 — Internet Numbers Registry System
