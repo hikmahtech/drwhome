@@ -17,6 +17,7 @@ describe("posts registry", () => {
       "dns-over-https-cloudflare-primer",
       "email-deliverability-checklist",
       "ip-geolocation-accuracy",
+      "json-formatting-for-logs",
       "jwt-claims-reference",
       "reading-ip-from-vercel-edge-headers",
       "security-headers-guide",

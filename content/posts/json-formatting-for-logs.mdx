@@ -1,0 +1,79 @@
+---
+title: "JSON formatting for logs: pretty-print vs minified and why it matters"
+date: "2026-05-06"
+description: Structured logs live in two worlds — the ingestion pipeline that wants compact machine-readable lines and the engineer who wants to read them during an incident. This post explains when to use each format and how to have both without breaking your log shipper.
+tags: [json, logging, observability]
+relatedTool: json
+---
+
+import { ToolCtaLink } from "@/components/blog/ToolCtaLink";
+
+The two useful forms of JSON for logs — pretty-printed and minified — optimize for opposite consumers. Pretty-printed is for humans reading with their eyes. Minified (the default, one-line-per-record) is for log shippers reading with regex. Choose wrong and you either flood the pipeline with multi-line records or ship logs that nobody can debug on a call.
+
+## The split
+
+**Minified** JSON is one `{"key":"value",...}` per line. It is what every structured-log framework outputs by default: `logrus.JSONFormatter`, `pino`, `zerolog`, `winston` with the JSON formatter, Python's `structlog` with the JSON processor.
+
+**Pretty-printed** JSON has indentation and line breaks:
+
+```json
+{
+  "timestamp": "2026-05-06T12:34:56Z",
+  "level": "error",
+  "msg": "db connection failed",
+  "host": "web-3",
+  "error": {
+    "type": "ConnectionRefused",
+    "attempt": 3
+  }
+}
+```
+
+The minified version of the same:
+
+```
+{"timestamp":"2026-05-06T12:34:56Z","level":"error","msg":"db connection failed","host":"web-3","error":{"type":"ConnectionRefused","attempt":3}}
+```
+
+Identical data. Wildly different readability. Wildly different ingestion characteristics.
+
+## Why log shippers need minified
+
+Most log shippers assume **one record per line**. `tail -F`, `fluentbit`, `vector`, Datadog's agent, Splunk's universal forwarder — they all read line by line and treat each line as a discrete record. Pretty-printed JSON's internal newlines break that assumption. A single log event becomes 15 records, each a fragment, and downstream parsing fails.
+
+Some shippers support multiline patterns (matching on an indent or a bracket). These work but are brittle: a timestamp format change, an extra nested field, and the pattern stops matching. Production logs should always be minified.
+
+## Why humans need pretty-printed
+
+Reading a 400-character minified line is possible but slow. During an incident you are scanning 50 log lines looking for one pattern; each line is a 3-second visual parse in minified form, 1 second pretty-printed. That difference compounds fast.
+
+## How to have both
+
+Two approaches:
+
+**Tooling at the read-side.** Pipe minified logs through `jq` on your terminal:
+
+```
+kubectl logs pod-name | jq '.'
+```
+
+`jq .` pretty-prints every record. `jq -c '.'` compacts them back. Combined with filters (`jq 'select(.level == "error")'`) you get structured grep + pretty output with one command.
+
+**Pretty for CI, minified for prod.** Many frameworks have dev vs prod modes: pretty-print (and color) when running locally or in CI, minified in production. Do this via a config flag, not a build-time constant — being able to flip it in an incident is valuable.
+
+## Formatting choices that matter
+
+**Key ordering.** Minified JSON has no intrinsic order; pretty-printed output usually preserves insertion order (JSON is defined as unordered, but every JSON library in practice preserves insertion order). If you are diffing logs, ordering matters. Standardize on alphabetical when you need diffability.
+
+**Indent width.** Two spaces is the most readable for typical log records. Four spaces wastes screen real estate; tabs render inconsistently across terminals.
+
+**Trailing newline.** Every log record should end with `\n`. Without it, the next record's first character appears glued to the previous record's last character, which breaks every line-based parser downstream.
+
+<ToolCtaLink postSlug="json-formatting-for-logs" toolSlug="json">
+  Format or minify a JSON payload →
+</ToolCtaLink>
+
+## Further reading
+
+- [Base64 isn't encryption](/blog/base64-isnt-encryption)
+- RFC 8259 — JSON Data Interchange Format
