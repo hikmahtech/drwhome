@@ -268,7 +268,6 @@ export const popularDomains: readonly string[] = [
   "astro.build",
   "remix.run",
   "solidjs.com",
-  "sveltekit.io",
   "svelte.dev",
   "vitejs.dev",
   "rollupjs.org",
