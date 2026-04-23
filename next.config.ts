@@ -14,6 +14,7 @@ const config: NextConfig = {
   poweredByHeader: false,
   typedRoutes: true,
   pageExtensions: ["ts", "tsx", "md", "mdx"],
+  output: "standalone",
 };
 
 const withMDX = createMDX({
