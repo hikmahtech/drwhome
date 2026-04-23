@@ -10,6 +10,7 @@ import { spfCheck } from "@/lib/dossier/checks/spf";
 import { tlsCheck } from "@/lib/dossier/checks/tls";
 import { webSurfaceCheck } from "@/lib/dossier/checks/web-surface";
 import { isDenied } from "@/lib/dossier/denylist";
+import { dossierChecks } from "@/lib/dossier/registry";
 import { decodeBase64, encodeBase64 } from "@/lib/tools/base64";
 import { DNS_TYPES, resolveDns } from "@/lib/tools/dns";
 import { lookupIp } from "@/lib/tools/ipLookup";
@@ -321,6 +322,22 @@ const rawMcpTools: McpTool[] = [
       return ok(generateUuid(version));
     },
   },
+  {
+    name: "dossier_full",
+    slug: "dossier-full",
+    description:
+      "Run all 10 dossier checks for a domain in parallel: dns, mx, spf, dmarc, dkim, tls, redirects, headers, cors, web-surface. Returns one JSON object keyed by check id, each value a CheckResult. Counts as ONE MCP call.",
+    inputSchema: { domain: z.string().describe("Public FQDN.") },
+    handler: async (input) => {
+      const domain = String((input as { domain?: string }).domain ?? "");
+      const results = await Promise.all(
+        dossierChecks.map(async (c) => [c.id, await c.runUncached(domain)] as const),
+      );
+      const payload: Record<string, unknown> = {};
+      for (const [id, r] of results) payload[id] = r;
+      return ok(JSON.stringify(payload, null, 2));
+    },
+  },
 ];
 
 function withDenylist(tool: McpTool): McpTool {
@@ -337,7 +354,19 @@ function withDenylist(tool: McpTool): McpTool {
   };
 }
 
-const DOSSIER_PREFIX = "dossier_";
+const DENYLIST_GATED = new Set([
+  "dossier_dns",
+  "dossier_mx",
+  "dossier_spf",
+  "dossier_dmarc",
+  "dossier_dkim",
+  "dossier_tls",
+  "dossier_redirects",
+  "dossier_headers",
+  "dossier_cors",
+  "dossier_web_surface",
+  "dossier_full",
+]);
 
 function withTracking(tool: McpTool): McpTool {
   return {
@@ -351,7 +380,7 @@ function withTracking(tool: McpTool): McpTool {
 }
 
 export const mcpTools: McpTool[] = rawMcpTools.map((t) =>
-  withTracking(t.name.startsWith(DOSSIER_PREFIX) ? withDenylist(t) : t),
+  withTracking(DENYLIST_GATED.has(t.name) ? withDenylist(t) : t),
 );
 
 export function findMcpTool(name: string): McpTool | undefined {
