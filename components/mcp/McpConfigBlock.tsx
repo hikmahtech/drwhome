@@ -17,7 +17,7 @@ export function McpConfigBlock({ client, configPath, config, footnote }: Props) 
     <>
       <section className="space-y-2">
         <h2 className="text-sm text-muted">config</h2>
-        <TerminalCard label={`$ ${configPath}`}>
+        <TerminalCard label={configPath}>
           <pre className="text-xs whitespace-pre overflow-x-auto">{config}</pre>
         </TerminalCard>
         <div className="flex items-center gap-3">
