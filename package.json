@@ -2,6 +2,7 @@
   "name": "drwho",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "author": "Hikmah Technologies <arshad@hikmahtechnologies.com>",
   "engines": {
     "node": ">=20.10"
