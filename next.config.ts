@@ -15,6 +15,11 @@ const config: NextConfig = {
   typedRoutes: true,
   pageExtensions: ["ts", "tsx", "md", "mdx"],
   output: "standalone",
+  // Render metadata synchronously in the initial HTML instead of streaming it
+  // via AsyncMetadataOutlet. Lighthouse (not in Next.js's default HTML-limited-bots
+  // list) snapshots the DOM before the streamed metadata resolves, failing the
+  // SEO meta-description audit. Matching all UAs forces blocking metadata.
+  htmlLimitedBots: /.*/,
 };
 
 const withMDX = createMDX({
