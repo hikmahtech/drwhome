@@ -56,5 +56,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   return tool.handler(request.params.arguments ?? {});
 });
 
-const transport = new StdioServerTransport();
-await server.connect(transport);
+void (async () => {
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+})();
