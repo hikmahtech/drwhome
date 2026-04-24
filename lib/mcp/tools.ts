@@ -96,7 +96,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_dns",
     slug: "dns-records-lookup",
     description:
-      "Fetch a domain's full DNS profile — A, AAAA, NS, SOA, CAA, and TXT records — all in parallel. Use as the first step of a domain audit or when you need a comprehensive DNS snapshot in one call; prefer dns_lookup for a single record type, or dossier_full for all 10 dossier checks at once. Fires six Cloudflare DoH (1.1.1.1) queries concurrently, each with a 5 s timeout. Returns a CheckResult discriminated union: on success, {status:\"ok\", records:{a, aaaa, ns, soa, caa, txt}}; on failure, {status:\"error\", reason}.",
+      'Fetch a domain\'s full DNS profile — A, AAAA, NS, SOA, CAA, and TXT records — all in parallel. Use as the first step of a domain audit or when you need a comprehensive DNS snapshot in one call; prefer dns_lookup for a single record type, or dossier_full for all 10 dossier checks at once. Fires six Cloudflare DoH (1.1.1.1) queries concurrently, each with a 5 s timeout. Returns a CheckResult discriminated union: on success, {status:"ok", records:{a, aaaa, ns, soa, caa, txt}}; on failure, {status:"error", reason}.',
     inputSchema: {
       domain: z.string().describe(DOMAIN_DESCRIBE),
     },
@@ -110,7 +110,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_mx",
     slug: "mx-lookup",
     description:
-      "Look up a domain's MX (mail exchanger) records and return them sorted ascending by priority. Use when verifying inbound-mail routing or as a precursor to SPF or DMARC checks; prefer dns_lookup with type=MX if you only need the raw DNS answer without the ranked view. Queries Cloudflare DoH (1.1.1.1), follows CNAME aliases, 5 s timeout. Returns a CheckResult discriminated union: on success, {status:\"ok\", records:[{exchange, priority},...]} sorted by priority; on failure, {status:\"error\", reason}.",
+      'Look up a domain\'s MX (mail exchanger) records and return them sorted ascending by priority. Use when verifying inbound-mail routing or as a precursor to SPF or DMARC checks; prefer dns_lookup with type=MX if you only need the raw DNS answer without the ranked view. Queries Cloudflare DoH (1.1.1.1), follows CNAME aliases, 5 s timeout. Returns a CheckResult discriminated union: on success, {status:"ok", records:[{exchange, priority},...]} sorted by priority; on failure, {status:"error", reason}.',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
@@ -122,7 +122,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_spf",
     slug: "spf-checker",
     description:
-      "Retrieve and parse a domain's SPF record, decomposing it into mechanisms and qualifiers. Use to verify email sender policy, debug delivery failures, or check the 10-lookup limit; pair with dossier_dmarc for full email-auth coverage, or use dns_lookup with type=TXT for the raw record only. Fetches TXT records via Cloudflare DoH (1.1.1.1), 5 s timeout, locates the v=spf1 record and parses all mechanisms. Returns a CheckResult: on success, {status:\"ok\", raw, mechanisms:[{type, value, qualifier},...], lookupCount}; on failure, {status:\"error\", reason}.",
+      'Retrieve and parse a domain\'s SPF record, decomposing it into mechanisms and qualifiers. Use to verify email sender policy, debug delivery failures, or check the 10-lookup limit; pair with dossier_dmarc for full email-auth coverage, or use dns_lookup with type=TXT for the raw record only. Fetches TXT records via Cloudflare DoH (1.1.1.1), 5 s timeout, locates the v=spf1 record and parses all mechanisms. Returns a CheckResult: on success, {status:"ok", raw, mechanisms:[{type, value, qualifier},...], lookupCount}; on failure, {status:"error", reason}.',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
@@ -134,7 +134,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_dmarc",
     slug: "dmarc-checker",
     description:
-      "Retrieve and parse a domain's DMARC policy from its _dmarc.<domain> TXT record, returning all tags. Use to audit email authentication policy, verify the p (policy) and rua (reporting) settings, or confirm alignment mode; pair with dossier_spf and dossier_dkim for complete email-auth coverage. Queries _dmarc.<domain> via Cloudflare DoH (1.1.1.1), 5 s timeout; parses each tag=value pair. Returns a CheckResult: on success, {status:\"ok\", raw, tags:{p, rua, ruf, adkim, aspf,...}}; on failure, {status:\"error\", reason}.",
+      'Retrieve and parse a domain\'s DMARC policy from its _dmarc.<domain> TXT record, returning all tags. Use to audit email authentication policy, verify the p (policy) and rua (reporting) settings, or confirm alignment mode; pair with dossier_spf and dossier_dkim for complete email-auth coverage. Queries _dmarc.<domain> via Cloudflare DoH (1.1.1.1), 5 s timeout; parses each tag=value pair. Returns a CheckResult: on success, {status:"ok", raw, tags:{p, rua, ruf, adkim, aspf,...}}; on failure, {status:"error", reason}.',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
@@ -146,14 +146,14 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_dkim",
     slug: "dkim-lookup",
     description:
-      "Probe a domain's DKIM public keys by querying <selector>._domainkey.<domain> for each selector. Use to verify signing configuration or discover active selectors; supply selectors when you know the ESP's selector, or omit to probe six common selectors (default, google, k1, selector1, selector2, mxvault). Issues parallel Cloudflare DoH (1.1.1.1) TXT queries per selector, 5 s timeout each. Returns a CheckResult: {status:\"ok\", found:[{selector, publicKey, raw},...], notFound:[...]} or {status:\"error\", reason}.",
+      'Probe a domain\'s DKIM public keys by querying <selector>._domainkey.<domain> for each selector. Use to verify signing configuration or discover active selectors; supply selectors when you know the ESP\'s selector, or omit to probe six common selectors (default, google, k1, selector1, selector2, mxvault). Issues parallel Cloudflare DoH (1.1.1.1) TXT queries per selector, 5 s timeout each. Returns a CheckResult: {status:"ok", found:[{selector, publicKey, raw},...], notFound:[...]} or {status:"error", reason}.',
     inputSchema: {
       domain: z.string().describe(DOMAIN_DESCRIBE),
       selectors: z
         .array(z.string())
         .optional()
         .describe(
-          "DKIM selector names to probe, e.g. [\"google\", \"s1\"]. Omit to probe the built-in common-selectors set: default, google, k1, selector1, selector2, mxvault.",
+          'DKIM selector names to probe, e.g. ["google", "s1"]. Omit to probe the built-in common-selectors set: default, google, k1, selector1, selector2, mxvault.',
         ),
     },
     handler: async (input) => {
@@ -171,7 +171,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_tls",
     slug: "tls-certificate-checker",
     description:
-      "Fetch and inspect the TLS certificate presented by a domain on port 443, returning chain details and validity period. Use to verify certificate expiry, issuer, Subject Alternative Names, or detect mismatched or self-signed certs; not a full cipher-suite scanner. Performs a TLS handshake from the server edge, 5 s timeout; extracts the leaf certificate. Returns a CheckResult: on success, {status:\"ok\", subject, issuer, validFrom, validTo, daysRemaining, sans, fingerprint}; on failure, {status:\"error\", reason}.",
+      'Fetch and inspect the TLS certificate presented by a domain on port 443, returning chain details and validity period. Use to verify certificate expiry, issuer, Subject Alternative Names, or detect mismatched or self-signed certs; not a full cipher-suite scanner. Performs a TLS handshake from the server edge, 5 s timeout; extracts the leaf certificate. Returns a CheckResult: on success, {status:"ok", subject, issuer, validFrom, validTo, daysRemaining, sans, fingerprint}; on failure, {status:"error", reason}.',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
@@ -183,7 +183,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_redirects",
     slug: "redirect-checker",
     description:
-      "Trace the full HTTP redirect chain starting from https://<domain>/, recording each hop's status code and destination URL. Use to debug redirect loops, verify HTTP→HTTPS upgrades, or audit link shorteners; stops at 10 hops to prevent infinite loops. Follows Location headers with fetch (no auto-redirect), 5 s per hop. Returns a CheckResult: on success, {status:\"ok\", hops:[{url, statusCode, redirectsTo},...], final}; on failure, {status:\"error\", reason}.",
+      'Trace the full HTTP redirect chain starting from https://<domain>/, recording each hop\'s status code and destination URL. Use to debug redirect loops, verify HTTP→HTTPS upgrades, or audit link shorteners; stops at 10 hops to prevent infinite loops. Follows Location headers with fetch (no auto-redirect), 5 s per hop. Returns a CheckResult: on success, {status:"ok", hops:[{url, statusCode, redirectsTo},...], final}; on failure, {status:"error", reason}.',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
@@ -195,7 +195,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_headers",
     slug: "security-headers-checker",
     description:
-      "Fetch https://<domain>/ and return all HTTP response headers, with an audit highlighting missing or misconfigured security headers. Use to review CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy; for redirect tracing use dossier_redirects instead. Single GET via fetch, 5 s timeout, captures raw response headers before any redirect is followed. Returns a CheckResult: on success, {status:\"ok\", headers:{...}, securityAudit:[{header, present, value},...]}; on failure, {status:\"error\", reason}.",
+      'Fetch https://<domain>/ and return all HTTP response headers, with an audit highlighting missing or misconfigured security headers. Use to review CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy; for redirect tracing use dossier_redirects instead. Single GET via fetch, 5 s timeout, captures raw response headers before any redirect is followed. Returns a CheckResult: on success, {status:"ok", headers:{...}, securityAudit:[{header, present, value},...]}; on failure, {status:"error", reason}.',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
@@ -207,7 +207,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_cors",
     slug: "cors-checker",
     description:
-      "Send a CORS preflight OPTIONS request to https://<domain>/ and return the access-control-* response headers. Use to verify CORS policy for a specific origin-method pair, or to check whether a domain allows cross-origin requests; provide origin and method to simulate a precise preflight, or omit to use defaults (origin: https://drwho.me, method: GET). Single OPTIONS request via fetch, 5 s timeout. Returns a CheckResult: on success, {status:\"ok\", headers:{access-control-allow-origin,...}}; on failure, {status:\"error\", reason}.",
+      'Send a CORS preflight OPTIONS request to https://<domain>/ and return the access-control-* response headers. Use to verify CORS policy for a specific origin-method pair, or to check whether a domain allows cross-origin requests; provide origin and method to simulate a precise preflight, or omit to use defaults (origin: https://drwho.me, method: GET). Single OPTIONS request via fetch, 5 s timeout. Returns a CheckResult: on success, {status:"ok", headers:{access-control-allow-origin,...}}; on failure, {status:"error", reason}.',
     inputSchema: {
       domain: z.string().describe(DOMAIN_DESCRIBE),
       origin: z
@@ -235,7 +235,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_web_surface",
     slug: "web-surface-inspector",
     description:
-      "Snapshot a domain's public web surface: robots.txt, sitemap.xml, and the home-page <head> metadata (title, description, OpenGraph, Twitter cards). Use for SEO audits, content discovery, or verifying metadata before sharing; for HTTP headers use dossier_headers, for redirect behavior use dossier_redirects. Fetches /, /robots.txt, and /sitemap.xml concurrently via HTTPS, 5 s each; parses <head> with a lightweight HTML parser. Returns a composite CheckResult: {status:\"ok\", meta:{title, description, og, twitter}, robots, sitemapPresent} or {status:\"error\", reason}.",
+      'Snapshot a domain\'s public web surface: robots.txt, sitemap.xml, and the home-page <head> metadata (title, description, OpenGraph, Twitter cards). Use for SEO audits, content discovery, or verifying metadata before sharing; for HTTP headers use dossier_headers, for redirect behavior use dossier_redirects. Fetches /, /robots.txt, and /sitemap.xml concurrently via HTTPS, 5 s each; parses <head> with a lightweight HTML parser. Returns a composite CheckResult: {status:"ok", meta:{title, description, og, twitter}, robots, sitemapPresent} or {status:"error", reason}.',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
@@ -252,7 +252,7 @@ const rawMcpTools: McpTool[] = [
       ua: z
         .string()
         .describe(
-          "Full User-Agent header value as sent by the browser or HTTP client, e.g. \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36\".",
+          'Full User-Agent header value as sent by the browser or HTTP client, e.g. "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36".',
         ),
     },
     handler: async (input) => {
@@ -291,7 +291,7 @@ const rawMcpTools: McpTool[] = [
     inputSchema: {
       input: z
         .string()
-        .describe("UTF-8 plaintext string to encode, e.g. \"Hello, world!\" or binary-safe data."),
+        .describe('UTF-8 plaintext string to encode, e.g. "Hello, world!" or binary-safe data.'),
     },
     handler: async (input) => {
       const r = encodeBase64(String((input as { input?: string }).input ?? ""));
@@ -325,7 +325,7 @@ const rawMcpTools: McpTool[] = [
       input: z
         .string()
         .describe(
-          "String to percent-encode, e.g. a query parameter value like \"hello world\" or \"a=b&c=d\". Pass only the component, not the full URL.",
+          'String to percent-encode, e.g. a query parameter value like "hello world" or "a=b&c=d". Pass only the component, not the full URL.',
         ),
     },
     handler: async (input) => {
@@ -342,7 +342,7 @@ const rawMcpTools: McpTool[] = [
       input: z
         .string()
         .describe(
-          "Percent-encoded string to decode, e.g. \"hello%20world\" or \"a%3Db%26c%3Dd\". Pass only the encoded component, not a full URL.",
+          'Percent-encoded string to decode, e.g. "hello%20world" or "a%3Db%26c%3Dd". Pass only the encoded component, not a full URL.',
         ),
     },
     handler: async (input) => {
@@ -355,7 +355,7 @@ const rawMcpTools: McpTool[] = [
     name: "jwt_decode",
     slug: "jwt",
     description:
-      "Decode a JWT (JSON Web Token) into its header, payload, and raw signature without verifying the cryptographic signature. Use to inspect token claims (sub, exp, iat, aud, etc.) or debug auth flows; do NOT use the decoded claims for access-control decisions since the signature is not validated. Splits on \".\", base64url-decodes each segment, and JSON-parses header and payload — no network calls, no key lookup. Returns JSON with header, payload, and signature fields. On malformed input, returns an error message.",
+      'Decode a JWT (JSON Web Token) into its header, payload, and raw signature without verifying the cryptographic signature. Use to inspect token claims (sub, exp, iat, aud, etc.) or debug auth flows; do NOT use the decoded claims for access-control decisions since the signature is not validated. Splits on ".", base64url-decodes each segment, and JSON-parses header and payload — no network calls, no key lookup. Returns JSON with header, payload, and signature fields. On malformed input, returns an error message.',
     inputSchema: {
       token: z
         .string()
@@ -392,7 +392,7 @@ const rawMcpTools: McpTool[] = [
     name: "dossier_full",
     slug: "dossier-full",
     description:
-      "Run all 10 Domain Dossier checks — dns, mx, spf, dmarc, dkim, tls, redirects, headers, cors, web-surface — in parallel and return all results in a single response. Use when you need a comprehensive domain health snapshot in one call; counts as ONE paywall call regardless of how many checks run. For a single focused check, prefer the individual dossier_* tools to minimise latency. Fires all 10 checks concurrently via Cloudflare DoH or direct HTTPS, 5 s per-check timeout. Returns a JSON object keyed by check id (dns, mx, etc.), each value a CheckResult discriminated union ({status:\"ok\",...} or {status:\"error\", reason}).",
+      'Run all 10 Domain Dossier checks — dns, mx, spf, dmarc, dkim, tls, redirects, headers, cors, web-surface — in parallel and return all results in a single response. Use when you need a comprehensive domain health snapshot in one call; counts as ONE paywall call regardless of how many checks run. For a single focused check, prefer the individual dossier_* tools to minimise latency. Fires all 10 checks concurrently via Cloudflare DoH or direct HTTPS, 5 s per-check timeout. Returns a JSON object keyed by check id (dns, mx, etc.), each value a CheckResult discriminated union ({status:"ok",...} or {status:"error", reason}).',
     inputSchema: { domain: z.string().describe(DOMAIN_DESCRIBE) },
     handler: async (input) => {
       const domain = String((input as { domain?: string }).domain ?? "");
