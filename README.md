@@ -1,5 +1,7 @@
 # drwho.me
 
+[![hikmahtech/drwhome MCP server](https://glama.ai/mcp/servers/hikmahtech/drwhome/badges/score.svg)](https://glama.ai/mcp/servers/hikmahtech/drwhome)
+
 Minimal, fast network and developer tools at `drwho.me`.
 Operated by [Hikmah Technologies](https://hikmahtechnologies.com).
 
