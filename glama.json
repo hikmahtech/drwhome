@@ -1,0 +1,15 @@
+{
+  "$schema": "https://glama.ai/mcp/schemas/server.json",
+  "name": "drwhome",
+  "description": "Remote MCP server with 21 tools for Domain Dossier checks and developer utilities.",
+  "server": {
+    "type": "remote",
+    "transport": "streamable-http",
+    "url": "https://drwho.me/mcp/mcp"
+  },
+  "maintainers": [
+    { "name": "Hikmah Technologies", "email": "arshad@hikmahtechnologies.com" }
+  ],
+  "license": "MIT",
+  "homepage": "https://drwho.me"
+}
