@@ -61,3 +61,7 @@ A remote MCP endpoint lives at `/mcp/mcp` (Streamable HTTP). The handshake and t
 ## Deploy
 
 Push to `main` → Vercel auto-deploys. PRs → preview deploys. Set the env vars above in Vercel before first deploy (except the Plan-deferred ones).
+
+## Credits
+
+Favicon: owl icon by [Lorc](https://lorcblog.blogspot.com/) via [game-icons.net](https://game-icons.net/1x1/lorc/owl.html), licensed under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/).
