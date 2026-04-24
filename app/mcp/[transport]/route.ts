@@ -34,4 +34,19 @@ const mcpInner = createMcpHandler(
 
 const handler = withPaywall((req, _ctx) => mcpInner(req));
 
+// HEAD requests come from link-preview bots and uptime monitors. Next.js falls
+// back to GET when HEAD isn't exported, which enters mcp-handler's SSE path and
+// hangs until the 60s serverless timeout — producing a 504. Short-circuit fast.
+export function HEAD(): Response {
+  return new Response(null, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+      "X-MCP-Server": "drwho.me",
+      "X-MCP-Transport": "streamable-http",
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
 export { handler as GET, handler as POST, handler as DELETE };
