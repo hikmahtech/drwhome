@@ -1,0 +1,4 @@
+# pnpm refuses packages published in the last few days. This one is ours, and was published
+# the day the site switched to it. Safe to remove once 0.2.0 is a week old.
+minimumReleaseAgeExclude:
+  - '@hikmahtech/dossier-checks@0.2.0'

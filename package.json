@@ -2,7 +2,7 @@
   "name": "drwho",
   "version": "0.1.0",
   "private": true,
-  "description": "drwho.me \u2014 free network and developer tools, and a free MCP server.",
+  "description": "drwho.me — free network and developer tools, and a free MCP server.",
   "license": "MIT",
   "type": "module",
   "engines": {
@@ -18,7 +18,7 @@
     "manifests": "tsx scripts/gen-manifests.ts"
   },
   "dependencies": {
-    "@hikmahtech/dossier-checks": "file:vendor/hikmahtech-dossier-checks-0.2.0.tgz",
+    "@hikmahtech/dossier-checks": "^0.2.0",
     "@hono/mcp": "^0.3.2",
     "@hono/node-server": "^1.13.7",
     "@modelcontextprotocol/sdk": "^1.30.0",
