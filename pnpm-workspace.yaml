@@ -1,4 +1,0 @@
-# Dependencies allowed to run an install script. pnpm refuses the install otherwise.
-onlyBuiltDependencies:
-  - "@biomejs/biome"
-  - esbuild

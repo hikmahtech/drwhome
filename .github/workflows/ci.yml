@@ -16,6 +16,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+      # pnpm 11 refuses dependency install scripts (esbuild, biome) unless told otherwise. The
+      # lockfile is the trust boundary here.
+      - run: pnpm config set dangerouslyAllowAllBuilds true
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm exec tsc --noEmit
