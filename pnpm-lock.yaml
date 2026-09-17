@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@hikmahtech/dossier-checks':
-        specifier: file:vendor/hikmahtech-dossier-checks-0.2.0.tgz
-        version: file:vendor/hikmahtech-dossier-checks-0.2.0.tgz
+        specifier: ^0.2.0
+        version: 0.2.0
       '@hono/mcp':
         specifier: ^0.3.2
         version: 0.3.2(@modelcontextprotocol/sdk@1.30.0(zod@4.6.5))(hono-rate-limiter@0.5.4(hono@4.13.8))(hono@4.13.8)(zod@4.6.5)
@@ -567,9 +567,8 @@ packages:
   '@fontsource/ibm-plex-mono@5.3.0':
     resolution: {integrity: sha512-eTgnZjZEGk1QtD3ZstF+Vclo2HLAni8YMy34/DxllwZvyz1lR/1RF/xTiAquOBO7MvqBx8D2Ig2WCPMVfdZu7Q==}
 
-  '@hikmahtech/dossier-checks@file:vendor/hikmahtech-dossier-checks-0.2.0.tgz':
-    resolution: {integrity: sha512-ng/bCV8eG5u6uRkunvmq4cbbgnaZ01U5unT2UXWuRRY/ESMtLx8XMFzigguUwX23l6eKLsiScf//R2w0rU7fEw==, tarball: file:vendor/hikmahtech-dossier-checks-0.2.0.tgz}
-    version: 0.2.0
+  '@hikmahtech/dossier-checks@0.2.0':
+    resolution: {integrity: sha512-o5yeTWw+M3NMVfD1JG6+/N344pUeo+/W1Mo4yBecOZvmvWiUkay+MeGGvpOjahpbTKJ04zdsQG1soMXXnYc08w==}
 
   '@hono/mcp@0.3.2':
     resolution: {integrity: sha512-IJQ4RazhwFLRwcTM95Dj9YfNBYXwOQzd1IfnDy4S3hiaBbtnVY0sWiT83auOOnhaCiE0TTbud4JV9UD30zknXA==}
@@ -1619,7 +1618,7 @@ snapshots:
 
   '@fontsource/ibm-plex-mono@5.3.0': {}
 
-  '@hikmahtech/dossier-checks@file:vendor/hikmahtech-dossier-checks-0.2.0.tgz':
+  '@hikmahtech/dossier-checks@0.2.0':
     dependencies:
       whoiser: 1.18.0
 

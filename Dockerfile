@@ -6,7 +6,6 @@ RUN corepack enable pnpm
 # Inside the image the lockfile is the trust boundary, so install scripts (esbuild) may run.
 RUN pnpm config set dangerouslyAllowAllBuilds true
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml* ./
-COPY vendor ./vendor
 RUN pnpm install --frozen-lockfile --prod
 COPY tsconfig.json mcp-server.ts ./
 COPY src ./src
