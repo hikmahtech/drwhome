@@ -42,6 +42,14 @@ app.use(async (c, next) => {
 // Google Analytics hosts are allowed only when a measurement id is configured.
 const GA = Boolean(process.env.GA_MEASUREMENT_ID);
 const GA_SCRIPT = GA ? ["https://www.googletagmanager.com"] : [];
+// Not allowed on purpose: www.google.com. The Google tag also tries an ad-side ping there
+// (Google Signals is off on the property and in the tag, it still tries). The policy blocks it;
+// the cost is one line of console noise, and the analytics hits are unaffected.
+
+// Cloudflare injects its cookieless Web Analytics beacon at the edge. Without these two hosts
+// the policy blocks it and every page logs an error.
+const CF_BEACON_SCRIPT = "https://static.cloudflareinsights.com";
+const CF_BEACON_CONNECT = "https://cloudflareinsights.com";
 const GA_CONNECT = GA
   ? [
       "https://www.google-analytics.com",
@@ -56,12 +64,12 @@ app.use(
     // Strict on purpose: visitors will point the security-headers checker at this site.
     contentSecurityPolicy: {
       defaultSrc: ["'none'"],
-      scriptSrc: ["'self'", ...GA_SCRIPT],
+      scriptSrc: ["'self'", CF_BEACON_SCRIPT, ...GA_SCRIPT],
       styleSrc: ["'self'"],
       fontSrc: ["'self'"],
       imgSrc: ["'self'", "data:", ...GA_SCRIPT],
       // Browser tools call these public APIs directly.
-      connectSrc: ["'self'", "https://cloudflare-dns.com", ...GA_CONNECT],
+      connectSrc: ["'self'", "https://cloudflare-dns.com", CF_BEACON_CONNECT, ...GA_CONNECT],
       formAction: ["'self'"],
       baseUri: ["'none'"],
       frameAncestors: ["'none'"],

@@ -58,7 +58,13 @@ export function Privacy() {
             <p>
               The site uses Google Analytics (GA4) to count page views and events. For visitors in
               the EEA, the UK and Switzerland, this is off until you agree to it. Links from
-              drwho.me to Domain Posture carry UTM tags so we can see which tool sent the click.
+              drwho.me to Domain Posture carry UTM tags so we can see which tool sent the click. We
+              send which tool ran and whether it found a problem, never the domain, address or text
+              you entered.
+            </p>
+            <p>
+              Cloudflare also adds its Web Analytics script to the pages. It counts visits and page
+              speed without cookies and does not follow you across sites.
             </p>
             <h2>Hosting</h2>
             <p>drwho.me sits behind Cloudflare, which fronts and caches the site.</p>

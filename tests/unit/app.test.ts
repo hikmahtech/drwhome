@@ -45,6 +45,13 @@ describe("canonical host", () => {
 });
 
 describe("response headers", () => {
+  it("lets the Cloudflare beacon through and keeps www.google.com out", async () => {
+    const csp = (await get("/")).headers.get("content-security-policy") ?? "";
+    expect(csp).toMatch(/script-src[^;]*static\.cloudflareinsights\.com/);
+    expect(csp).toMatch(/connect-src[^;]*cloudflareinsights\.com/);
+    expect(csp).not.toContain("www.google.com");
+  });
+
   it("sends a permissions policy that turns off what the site does not use", async () => {
     const pp = (await get("/")).headers.get("permissions-policy") ?? "";
     expect(pp).toContain("camera=()");
