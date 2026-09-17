@@ -8,6 +8,9 @@ memory: "256M"
 # Public by nature: it is in the page source. Drives the GA4 tag and its CSP allowances.
 env:
   GA_MEASUREMENT_ID: G-1FL5CW8C4R
+  # Public half of the key that proves to the MCP registry we own drwho.me. Served at
+  # /.well-known/mcp-registry-auth. The private half is outside the repo.
+  MCP_REGISTRY_AUTH: "v=MCPv1; k=ed25519; p=nH7rLb7hye3IjJ3n1hsZcJvk5TdeMS6KI6IyU7AfJH4="
 # Values are entered in the koyracloud UI, never committed. A secret listed here but not
 # entered is simply empty at runtime; the app warns at boot for each one (grep "is unset").
 secrets:
