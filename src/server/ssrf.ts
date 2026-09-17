@@ -158,6 +158,38 @@ export function installNetworkGuard(): void {
   globalThis.fetch = undiciFetch as unknown as typeof fetch;
 }
 
+export type GuardVerdict = { ok: true } | { ok: false; message: string; tone: "warn" | "bad" };
+
+/**
+ * The public-address test, with an answer a person can act on. The guard fails closed in three
+ * different situations, and they must not read the same: a lookup that failed says nothing
+ * about the domain, so it must never be reported as "this domain is private".
+ */
+export async function checkPublic(domain: string): Promise<GuardVerdict> {
+  let guard = await resolvesToPublicIp(domain);
+  // A failed lookup is usually a blip (it happens for a few seconds after a deploy). One retry.
+  if (!guard.ok && guard.reason === "DNS resolution failed") {
+    await new Promise((r) => setTimeout(r, 400));
+    guard = await resolvesToPublicIp(domain);
+  }
+  if (guard.ok) return { ok: true };
+  if (guard.reason === "DNS resolution failed") {
+    return {
+      ok: false,
+      tone: "warn",
+      message: "Could not look up this domain's addresses just now. Try again.",
+    };
+  }
+  if (guard.reason === "no resolvable A/AAAA records") {
+    return {
+      ok: false,
+      tone: "warn",
+      message: "This domain has no A or AAAA record, so there is no site to check.",
+    };
+  }
+  return { ok: false, tone: "bad", message: "This domain does not resolve to a public address." };
+}
+
 /** Runs a server-side check on a visitor-supplied domain, after the public-address test. */
 export async function guardedRun(
   rawDomain: string,
@@ -165,9 +197,7 @@ export async function guardedRun(
 ): Promise<Report> {
   const v = validateDomain(rawDomain);
   if (!v.ok) return { verdict: `Not a valid domain: ${v.reason}`, tone: "bad", rows: [] };
-  const guard = await resolvesToPublicIp(v.domain);
-  if (!guard.ok) {
-    return { verdict: "This domain does not resolve to a public address.", tone: "bad", rows: [] };
-  }
+  const guard = await checkPublic(v.domain);
+  if (!guard.ok) return { verdict: guard.message, tone: guard.tone, rows: [] };
   return run(v.domain);
 }

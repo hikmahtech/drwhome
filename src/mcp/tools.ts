@@ -14,7 +14,6 @@ import {
   mtaStsCheck,
   mxCheck,
   redirectsCheck,
-  resolvesToPublicIp,
   securityTxtCheck,
   spfCheck,
   tlsCheck,
@@ -33,6 +32,7 @@ import { decodeJwt } from "../lib/jwt";
 import { decodeUrl, encodeUrl } from "../lib/url";
 import { parseUserAgent } from "../lib/user-agent";
 import { uuidV4, uuidV7 } from "../lib/uuid";
+import { checkPublic } from "../server/ssrf";
 import { isDenied } from "./denylist";
 
 /**
@@ -99,8 +99,8 @@ function domainTool(
       if (isDenied(v.domain))
         return fail("This domain is on the drwho.me denylist for abuse reasons.");
       if (fetches) {
-        const guard = await resolvesToPublicIp(v.domain);
-        if (!guard.ok) return fail("This domain does not resolve to a public address.");
+        const guard = await checkPublic(v.domain);
+        if (!guard.ok) return fail(guard.message);
       }
       const result = await run(v.domain, input);
       return {

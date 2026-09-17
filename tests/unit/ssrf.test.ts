@@ -1,8 +1,13 @@
 import { createServer } from "node:http";
 import net, { type AddressInfo } from "node:net";
 import tls from "node:tls";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { guardedRun, installNetworkGuard, isPublicAddress } from "../../src/server/ssrf";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import {
+  checkPublic,
+  guardedRun,
+  installNetworkGuard,
+  isPublicAddress,
+} from "../../src/server/ssrf";
 
 describe("isPublicAddress", () => {
   it.each([
@@ -94,5 +99,56 @@ describe("guardedRun", () => {
     });
     expect(ran).toBe(false);
     expect(r.tone).toBe("bad");
+  });
+});
+
+describe("checkPublic says why it refused", () => {
+  const doh = (answers: Record<string, string[]>) =>
+    vi.fn(async (input: string | URL) => {
+      const u = new URL(String(input));
+      const type = u.searchParams.get("type") === "AAAA" ? 28 : 1;
+      const data = answers[u.searchParams.get("type") ?? "A"] ?? [];
+      return new Response(
+        JSON.stringify({
+          Status: 0,
+          Answer: data.map((d) => ({ name: "x", type, TTL: 60, data: d })),
+        }),
+      );
+    });
+
+  it("passes a public domain", async () => {
+    vi.stubGlobal("fetch", doh({ A: ["93.184.216.34"] }));
+    expect(await checkPublic("example.com")).toEqual({ ok: true });
+  });
+
+  it("calls a private address a refusal", async () => {
+    vi.stubGlobal("fetch", doh({ A: ["10.1.2.3"] }));
+    const r = await checkPublic("evil.example.org");
+    expect(r).toMatchObject({ ok: false, tone: "bad" });
+  });
+
+  it("never blames the domain when the lookup itself failed, and retries once", async () => {
+    const failing = vi.fn(async () => new Response("", { status: 502 }));
+    vi.stubGlobal("fetch", failing);
+    const r = await checkPublic("example.com");
+    expect(r).toMatchObject({ ok: false, tone: "warn" });
+    expect(r.ok === false && r.message).toContain("Try again");
+    // Two lookups (A and AAAA) per attempt, two attempts.
+    expect(failing).toHaveBeenCalledTimes(4);
+  });
+
+  it("recovers when only the first attempt fails", async () => {
+    const good = doh({ A: ["93.184.216.34"] });
+    let calls = 0;
+    vi.stubGlobal("fetch", (input: string | URL) =>
+      ++calls <= 2 ? Promise.resolve(new Response("", { status: 502 })) : good(input),
+    );
+    expect(await checkPublic("example.com")).toEqual({ ok: true });
+  });
+
+  it("says so when the domain has no address at all", async () => {
+    vi.stubGlobal("fetch", doh({}));
+    const r = await checkPublic("mail-only.example.org");
+    expect(r.ok === false && r.message).toContain("no A or AAAA record");
   });
 });
