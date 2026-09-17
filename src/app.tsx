@@ -29,6 +29,16 @@ export const app = new Hono();
 // Lets a view read the current request (Layout needs the visitor's country for consent).
 app.use(contextStorage());
 
+// One canonical host. www serves nothing itself, so the two never compete in search results.
+// 308 keeps the method, so an MCP client pointed at www still gets its POST through.
+app.use(async (c, next) => {
+  const url = new URL(c.req.url);
+  const host = c.req.header("host")?.toLowerCase().split(":")[0];
+  if (host === "www.drwho.me")
+    return c.redirect(`https://drwho.me${url.pathname}${url.search}`, 308);
+  return next();
+});
+
 // Google Analytics hosts are allowed only when a measurement id is configured.
 const GA = Boolean(process.env.GA_MEASUREMENT_ID);
 const GA_SCRIPT = GA ? ["https://www.googletagmanager.com"] : [];
@@ -59,6 +69,15 @@ app.use(
     // No includeSubDomains or preload: other drwho.me hosts (app.drwho.me) are not this app's to bind.
     strictTransportSecurity: "max-age=31536000",
     referrerPolicy: "strict-origin-when-cross-origin",
+    // The site uses none of these. Only the copy buttons need the clipboard.
+    permissionsPolicy: {
+      camera: [],
+      microphone: [],
+      geolocation: [],
+      payment: [],
+      usb: [],
+      clipboardWrite: ["self"],
+    },
   }),
 );
 

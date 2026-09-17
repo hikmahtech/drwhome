@@ -23,6 +23,35 @@ describe("pages", () => {
   });
 });
 
+describe("canonical host", () => {
+  const www = (path: string, init?: RequestInit) =>
+    app.request(`http://www.drwho.me${path}`, { ...init, headers: { host: "www.drwho.me" } });
+
+  it("sends www to the apex with path and query", async () => {
+    const res = await www("/tools/spf-checker?domain=example.com");
+    expect(res.status).toBe(308);
+    expect(res.headers.get("location")).toBe(
+      "https://drwho.me/tools/spf-checker?domain=example.com",
+    );
+  });
+
+  it("keeps the method for an MCP client pointed at www", async () => {
+    expect((await www("/mcp/mcp", { method: "POST" })).status).toBe(308);
+  });
+
+  it("leaves the apex and other hosts alone", async () => {
+    expect((await get("/")).status).toBe(200);
+  });
+});
+
+describe("response headers", () => {
+  it("sends a permissions policy that turns off what the site does not use", async () => {
+    const pp = (await get("/")).headers.get("permissions-policy") ?? "";
+    expect(pp).toContain("camera=()");
+    expect(pp).toContain("geolocation=()");
+  });
+});
+
 describe("legacy paths still reach Domain Posture", () => {
   // Signed evidence packs and invoice emails already issued carry these drwho.me URLs.
   const cases = [
