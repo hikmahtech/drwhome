@@ -1,0 +1,15 @@
+name: drwho
+runtime: dockerfile
+dockerfile: Dockerfile.web
+port: 3000
+# The image installs python3 for this: koyracloud runs the check as a python3 command.
+healthcheck: /healthz
+memory: "256M"
+# Public by nature: it is in the page source. Drives the GA4 tag and its CSP allowances.
+env:
+  GA_MEASUREMENT_ID: G-1FL5CW8C4R
+# Values are entered in the koyracloud UI, never committed. A secret listed here but not
+# entered is simply empty at runtime; the app warns at boot for each one (grep "is unset").
+secrets:
+  - IPINFO_TOKEN
+  - GA_API_SECRET

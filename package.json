@@ -1,0 +1,41 @@
+{
+  "name": "drwho",
+  "version": "0.1.0",
+  "private": true,
+  "description": "drwho.me \u2014 free network and developer tools, and a free MCP server.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "node scripts/build-client.mjs && tsx watch src/server.ts",
+    "build": "node scripts/build-client.mjs --minify",
+    "start": "tsx src/server.ts",
+    "test": "vitest run",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "manifests": "tsx scripts/gen-manifests.ts"
+  },
+  "dependencies": {
+    "@hikmahtech/dossier-checks": "file:vendor/hikmahtech-dossier-checks-0.2.0.tgz",
+    "@hono/mcp": "^0.3.2",
+    "@hono/node-server": "^1.13.7",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "hono": "^4.6.14",
+    "tsx": "^4.19.2",
+    "ua-parser-js": "^2.0.10",
+    "undici": "^8.10.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@fontsource-variable/archivo": "^5.1.0",
+    "@fontsource/ibm-plex-mono": "^5.1.0",
+    "@types/node": "^22.10.2",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "pnpm@11.5.3"
+}

@@ -1,0 +1,9 @@
+node_modules
+public/js
+public/fonts
+logs
+.git
+.github
+docs
+tests
+.env*

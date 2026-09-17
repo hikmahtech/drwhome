@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "me.drwho/tools",
+  "title": "drwho.me network and developer tools",
+  "description": "29 free tools: DNS, email auth (SPF, DKIM, DMARC), TLS, headers, WHOIS, dev utils.",
+  "version": "2.0.0",
+  "websiteUrl": "https://drwho.me/mcp",
+  "repository": {
+    "url": "https://github.com/hikmahtech/drwhome",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://drwho.me/mcp/mcp"
+    }
+  ]
+}

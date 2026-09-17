@@ -1,0 +1,9 @@
+node_modules
+public/js
+public/fonts
+logs
+.env*
+!.env.example
+
+# Planning notes that mention private infrastructure. Never published.
+docs/internal/
