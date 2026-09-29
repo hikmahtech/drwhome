@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { app } from "../../src/app";
+import { clientLabel } from "../../src/mcp/analytics";
 import { glamaManifest, registryManifest } from "../../src/mcp/manifests";
 import { mcpTools } from "../../src/mcp/tools";
 
@@ -92,6 +93,57 @@ describe("MCP endpoint", () => {
   it("does not hang on HEAD or GET", async () => {
     expect((await app.request("http://drwho.me/mcp/mcp", { method: "HEAD" })).status).toBe(200);
     expect((await app.request("http://drwho.me/mcp/mcp")).status).toBe(405);
+  });
+});
+
+describe("MCP call analytics", () => {
+  const call = {
+    jsonrpc: "2.0",
+    id: 7,
+    method: "tools/call",
+    params: { name: "base64_encode", arguments: { text: "drwho" } },
+  };
+  const ua = { "user-agent": "claude-code/1.2.3 (cli)", "cf-connecting-ip": "203.0.113.90" };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  // Each call has no session, so in the website's property every call counted as a new user (#11).
+  it("never sends to the website's property", async () => {
+    vi.stubEnv("GA_MEASUREMENT_ID", "G-WEB");
+    vi.stubEnv("GA_API_SECRET", "web-secret");
+    vi.stubEnv("GA_MCP_MEASUREMENT_ID", "");
+    vi.stubEnv("GA_MCP_API_SECRET", "");
+    const sent = vi.fn(async () => new Response(null));
+    vi.stubGlobal("fetch", sent);
+    await rpc(call, ua);
+    expect(sent).not.toHaveBeenCalled();
+  });
+
+  it("sends to the MCP property with a coarse client label", async () => {
+    vi.stubEnv("GA_MCP_MEASUREMENT_ID", "G-MCP");
+    vi.stubEnv("GA_MCP_API_SECRET", "mcp-secret");
+    const sent = vi.fn(async (_url: string, _init: RequestInit) => new Response(null));
+    vi.stubGlobal("fetch", sent);
+    await rpc(call, ua);
+    expect(sent).toHaveBeenCalledOnce();
+    const [url, init] = sent.mock.calls[0] ?? [];
+    expect(url).toContain("measurement_id=G-MCP");
+    const body = JSON.parse(String(init?.body));
+    expect(body.events[0].params).toMatchObject({
+      tool_name: "base64_encode",
+      client_name: "claude-code",
+    });
+    expect(String(init?.body)).not.toContain("203.0.113.90");
+  });
+
+  it("labels the client by clientInfo first, then the User-Agent product", () => {
+    expect(clientLabel("Cursor", "node")).toBe("cursor");
+    expect(clientLabel(undefined, "Claude-User/1.0 (+https://x)")).toBe("claude-user");
+    expect(clientLabel(undefined, null)).toBe("unknown");
+    expect(clientLabel("<script>", null)).toBe("script");
   });
 });
 

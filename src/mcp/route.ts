@@ -2,7 +2,7 @@ import { StreamableHTTPTransport } from "@hono/mcp";
 import { Hono } from "hono";
 import { clientIp } from "../server/client-ip";
 import { createLimiter } from "../server/rate-limit";
-import { sendMcpEvent } from "./analytics";
+import { clientLabel, sendMcpEvent } from "./analytics";
 import { createMcpServer } from "./server";
 
 /**
@@ -44,7 +44,11 @@ mcp.post("/mcp/mcp", async (c) => {
       };
     }
     const result = await tool.handler(input);
-    sendMcpEvent(tool.name, !result.isError);
+    const client = clientLabel(
+      server.server.getClientVersion()?.name,
+      c.req.header("user-agent") ?? null,
+    );
+    sendMcpEvent(tool.name, !result.isError, client);
     return result;
   });
   const transport = new StreamableHTTPTransport({

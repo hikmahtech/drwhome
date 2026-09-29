@@ -15,4 +15,7 @@ env:
 # entered is simply empty at runtime; the app warns at boot for each one (grep "is unset").
 secrets:
   - IPINFO_TOKEN
-  - GA_API_SECRET
+  # MCP tool calls go to their own GA4 property, never the website's (#11). The id is not secret,
+  # but keeping it here lets it be set in the UI. Without both, no MCP events are sent.
+  - GA_MCP_MEASUREMENT_ID
+  - GA_MCP_API_SECRET
