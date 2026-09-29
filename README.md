@@ -97,7 +97,9 @@ pnpm lint
 ```
 
 Configuration is in `.env.example`. Everything is optional: without `IPINFO_TOKEN` the two IP
-tools say they are not configured, and without `GA_MEASUREMENT_ID` no analytics loads.
+tools say they are not configured, and without `GA_MEASUREMENT_ID` no analytics loads. MCP tool
+calls are counted in a separate GA4 property set by `GA_MCP_MEASUREMENT_ID` and
+`GA_MCP_API_SECRET`; without both, none are sent.
 
 `glama.json` and `server.json` are generated from the code with `pnpm manifests`. A test fails if
 they are out of date.
