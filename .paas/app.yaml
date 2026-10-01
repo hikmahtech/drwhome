@@ -19,3 +19,5 @@ secrets:
   # but keeping it here lets it be set in the UI. Without both, no MCP events are sent.
   - GA_MCP_MEASUREMENT_ID
   - GA_MCP_API_SECRET
+  # Key for the daily caller-id hash in MCP events (any long random value). Optional.
+  - MCP_CALLER_SALT
