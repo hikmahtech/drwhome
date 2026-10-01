@@ -2,7 +2,13 @@ import { StreamableHTTPTransport } from "@hono/mcp";
 import { Hono } from "hono";
 import { clientIp } from "../server/client-ip";
 import { createLimiter } from "../server/rate-limit";
-import { clientLabel, sendMcpEvent } from "./analytics";
+import {
+  type McpCaller,
+  callerId,
+  clientLabel,
+  clientVersionLabel,
+  sendMcpEvent,
+} from "./analytics";
 import { createMcpServer } from "./server";
 
 /**
@@ -29,6 +35,16 @@ mcp.delete("/mcp/mcp", (c) => c.body(null, 405));
 
 mcp.post("/mcp/mcp", async (c) => {
   const ip = clientIp(c.req.raw.headers);
+  const userAgent = c.req.header("user-agent") ?? null;
+  // Read lazily: clientInfo is only known once initialize has been handled.
+  const caller = (): McpCaller => {
+    const info = server.server.getClientVersion();
+    return {
+      id: callerId(ip),
+      name: clientLabel(info?.name, userAgent),
+      version: clientVersionLabel(info, userAgent),
+    };
+  };
   const server = createMcpServer((tool) => async (input) => {
     // Only tool calls are metered. Listing the tools is always free.
     const limit = callLimiter.take(ip);
@@ -44,11 +60,7 @@ mcp.post("/mcp/mcp", async (c) => {
       };
     }
     const result = await tool.handler(input);
-    const client = clientLabel(
-      server.server.getClientVersion()?.name,
-      c.req.header("user-agent") ?? null,
-    );
-    sendMcpEvent(tool.name, !result.isError, client);
+    sendMcpEvent("mcp_tool_call", caller(), { tool_name: tool.name, success: !result.isError });
     return result;
   });
   const transport = new StreamableHTTPTransport({
@@ -57,5 +69,7 @@ mcp.post("/mcp/mcp", async (c) => {
   });
   await server.connect(transport);
   const res = await transport.handleRequest(c);
+  // Each request has a fresh server, so clientInfo is set only when this request was initialize.
+  if (server.server.getClientVersion()) sendMcpEvent("mcp_session_start", caller());
   return res ?? c.body(null, 202);
 });
