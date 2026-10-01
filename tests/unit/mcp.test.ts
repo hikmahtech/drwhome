@@ -90,6 +90,41 @@ describe("MCP endpoint", () => {
     expect((await rpc({ jsonrpc: "2.0", id: 6, method: "tools/list" }, who)).status).toBe(200);
   });
 
+  // Glama's hourly check (#8) is a bare client: initialize, notifications/initialized, tools/list,
+  // with no session id, no cookie, no Origin and often no browser User-Agent. Every variant here
+  // must get through; a newer SDK that insists on the Accept header would break the listing.
+  it("lets a bare directory health check through: initialize, initialized, tools/list", async () => {
+    const bare = (body: unknown, headers: Record<string, string>) =>
+      app.request("http://drwho.me/mcp/mcp", {
+        method: "POST",
+        headers: { "content-type": "application/json", ...headers },
+        body: JSON.stringify(body),
+      });
+    const variants: Record<string, string>[] = [
+      { accept: "application/json, text/event-stream" },
+      {},
+      { accept: "application/json, text/event-stream", "user-agent": "node" },
+      { accept: "*/*", "user-agent": "python-httpx/0.27.0" },
+    ];
+    for (const headers of variants) {
+      const init = await bare(
+        { ...INIT, params: { ...INIT.params, protocolVersion: "2025-11-25" } },
+        headers,
+      );
+      expect(init.status).toBe(200);
+      expect(init.headers.get("location")).toBeNull();
+      expect(init.headers.get("www-authenticate")).toBeNull();
+      const sid = init.headers.get("mcp-session-id");
+      const withSid = sid ? { ...headers, "mcp-session-id": sid } : headers;
+      const note = await bare({ jsonrpc: "2.0", method: "notifications/initialized" }, withSid);
+      expect(note.status).toBe(202);
+      const list = await bare({ jsonrpc: "2.0", id: 2, method: "tools/list" }, withSid);
+      expect(list.status).toBe(200);
+      const body = (await list.json()) as { result: { tools: unknown[] } };
+      expect(body.result.tools).toHaveLength(mcpTools.length);
+    }
+  });
+
   it("does not hang on HEAD or GET", async () => {
     expect((await app.request("http://drwho.me/mcp/mcp", { method: "HEAD" })).status).toBe(200);
     expect((await app.request("http://drwho.me/mcp/mcp")).status).toBe(405);
