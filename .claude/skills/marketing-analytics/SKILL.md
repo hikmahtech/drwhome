@@ -25,12 +25,21 @@ Domain Posture). Default window 28 days; override with `DAYS=<n>`.
 3. **Pull.**
    - `DAYS=<n> "$NODE" ~/Workspace/hikmah/analytics-toolkit/gsc.mjs sc-domain:drwho.me`
    - `DAYS=<n> "$NODE" ~/Workspace/hikmah/analytics-toolkit/ga.mjs properties/533500563`
-   - Bing: the site is not yet added to Bing Webmaster Tools (issue #1). If
-     `"$NODE" ~/Workspace/hikmah/analytics-toolkit/bing.mjs sites` lists it, also run
-     `traffic`, `pages` and `queries` with `https://drwho.me/`.
+   - `DAYS=<n> "$NODE" ~/Workspace/hikmah/analytics-toolkit/ga-mcp.mjs properties/556540241`
+     (the separate "drwho.me MCP" property; MCP events never go to 533500563).
+   - Bing: run `traffic`, `pages` and `queries` with `https://drwho.me/` via
+     `"$NODE" ~/Workspace/hikmah/analytics-toolkit/bing.mjs`.
    The site's own Cloudflare beacon is the primary page-view count; GA4 is secondary.
 4. **Write** `docs/internal/analytics/YYYY-MM-DD.md` (the directory is gitignored — the
    repo is public and these notes name private infrastructure). Sections: header and
    window; totals with deltas against the previous file; top tool pages; top queries;
-   MCP call counts if issue #1 has landed them; three concrete actions.
+   MCP usage; three concrete actions.
+
+   **MCP usage: report real use, never the raw total.** Most MCP traffic is directories and
+   registries probing the server (glama, mcpbeat, tendle, `*-probe`, `*-health`, …). On
+   2026-10-02 about 340 sessions came from ~57 clients and one was a real agent. Headline
+   number = `REAL USE` from `ga-mcp.mjs` (tool calls from known agents + unclassified
+   clients). Show the agent and unknown rows in full; give probes one summary line. If a new
+   client name looks like a real agent or a probe, add it to the lists in `ga-mcp.mjs`.
+   Treat `python-httpx` and `(no client name)` as unclassified, not as people.
 5. Show the owner a short summary and the file path. Do not commit.
