@@ -17,7 +17,11 @@ export function defineLive(compute: (fields: FormData) => LiveOutput | Promise<L
 
       // Only the newest run may write to the page: a slow lookup must not overwrite a later one.
       let run = 0;
-      const update = async (): Promise<void> => {
+      const onSubmit = this.getAttribute("on") === "submit";
+      const tool = this.getAttribute("tool") ?? "";
+      let announced = false;
+      // `user` is true when the visitor did something; the first run on page load is not a use.
+      const update = async (user = false): Promise<void> => {
         const mine = ++run;
         let result: LiveOutput;
         try {
@@ -25,21 +29,28 @@ export function defineLive(compute: (fields: FormData) => LiveOutput | Promise<L
         } catch {
           result = { error: "Something went wrong in the page." };
         }
-        if (mine === run) out.replaceChildren(...show(result));
+        if (mine !== run) return;
+        out.replaceChildren(...show(result));
+        // For analytics, if loaded. Carries the tool and the outcome, never what was typed.
+        // Submit tools announce every run; typing tools once per page, not per keystroke.
+        if (user && result && (onSubmit || !announced)) {
+          announced = true;
+          const tone = "report" in result ? result.report.tone : "error" in result ? "bad" : "good";
+          document.dispatchEvent(new CustomEvent("dw:tool", { detail: { tool, tone } }));
+        }
       };
 
       // on="submit" is for tools that make a network call: they run on the button, not per key.
-      const onSubmit = this.getAttribute("on") === "submit";
       form.addEventListener("submit", (e) => {
         e.preventDefault();
-        if (onSubmit) void update();
+        if (onSubmit) void update(true);
       });
       if (onSubmit) return;
-      form.addEventListener("input", update);
-      form.addEventListener("change", update);
+      form.addEventListener("input", () => void update(true));
+      form.addEventListener("change", () => void update(true));
       // Buttons marked data-again re-run the tool (a UUID generator has no input to type in).
       form.addEventListener("click", (e) => {
-        if ((e.target as HTMLElement).closest("[data-again]")) void update();
+        if ((e.target as HTMLElement).closest("[data-again]")) void update(true);
       });
       void update();
     }
