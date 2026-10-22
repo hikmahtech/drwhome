@@ -31,7 +31,10 @@ links:
 disclosure: I built this.
 link_wanted: true                      # the tools are free, no account
 voice: plain and technical; answer the question first, name the tool last; one tool per post, never "suite" or "platform"
-channels: [devto, bluesky, linkedin, medium]   # developer audience, so not facebook or linkedin-page
+channels: [linkedin-page, facebook, bluesky, devto, medium]   # developer audience: devto and bluesky first
+# Company accounts only (owner, 2026-10-22): never the personal LinkedIn (`linkedin`) or a personal
+# Facebook profile. devto and medium are personal-name accounts: how-to articles only, with the
+# product only as the canonical link.
 ---
 
 ## Positioning
