@@ -8,10 +8,11 @@ agents. No account, no API key.
 - Site: https://drwho.me
 - MCP endpoint: `https://drwho.me/mcp/mcp` (streamable HTTP)
 
-Most tools run in your browser. A DNS or email check goes from your browser straight to
-Cloudflare's public DNS, so the domain you look up never reaches our server. Tools that must read
-another site's response (security headers, TLS certificate, redirects) run on the server, which
-does not store what you check.
+DNS and most email checks run in your browser (17 of the 32 tools), so the domain never reaches
+drwho.me. SPF, DMARC, DKIM, TLS-RPT and the blacklist check go from your browser straight to
+Cloudflare's public DNS. Site checks, WHOIS and the certificate log run on the server, which does
+not store what you check. So do MTA-STS and the other tools that must read another site's
+response or open a socket.
 
 drwho.me is built by [Hikmah Technologies](https://hikmahtechnologies.com), the team behind
 Domain Posture. Each tool here checks one thing. Domain Posture runs every check at once, grades
@@ -32,6 +33,8 @@ Most other clients take this shape (check your client's docs):
 ```
 
 Fair use: 60 tool calls per hour per address. Listing the tools is never limited.
+On the website, server-side checks are limited to 60 an hour per address (30 an hour shared by
+requests with no address), and IP lookup to 30 an hour.
 
 To run it yourself over stdio:
 
