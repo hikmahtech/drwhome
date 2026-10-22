@@ -18,4 +18,4 @@ not for implementation.
 | `2026-04-18-drwho-03-content-seo.md` | Build plan 3: content and SEO for the tool pages. |
 | `2026-04-18-drwho-04-mcp-endpoint.md` | Build plan 4: the MCP endpoint. |
 | `2026-04-24-glama-aaa-score.md` | How the Glama listing (`hikmahtech/drwhome`) reached an A/A/A score. |
-| `2026-04-24-mcp-directories.md` | Directory submission checklist from April 2026. The current registry state for the Domain Posture server lives in that repo; the Glama listing in this file is now this site's connector, `me.drwho/drwhome`. |
+| `2026-04-24-mcp-directories.md` | Directory submission checklist from April 2026. The current registry state for the Domain Posture server lives in that repo; the listing in this file is now this site's connector, registered as `me.drwho/tools` (Glama: `hikmahtech/drwhome`). |

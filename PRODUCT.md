@@ -1,9 +1,9 @@
 ---
-one_liner: Free single-purpose tools for domains, mail and the web, most of them running in your browser, plus a free MCP server that gives the same tools to AI agents.
-for_whom: Developers, sysadmins and people who run a domain and want to check one thing (an SPF record, a certificate, a header) quickly, without an account; and people who want those checks inside an AI agent.
+one_liner: A free MCP server that gives AI agents 29 DNS, email, TLS and developer checks, plus 32 free single-purpose web tools for domains, mail and the web; DNS and most email checks run in your browser.
+for_whom: Developers who want DNS, email and TLS checks inside an AI agent; and developers, sysadmins and people who run a domain and want to check one thing (an SPF record, a certificate, a header) quickly, without an account.
 answers:
+  - is there a free MCP server for DNS and email checks
   - how do I check my SPF record
-  - how many DNS lookups does my SPF record use
   - how do I check a domain's DMARC policy
   - how do I find the DKIM selector for a domain
   - is my mail server IP on a blacklist
@@ -11,38 +11,65 @@ answers:
   - when does my TLS certificate expire
   - what does my robots.txt tell GPTBot and ClaudeBot
   - does my site have an llms.txt or security.txt
-  - is there a free MCP server for DNS and email checks
   - decode a JWT without sending it to a server
 does_not:
-  - grade results or tell you what to fix first; each tool checks one thing (the graded full report is Domain Posture)
+  - give a domain one overall grade or put fixes in order across checks; each tool grades its own one thing and shows the fix for it (the full graded report across 18 checks is Domain Posture)
+  # Each check's verdict and "To fix" rows come from Domain Posture's own rules (src/reports/report.ts, gradedReport).
   - run checks on a schedule, alert on changes or keep a history; every check is a single look, right now
   - produce signed reports or evidence packs (Domain Posture sells those)
   - change or fix your records; it reads them
-  - give unlimited MCP use; fair use is 60 tool calls an hour per address
-  - run every tool in the browser; security headers, TLS, redirects, CORS, WHOIS, certificate logs and the IP tools run on the server (it does not store what you check)
+  - give unlimited use; the MCP server allows 60 tool calls an hour per address, and the server-side checks on the site allow 60 an hour per address
+  # src/mcp/route.ts (callLimiter 60/h); src/app.tsx (checkLimiter 60/h, 30/h shared by callers with no address); src/views/pages/ip-lookup.tsx (30/h)
+  - run every tool in the browser; 15 of the 32 run on the server (MTA-STS, all nine site checks, WHOIS, the certificate log lookup and the three connection tools), which does not store what you check
+  # src/content/tools.ts (runs: "browser" | "server"); src/checks/server.ts
+  - offer the blacklist check or the MCP endpoint checker over MCP; those two are web pages only
+  # src/mcp/tools.ts has no blacklist or mcp-endpoint tool
 links:
   home: https://drwho.me/
   free_tool: https://drwho.me/tools
   docs: https://drwho.me/mcp           # MCP server page: endpoint, install lines, tool list
 disclosure: I built this.
-link_wanted: true                      # OWNER: confirm; the tools are free, no account
+link_wanted: true                      # the tools are free, no account
 voice: plain and technical; answer the question first, name the tool last; one tool per post, never "suite" or "platform"
-channels: [devto, bluesky, linkedin, medium]   # OWNER: confirm; developer audience, so not facebook or linkedin-page by default
+channels: [devto, bluesky, linkedin, medium]   # developer audience, so not facebook or linkedin-page
 ---
 
 ## Positioning
 
-drwho.me is a set of 32 free tools in six groups: Email, DNS, Site checks, Discovery, Your
-connection and Developer. Each tool checks or does one thing. No account, no API key.
+drwho.me is a set of 32 free tools in six groups: Email (8), DNS (4), Site checks (9), Discovery
+(2), Your connection (4) and Developer (5). Each tool checks or does one thing. No account, no API
+key. <!-- src/content/tools.ts -->
 
-Most tools run in the browser. A DNS or email check goes from the browser straight to a public
-service (Cloudflare DNS, crt.sh), so the domain never reaches drwho.me's server. Tools that must
-read another site's response run on the server, which does not store what you check.
+DNS and most email checks run in your browser (17 of the 32 tools), so the domain never reaches
+drwho.me. Site checks, WHOIS and the certificate log run on the server, which does not store what
+you check. Talking points use those two sentences as written.
+
+In detail, the 17 browser tools are SPF, DMARC, DKIM, TLS-RPT, the blacklist check, the SPF and DMARC
+generators, all four DNS tools, the user agent parser and the five developer tools. A browser check
+goes straight from the browser to Cloudflare's public DNS (DNS over HTTPS), so the domain never
+reaches drwho.me's server. The developer tools run entirely in the page. Tools that must read
+another site's response or open a raw socket run on the server: MTA-STS, security headers, TLS
+certificate, redirects, CORS, web surface, AI-crawler policy, llms.txt, security.txt, the MCP
+endpoint checker, WHOIS and the certificate log lookup. So do "What is my IP", "IP lookup" (both
+send the address to ipinfo.io) and "Request headers". The server does not store what you check.
+<!-- src/checks/browser.ts, src/checks/server.ts; the CT log lookup moved to the server because
+crt.sh rejects the browser's preflight. src/app.tsx connectSrc allows only cloudflare-dns.com. -->
+
+Each check gives a verdict and, when something is wrong, the fix. The verdict comes from the same
+rule Domain Posture uses, so the two sites never disagree about a domain. Some specifics worth
+quoting: the DKIM lookup probes 22 common selectors; the blacklist check queries six DNS
+blocklists (Barracuda, SpamCop, UCEPROTECT L1, Mailspike, PSBL, s5h.net), not Spamhaus.
+<!-- src/reports/report.ts; DKIM: DEFAULT_DKIM_SELECTORS in @hikmahtech/dossier-checks 0.2.0 has 22
+entries (the tool list summary in src/content/tools.ts still says 21); src/lib/blacklist.ts -->
 
 The same checks are open to AI agents through a free MCP server at `https://drwho.me/mcp/mcp`
-(streamable HTTP, no auth, 29 read-only tools, 60 tool calls an hour per address). It installs in
-Claude Code with one line. It is listed on Glama and other MCP directories.
-<!-- OWNER: confirm which directory listings are live today; docs/history/2026-04-24-mcp-directories.md is from April -->
+(streamable HTTP, no auth, 29 read-only tools, 60 tool calls an hour per address; listing the tools
+is never limited). The tools: `dossier_summary` (nine DNS, email and TLS checks in one call),
+18 single `dossier_*` checks, `dns_lookup`, `ip_lookup`, `user_agent_parse` and seven developer
+utilities. It installs in Claude Code with one line. It is listed on Glama and in the official MCP
+registry as `me.drwho/tools`.
+<!-- src/mcp/tools.ts (29 tools), src/mcp/route.ts, src/mcp/manifests.ts; /.well-known/mcp-registry-auth in src/app.tsx -->
+<!-- Checked 2026-10-22: registry.modelcontextprotocol.io lists me.drwho/tools as active; glama.ai/mcp/servers/hikmahtech/drwhome answers 200. -->
 
 The code is open source under MIT (`github.com/hikmahtech/drwhome`). The check logic is the
 MIT-licensed `@hikmahtech/dossier-checks` npm package, shared with Domain Posture.
@@ -52,23 +79,25 @@ MIT-licensed `@hikmahtech/dossier-checks` npm package, shared with Domain Postur
 Both are built by Hikmah Technologies on the same checks. They are separate products with
 separate talking points:
 
-- **drwho.me** is the free front door: one check at a time, in the browser, plus the MCP server.
-  Talk about a single record or header, privacy (runs in your browser), developer utilities, and
-  agents.
-- **Domain Posture** (https://www.domainposture.com) runs all 18 checks at once, grades them,
-  lists fixes in order, and sells scheduled monitoring, change alerts and signed evidence packs.
-  Talk about that there, not here.
+- **drwho.me** is the free front door: one check at a time, plus the MCP server. Talk about a
+  single record or header, privacy for the tools that run in the browser, developer utilities,
+  and agents.
+- **Domain Posture** (https://www.domainposture.com) runs all 18 checks at once, grades them as a
+  whole, and sells signed reports, scheduled monitoring and change alerts. Talk about that there,
+  not here.
 
-drwho.me links to Domain Posture from its tool pages, `/domain-report` and `/monitoring`. A
-drwho.me post may mention that the full graded report exists, but must not claim drwho.me grades,
-monitors or signs anything.
+drwho.me links to Domain Posture from its tool pages, `/domain-report` and `/monitoring`, always
+through `/go/<target>` with UTM tags. A drwho.me post may mention that the full report exists,
+but must not claim drwho.me monitors, alerts or signs anything.
+<!-- src/content/funnel.ts, src/app.tsx /go/:target -->
 
 History: drwho.me was once Domain Posture's address. Unknown paths on drwho.me redirect with 308
-to the same path on www.domainposture.com, so old links keep working (for example
-`drwho.me/spf-checker` goes to Domain Posture; the drwho.me tool is at `drwho.me/tools/spf-checker`).
-Always link `/tools/<slug>` URLs. The Search Console change of address from drwho.me to
-domainposture.com was removed on 2026-10-01; drwho.me's pages now carry their own canonical URLs.
-<!-- OWNER: confirm the change of address is still absent in GSC and drwho.me pages are being indexed -->
+to the same path on www.domainposture.com, so old links and issued evidence-pack URLs keep working
+(for example `drwho.me/spf-checker` goes to Domain Posture; the drwho.me tool is at
+`drwho.me/tools/spf-checker`). Always link `/tools/<slug>` URLs. `www.drwho.me` redirects to
+`drwho.me`. The Search Console change of address from drwho.me to domainposture.com was removed
+on 2026-10-01; drwho.me's pages now carry their own canonical URLs.
+<!-- src/app.tsx: www redirect and the catch-all 308 -->
 
 ## Pricing
 
@@ -78,8 +107,12 @@ domainposture.com product.
 ## Words to avoid
 
 - "suite", "platform", "all-in-one", "audit", "scan your whole domain": drwho.me checks one thing per tool.
-- "grade", "score", "monitoring", "alerts", "evidence", "signed": those are Domain Posture.
+- "overall grade", "score", "monitoring", "alerts", "evidence", "signed": those are Domain Posture.
+  A post may say a check "flags a problem and shows the fix"; it must not say drwho.me grades a domain.
 - "no tracking" on its own: the site says "no tracking of what you look up"; it does load GA4
-  for page analytics. Use the full phrase. <!-- OWNER: confirm wording -->
-- "private" or "nothing leaves your browser" for server-side tools; say which tools run in the browser.
+  (consent-gated in the EEA, UK and Switzerland) and Cloudflare Web Analytics. Use the full phrase.
+  <!-- src/views/Layout.tsx, src/views/site/Privacy.tsx -->
+- "private", "runs in your browser" or "nothing leaves your browser" for the whole site: 15 of 32
+  tools, including most site checks, run on the server. Name which tools run in the browser.
+- "unlimited": both the MCP server and the server-side checks are capped at 60 an hour per address.
 - Hype words: "powerful", "ultimate", "blazing fast", "AI-powered".
