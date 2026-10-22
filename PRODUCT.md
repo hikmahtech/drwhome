@@ -28,7 +28,7 @@ links:
   home: https://drwho.me/
   free_tool: https://drwho.me/tools
   docs: https://drwho.me/mcp           # MCP server page: endpoint, install lines, tool list
-disclosure: I built this.
+disclosure: Built by Hikmah Technologies.
 link_wanted: true                      # the tools are free, no account
 voice: plain and technical; answer the question first, name the tool last; one tool per post, never "suite" or "platform"
 channels: [linkedin-page, facebook, bluesky, devto, medium]   # developer audience: devto and bluesky first
