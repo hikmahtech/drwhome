@@ -51,6 +51,16 @@ site.get("/robots.txt", (c) => {
   );
 });
 
+/** W3C date formats sitemaps allow: YYYY-MM-DD or a full ISO 8601 datetime. */
+const W3C_DATE =
+  /^\d{4}-\d{2}-\d{2}$|^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+
+/** Last deployment date for every URL, set by the deploy (see Dockerfile.web). Absent or invalid means no <lastmod>. */
+function lastmod(): string | undefined {
+  const v = process.env.SITEMAP_LASTMOD;
+  return v && W3C_DATE.test(v) ? v : undefined;
+}
+
 /** Generated from the tool list, never typed by hand, so a new ready tool appears here on its own. */
 site.get("/sitemap.xml", (c) => {
   const readyToolPaths = tools.filter(isReady).map((t) => `/tools/${t.slug}`);
@@ -64,7 +74,10 @@ site.get("/sitemap.xml", (c) => {
     "/about",
     "/privacy",
   ];
-  const urls = paths.map((p) => `  <url><loc>${SITE}${p}</loc></url>`).join("\n");
+  const mod = lastmod();
+  const urls = paths
+    .map((p) => `  <url><loc>${SITE}${p}</loc>${mod ? `<lastmod>${mod}</lastmod>` : ""}</url>`)
+    .join("\n");
   c.header("content-type", "application/xml; charset=utf-8");
   return c.body(
     `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`,

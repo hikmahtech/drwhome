@@ -128,6 +128,38 @@ describe("/sitemap.xml", () => {
       expect(xml).toContain(`<loc>https://drwho.me${p}</loc>`);
     }
   });
+
+  it("omits <lastmod> when no deploy date is configured", async () => {
+    process.env.SITEMAP_LASTMOD = undefined;
+    const xml = await (await get("/sitemap.xml")).text();
+    expect(xml).not.toContain("<lastmod>");
+  });
+
+  it("adds a valid W3C <lastmod> to every URL when a deploy date is set", async () => {
+    process.env.SITEMAP_LASTMOD = "2026-11-09";
+    try {
+      const xml = await (await get("/sitemap.xml")).text();
+      assertWellFormedXml(xml);
+      const W3C_DATE =
+        /^\d{4}-\d{2}-\d{2}$|^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+      const lastmods = [...xml.matchAll(/<lastmod>([^<]*)<\/lastmod>/g)].map((m) => m[1]);
+      const locs = [...xml.matchAll(/<loc>/g)].length;
+      expect(lastmods.length).toBe(locs);
+      for (const m of lastmods) expect(W3C_DATE.test(m)).toBe(true);
+    } finally {
+      process.env.SITEMAP_LASTMOD = undefined;
+    }
+  });
+
+  it("omits <lastmod> when the configured date is not a W3C date", async () => {
+    process.env.SITEMAP_LASTMOD = "09/11/2026";
+    try {
+      const xml = await (await get("/sitemap.xml")).text();
+      expect(xml).not.toContain("<lastmod>");
+    } finally {
+      process.env.SITEMAP_LASTMOD = undefined;
+    }
+  });
 });
 
 describe("/llms.txt", () => {
