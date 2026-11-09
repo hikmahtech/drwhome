@@ -11,6 +11,21 @@ describe("pages", () => {
     expect(await res.text()).toContain('value="example.com"');
   });
 
+  it("serves /tools/ai-crawler-checker with a self-canonical and no noindex", async () => {
+    const res = await get("/tools/ai-crawler-checker");
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain(
+      '<link rel="canonical" href="https://drwho.me/tools/ai-crawler-checker"',
+    );
+    expect(html).not.toContain("noindex");
+  });
+
+  it("links to /tools/ai-crawler-checker from /tools", async () => {
+    const html = await (await get("/tools")).text();
+    expect(html).toContain('href="/tools/ai-crawler-checker"');
+  });
+
   it("does not echo an invalid domain back into the page", async () => {
     const html = await (await get('/tools/spf-checker?domain="><script>x</script>')).text();
     expect(html).not.toContain("<script>x");
