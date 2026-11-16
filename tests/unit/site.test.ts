@@ -1,10 +1,15 @@
 import { describe, expect, it } from "vitest";
+import { app } from "../../src/app";
 import { isReady } from "../../src/content/ready";
 import { tools } from "../../src/content/tools";
 import { OWNED_PATHS, site } from "../../src/routes/site";
 import { Mcp } from "../../src/views/site/Mcp";
 
 const get = (path: string, init?: RequestInit) => site.request(`http://drwho.me${path}`, init);
+
+// Internal links also reach pages outside this router (/ , /go/, /tools/:slug), so link
+// integrity is checked against the full app, not just `site`.
+const appGet = (path: string, init?: RequestInit) => app.request(`http://drwho.me${path}`, init);
 
 /** No full XML parser in this project. Good enough for output we generate ourselves: every
  *  opening tag must have a matching closing tag, in order. */
@@ -45,6 +50,25 @@ describe("pages", () => {
       const html = await (await get(path)).text();
       expect(html).not.toContain('href="https://www.domainposture.com');
       expect(html).not.toContain('href="https://domainposture.com');
+    }
+  });
+});
+
+describe("internal links", () => {
+  // The weekly SEO crawl flags broken_internal_link when a page's own link to an internal URL
+  // dies (404) or falls through to the legacy 308 to domainposture.com. Every anchor href on
+  // every page must resolve inside this app — the /about dead end of issue #28 would fail here.
+  it("every internal link on every page resolves in this app, never a 404 or legacy 308", async () => {
+    for (const [path] of PAGES) {
+      const html = await (await appGet(path)).text();
+      const hrefs = new Set([...html.matchAll(/<a\b[^>]*?\shref="(\/[^"#]*)"/g)].map((m) => m[1]));
+      expect(hrefs.size, `${path} links to nothing`).toBeGreaterThan(0);
+      for (const href of hrefs) {
+        const res = await appGet(href);
+        // /go/ is the outbound funnel to Domain Posture (302 by design); every other internal
+        // link must be served here.
+        expect(res.status, `${path} links to ${href}`).toBe(href.startsWith("/go/") ? 302 : 200);
+      }
     }
   });
 });
