@@ -24,7 +24,7 @@ const HOUR = 60 * 60 * 1000;
 /** Server-side checks cost us an outbound fetch each, so they are metered per visitor. */
 const checkLimiter = createLimiter({ perWindow: 60, windowMs: HOUR, anonymousPerWindow: 30 });
 
-export const app = new Hono();
+export const app = new Hono<{ Variables: { consentAsk?: boolean } }>();
 
 // Lets a view read the current request (Layout needs the visitor's country for consent).
 app.use(contextStorage());
@@ -136,7 +136,18 @@ app.get("/tools/:slug", async (c, next) => {
         ? { verdict: "Too many checks from your address. Try again later.", tone: "warn", rows: [] }
         : r;
   }
-  if (tool.kind === "page") c.header("cache-control", "no-store");
+  if (tool.kind !== "page" && !domain && !report) {
+    // Static HTML with no per-request state: let the CDN serve it from the edge (the origin
+    // container is small and slow). max-age=0 keeps it out of browser caches; a shared cache
+    // must never hold a page whose consent default came from one visitor's geo, so the
+    // consentAsk flag makes Layout ask everyone on cached pages.
+    c.header("cache-control", "public, max-age=0, s-maxage=1800");
+    c.set("consentAsk", true);
+  } else {
+    // Page tools echo the visitor's request (e.g. /tools/headers), and ?domain=/ssr renders
+    // carry a specific visitor's input or report.
+    c.header("cache-control", "no-store");
+  }
   return c.html(<ToolPage tool={tool} c={c} domain={domain} report={report} />);
 });
 

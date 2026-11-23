@@ -19,7 +19,11 @@ function analytics(): { id: string; ask: boolean } | null {
   const id = process.env.GA_MEASUREMENT_ID;
   if (!id) return null;
   try {
-    return { id, ask: mustAskConsent(getContext().req.raw.headers) };
+    const c = getContext<{ Variables: { consentAsk?: boolean } }>();
+    // consentAsk is set for edge-cacheable responses: a cached page may reach a visitor whose
+    // geo differs from the visitor it was rendered for, so it must never carry a geo-derived
+    // consent default.
+    return { id, ask: c.get("consentAsk") ?? mustAskConsent(c.req.raw.headers) };
   } catch {
     return { id, ask: true };
   }

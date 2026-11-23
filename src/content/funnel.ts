@@ -8,7 +8,9 @@ const PATHS: Record<GoTarget, (domain?: string) => string> = {
   "full-scan": (d) => (d ? `/full-scan?domain=${encodeURIComponent(d)}` : "/full-scan"),
   monitoring: () => "/pricing",
   "evidence-pack": () => "/evidence-pack",
-  mcp: () => "/mcp",
+  // Absolute on purpose: www.domainposture.com/mcp 301s to drwho.me/mcp, so linking there
+  // would make the go-link a two-hop redirect chain.
+  mcp: () => "https://drwho.me/mcp",
 };
 
 export const isGoTarget = (s: string): s is GoTarget => s in PATHS;
