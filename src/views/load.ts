@@ -18,5 +18,6 @@ async function loadDir<P>(dir: string): Promise<Map<string, FC<P>>> {
 }
 
 export const prose = await loadDir<object>("prose");
+export const intros = await loadDir<object>("intros");
 export const forms = await loadDir<object>("forms");
 export const pages = await loadDir<{ c: Context }>("pages");

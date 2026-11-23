@@ -15,6 +15,8 @@ exist (`src/content/ready.ts`). Do not add a "ready" flag anywhere.
 
 Every tool also gets `src/views/prose/<slug>.tsx` (default export) and unit tests in `tests/unit/`.
 Views are found by file name (`src/views/load.ts`), so you never edit an index file.
+A check tool may also get `src/views/intros/<slug>.tsx` (default export): an optional
+intro paragraph rendered above the domain input.
 
 ## Reports
 

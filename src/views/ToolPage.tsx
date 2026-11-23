@@ -4,16 +4,18 @@ import { type Tool, toolNumber, tools } from "../content/tools";
 import type { Report } from "../reports/report";
 import { Layout } from "./Layout";
 import { MoreBand, ReportView } from "./ReportView";
-import { forms, pages, prose } from "./load";
+import { forms, intros, pages, prose } from "./load";
 
 type Props = { tool: Tool; c: Context; domain?: string; report?: Report };
 
 const RUNS_LABEL = { browser: "Runs in your browser", server: "Runs on our server" };
 
 function CheckBody({ tool, domain, report }: Props) {
+  const Intro = intros.get(tool.slug);
   return (
     // dw-check is upgraded by /js/check.js. The URL holds the state.
     <dw-check tool={tool.slug}>
+      {Intro ? <Intro /> : null}
       <form class="ask" method="get" action={`/tools/${tool.slug}`}>
         <input
           name="domain"
