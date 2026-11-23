@@ -124,4 +124,48 @@ describe("/go", () => {
     // /go is ours, so an unknown target is a plain 404, never a guessed destination.
     expect((await get("/go/nowhere")).status).toBe(404);
   });
+
+  it("sends /go/mcp straight to the final URL in one hop", async () => {
+    // www.domainposture.com/mcp 301s back to drwho.me/mcp; linking there would chain.
+    const res = await get("/go/mcp?from=mcp");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe(
+      "https://drwho.me/mcp?utm_source=drwho.me&utm_medium=tool&utm_campaign=mcp",
+    );
+  });
+});
+
+describe("tool page caching", () => {
+  it("lets the CDN cache a plain check/live tool page", async () => {
+    const res = await get("/tools/mx-lookup");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("cache-control")).toBe("public, max-age=0, s-maxage=1800");
+  });
+
+  it("keeps a page with a domain input uncached", async () => {
+    const res = await get("/tools/mx-lookup?domain=example.com");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("keeps request-echoing page tools uncached", async () => {
+    const res = await get("/tools/headers");
+    expect(res.headers.get("cache-control")).toBe("no-store");
+  });
+
+  it("asks for consent on a cacheable page even for a non-EEA visitor", async () => {
+    process.env.GA_MEASUREMENT_ID = "G-TEST123";
+    try {
+      const res = await get("/tools/mx-lookup", {
+        headers: { "cf-ipcountry": "US" },
+      });
+      expect(await res.text()).toContain('data-consent-ask="1"');
+      // The uncached variant keeps the geo-based behavior: a US visitor is not asked.
+      const uncached = await get("/tools/mx-lookup?domain=example.com", {
+        headers: { "cf-ipcountry": "US" },
+      });
+      expect(await uncached.text()).not.toContain("data-consent-ask");
+    } finally {
+      process.env.GA_MEASUREMENT_ID = "";
+    }
+  });
 });
